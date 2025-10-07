@@ -1,4 +1,3 @@
-# routes/auth.py (for web routes, not API)
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
 auth_routes_bp = Blueprint('auth_routes', __name__)

@@ -1,4 +1,3 @@
-# routes/dashboard.py
 from flask import Blueprint, render_template, session, redirect, url_for, flash
 from functools import wraps
 
@@ -19,7 +18,7 @@ def index():
     return render_template('dashboard/index.html')
 
 @dashboard_bp.route('/analytics')
-@require_auth  
+@require_auth
 def analytics():
     return render_template('dashboard/analytics.html')
 
