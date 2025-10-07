@@ -22,7 +22,8 @@ from enum import Enum
 import json
 import ipaddress
 from urllib.parse import urlparse
-
+from functools import wraps
+from flask import session, redirect, url_for, flash
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -474,7 +475,19 @@ class SecurityManager:
                 ))
         
         return issues
-    
+    def require_auth(f):
+        """Decorator to require authentication"""
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash('Please log in to access this page.', 'error')
+                return redirect(url_for('auth_routes.login'))
+            return f(*args, **kwargs)
+        return decorated_function
+
+# Export it so it can be imported
+    __all__ = ['SecurityManager', 'require_auth', 'ThreatLevel']
+
     def _is_suspicious_url(self, url: str) -> bool:
         """Check if URL is potentially suspicious"""
         try:
