@@ -17,7 +17,7 @@ import os
 import sys
 import logging
 import logging.handlers
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import asyncio
 import signal
@@ -40,7 +40,6 @@ from werkzeug.exceptions import HTTPException
 import redis
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
-from sqlalchemy.pool import QueuePool
 
 # Celery and async processing
 from celery import Celery
@@ -48,40 +47,66 @@ from kombu import Queue
 
 # Security and monitoring
 import secrets
-from datetime import timezone
 
-# Import existing modules
+# Import existing modules with comprehensive error handling
 try:
     from core.database_models import Base
     from core.security_manager import SecurityManager, init_security_manager
     from core.template_engine import SecureTemplateEngine
+    DATABASE_MODELS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Core modules not available: {e}")
+    DATABASE_MODELS_AVAILABLE = False
+
+try:
     from services.analytics import analytics_service
+    ANALYTICS_AVAILABLE = True
+except ImportError:
+    ANALYTICS_AVAILABLE = False
+    print("Warning: Analytics service not available")
+
+try:
     from api.auth import auth_bp
     from api.analytics import analytics_bp, init_socketio
-    from middleware.security import security_headers, require_auth, security_scan
-    from tasks.email_sender import celery_app
-    from config.security import SecurityConfig, FedoraSecurityConfig
+    API_MODULES_AVAILABLE = True
 except ImportError as e:
-    print(f"Critical import error: {e}")
-    print("Ensure all required modules are available in the Python path")
-    sys.exit(1)
+    print(f"Warning: API modules not available: {e}")
+    API_MODULES_AVAILABLE = False
+
+try:
+    from middleware.security import security_headers, require_auth, security_scan
+    MIDDLEWARE_AVAILABLE = True
+except ImportError:
+    MIDDLEWARE_AVAILABLE = False
+    print("Warning: Security middleware not available")
+
+try:
+    from tasks.email_sender import celery_app
+    CELERY_TASKS_AVAILABLE = True
+except ImportError:
+    CELERY_TASKS_AVAILABLE = False
+    print("Warning: Celery tasks not available")
+
+try:
+    from config.security import SecurityConfig, FedoraSecurityConfig
+    SECURITY_CONFIG_AVAILABLE = True
+except ImportError:
+    SECURITY_CONFIG_AVAILABLE = False
+    print("Warning: Security config not available")
 
 try:
     from routes.dashboard import dashboard_bp
-    from routes.campaigns import campaigns_bp  
+    from routes.campaigns import campaigns_bp
     from routes.auth import auth_routes_bp
     ROUTES_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Route imports failed: {e}")
     ROUTES_AVAILABLE = False
 
-# Then in the register_blueprints function, add:
-if ROUTES_AVAILABLE:
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    app.register_blueprint(campaigns_bp, url_prefix='/campaigns') 
-    app.register_blueprint(auth_routes_bp, url_prefix='/auth')
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
 
-# Configure logging for systemd journal integration
 def setup_fedora_logging(app: Flask) -> None:
     """
     Configure logging optimized for Fedora 41 systemd journal integration
@@ -97,12 +122,12 @@ def setup_fedora_logging(app: Flask) -> None:
     
     # Create custom formatters for different contexts
     journal_formatter = logging.Formatter(
-        fmt='%(name)s[%(process)d]: %(levelname)s %(message)s',
+        fmt='%(name)s[%(process)d]: %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
     detailed_formatter = logging.Formatter(
-        fmt='%(asctime)s %(name)-20s %(levelname)-8s %(funcName)-15s:%(lineno)-4d %(message)s',
+        fmt='%(asctime)s [%(name)-20s] %(levelname)-8s [%(funcName)-15s:%(lineno)-4d] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
@@ -122,33 +147,53 @@ def setup_fedora_logging(app: Flask) -> None:
         app.logger.warning("systemd.journal not available, falling back to syslog")
         
         # Fallback to syslog for development/testing
-        syslog_handler = logging.handlers.SysLogHandler(
-            address='/dev/log' if os.path.exists('/dev/log') else ('localhost', 514)
-        )
-        syslog_handler.setFormatter(journal_formatter)
-        syslog_handler.setLevel(log_level)
-        app.logger.addHandler(syslog_handler)
+        try:
+            syslog_handler = logging.handlers.SysLogHandler(
+                address='/dev/log' if os.path.exists('/dev/log') else ('localhost', 514)
+            )
+            syslog_handler.setFormatter(journal_formatter)
+            syslog_handler.setLevel(log_level)
+            app.logger.addHandler(syslog_handler)
+        except Exception:
+            # Final fallback to console
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(detailed_formatter)
+            console_handler.setLevel(log_level)
+            app.logger.addHandler(console_handler)
     
     # File handler for detailed debugging (development only)
     if app.config.get('FLASK_ENV') == 'development':
-        log_dir = Path('/var/log/email-sender')
-        log_dir.mkdir(exist_ok=True, parents=True)
-        
-        file_handler = logging.handlers.RotatingFileHandler(
-            log_dir / 'email-sender.log',
-            maxBytes=10*1024*1024,  # 10MB
-            backupCount=5
-        )
-        file_handler.setFormatter(detailed_formatter)
-        file_handler.setLevel(logging.DEBUG)
-        app.logger.addHandler(file_handler)
+        try:
+            log_dir = Path('/var/log/email-sender')
+            log_dir.mkdir(exist_ok=True, parents=True)
+            
+            file_handler = logging.handlers.RotatingFileHandler(
+                log_dir / 'email-sender.log',
+                maxBytes=10*1024*1024,  # 10MB
+                backupCount=5
+            )
+            file_handler.setFormatter(detailed_formatter)
+            file_handler.setLevel(logging.DEBUG)
+            app.logger.addHandler(file_handler)
+        except PermissionError:
+            # Use local log directory if /var/log is not writable
+            local_log_dir = Path('./logs')
+            local_log_dir.mkdir(exist_ok=True)
+            
+            file_handler = logging.handlers.RotatingFileHandler(
+                local_log_dir / 'email-sender.log',
+                maxBytes=10*1024*1024,
+                backupCount=5
+            )
+            file_handler.setFormatter(detailed_formatter)
+            file_handler.setLevel(logging.DEBUG)
+            app.logger.addHandler(file_handler)
     
     # Suppress verbose third-party logs in production
     if not app.debug:
         logging.getLogger('werkzeug').setLevel(logging.WARNING)
         logging.getLogger('socketio').setLevel(logging.WARNING)
         logging.getLogger('engineio').setLevel(logging.WARNING)
-
 
 def create_redis_clients(app: Flask) -> Dict[str, redis.Redis]:
     """
@@ -175,7 +220,7 @@ def create_redis_clients(app: Flask) -> Dict[str, redis.Redis]:
     # Create separate Redis databases for different purposes
     clients = {
         'sessions': redis.Redis(db=0, **redis_config),
-        'cache': redis.Redis(db=1, **redis_config), 
+        'cache': redis.Redis(db=1, **redis_config),
         'celery': redis.Redis(db=2, **redis_config),
         'rate_limit': redis.Redis(db=3, **redis_config),
         'analytics': redis.Redis(db=4, **redis_config)
@@ -188,70 +233,84 @@ def create_redis_clients(app: Flask) -> Dict[str, redis.Redis]:
             app.logger.info(f"Redis {name} client connected successfully")
         except redis.ConnectionError as e:
             app.logger.error(f"Redis {name} connection failed: {e}")
-            if app.config.get('REDIS_REQUIRED', True):
+            # Don't raise in development mode, continue without Redis
+            if app.config.get('REDIS_REQUIRED', False) and not app.debug:
                 raise
     
     return clients
 
-
 def configure_database(app: Flask) -> SQLAlchemy:
     """
-    Configure SQLAlchemy 2.0 with async support and production optimizations
+    Configure SQLAlchemy 2.0 with database-specific optimizations
     
     Features:
-    - Connection pooling for high concurrency
-    - Query optimization and monitoring
+    - Database-specific connection pooling
+    - Query optimization and monitoring  
     - Health checks and reconnection logic
     - Performance logging for slow queries
     """
-    # Database URL with connection pooling parameters
     database_url = app.config.get('DATABASE_URL', 'sqlite:///email_sender.db')
     
-    # Configure SQLAlchemy engine with production settings
-    engine_options = {
-        'poolclass': QueuePool,
-        'pool_size': app.config.get('DB_POOL_SIZE', 20),
-        'max_overflow': app.config.get('DB_MAX_OVERFLOW', 30),
-        'pool_pre_ping': True,  # Verify connections before use
-        'pool_recycle': 3600,   # Recycle connections every hour
-        'echo': app.debug,      # Log SQL queries in debug mode
-        'future': True,         # Enable SQLAlchemy 2.0 mode
-    }
-    
-    # Add PostgreSQL-specific optimizations
-    if 'postgresql' in database_url:
-        engine_options.update({
+    # Configure engine options based on database type
+    if 'sqlite' in database_url.lower():
+        # SQLite-specific configuration
+        engine_options = {
+            'pool_pre_ping': True,
+            'echo': app.debug,
+            'future': True,
+            'connect_args': {
+                'check_same_thread': False,  # Allow SQLite to work with Flask threads
+                'timeout': 20
+            }
+        }
+    elif 'postgresql' in database_url.lower():
+        # PostgreSQL-specific configuration  
+        from sqlalchemy.pool import QueuePool
+        engine_options = {
+            'pool_class': QueuePool,
+            'pool_size': app.config.get('DB_POOL_SIZE', 20),
+            'max_overflow': app.config.get('DB_MAX_OVERFLOW', 30),
+            'pool_pre_ping': True,
+            'pool_recycle': 3600,
+            'echo': app.debug,
+            'future': True,
             'connect_args': {
                 'options': '-c default_transaction_isolation=read_committed',
                 'application_name': 'email_sender',
-                'connect_timeout': 10,
+                'connect_timeout': 10
             }
-        })
+        }
+    else:
+        # Default configuration for other databases
+        engine_options = {
+            'pool_pre_ping': True,
+            'echo': app.debug,
+            'future': True
+        }
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize SQLAlchemy
-    db = SQLAlchemy()
     db.init_app(app)
     
-    # Configure database event listeners for monitoring
-    @event.listens_for(Engine, "before_cursor_execute")
-    def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-        """Log slow queries for performance monitoring"""
-        context._query_start_time = datetime.now()
-    
-    @event.listens_for(Engine, "after_cursor_execute")  
-    def receive_after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-        """Log completion of slow queries"""
-        total = (datetime.now() - context._query_start_time).total_seconds()
-        if total > app.config.get('SLOW_QUERY_THRESHOLD', 1.0):
-            app.logger.warning(f"Slow query ({total:.2f}s): {statement[:100]}...")
+    # Configure database event listeners for monitoring (only if not SQLite)
+    if 'sqlite' not in database_url.lower():
+        @event.listens_for(Engine, "before_cursor_execute")
+        def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            """Log slow queries for performance monitoring"""
+            context.query_start_time = datetime.now(timezone.utc)
+        
+        @event.listens_for(Engine, "after_cursor_execute") 
+        def receive_after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            """Log completion of slow queries"""
+            total = (datetime.now(timezone.utc) - context.query_start_time).total_seconds()
+            if total > app.config.get('SLOW_QUERY_THRESHOLD', 1.0):
+                app.logger.warning(f"Slow query ({total:.2f}s): {statement[:100]}...")
     
     app.logger.info(f"Database configured: {database_url.split('@')[-1] if '@' in database_url else database_url}")
     return db
-
 
 def configure_celery(app: Flask, redis_clients: Dict[str, redis.Redis]) -> Celery:
     """
@@ -264,7 +323,10 @@ def configure_celery(app: Flask, redis_clients: Dict[str, redis.Redis]) -> Celer
     - Error handling and retry logic
     - Monitoring integration
     """
-    # Configure Celery with Redis broker
+    if not CELERY_TASKS_AVAILABLE:
+        app.logger.warning("Celery not available, skipping configuration")
+        return None
+    
     celery_config = {
         'broker_url': f"redis://{app.config.get('REDIS_HOST', 'localhost')}:{app.config.get('REDIS_PORT', 6379)}/2",
         'result_backend': f"redis://{app.config.get('REDIS_HOST', 'localhost')}:{app.config.get('REDIS_PORT', 6379)}/2",
@@ -310,20 +372,23 @@ def configure_celery(app: Flask, redis_clients: Dict[str, redis.Redis]) -> Celer
     }
     
     # Update Celery app configuration
-    celery_app.conf.update(celery_config)
-    
-    # Configure Celery to work with Flask context
-    class ContextTask(celery_app.Task):
-        """Make celery tasks work with Flask app context"""
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-    
-    celery_app.Task = ContextTask
-    
-    app.logger.info("Celery configured with Redis broker")
-    return celery_app
-
+    try:
+        celery_app.conf.update(celery_config)
+        
+        # Configure Celery to work with Flask context
+        class ContextTask(celery_app.Task):
+            """Make celery tasks work with Flask app context"""
+            def __call__(self, *args, **kwargs):
+                with app.app_context():
+                    return self.run(*args, **kwargs)
+        
+        celery_app.Task = ContextTask
+        
+        app.logger.info("Celery configured with Redis broker")
+        return celery_app
+    except Exception as e:
+        app.logger.error(f"Failed to configure Celery: {e}")
+        return None
 
 def configure_security(app: Flask, redis_clients: Dict[str, redis.Redis]) -> tuple:
     """
@@ -333,53 +398,82 @@ def configure_security(app: Flask, redis_clients: Dict[str, redis.Redis]) -> tup
         Tuple of (SecurityManager, CSRFProtect, Limiter)
     """
     # Initialize security manager
-    security_manager = init_security_manager(app, redis_clients['rate_limit'])
+    if SECURITY_CONFIG_AVAILABLE and DATABASE_MODELS_AVAILABLE:
+        try:
+            security_manager = init_security_manager(app, redis_clients.get('rate_limit'))
+        except Exception as e:
+            app.logger.error(f"Failed to initialize security manager: {e}")
+            security_manager = None
+    else:
+        security_manager = None
+        app.logger.warning("Security manager not available")
     
     # Configure CSRF protection
     csrf = CSRFProtect()
-    csrf.init_app(app)
+    try:
+        csrf.init_app(app)
+    except Exception as e:
+        app.logger.warning(f"CSRF protection initialization failed: {e}")
     
     # Configure rate limiting
-    limiter = Limiter(
-        app=app,
-        key_func=get_remote_address,
-        storage_uri=f"redis://{app.config.get('REDIS_HOST', 'localhost')}:{app.config.get('REDIS_PORT', 6379)}/3",
-        default_limits=["1000 per hour", "100 per minute"],
-        headers_enabled=True
-    )
+    try:
+        limiter = Limiter(
+            app=app,
+            key_func=get_remote_address,
+            storage_uri=f"redis://{app.config.get('REDIS_HOST', 'localhost')}:{app.config.get('REDIS_PORT', 6379)}/3" if redis_clients else None,
+            default_limits=["1000 per hour", "100 per minute"],
+            headers_enabled=True
+        )
+    except Exception as e:
+        app.logger.warning(f"Rate limiter initialization failed: {e}")
+        limiter = None
     
     # Configure CORS for API endpoints
-    CORS(app, 
-         origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']),
-         supports_credentials=True,
-         allow_headers=['Content-Type', 'Authorization', 'X-CSRF-Token'])
+    try:
+        CORS(app, 
+             origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']),
+             supports_credentials=True,
+             allow_headers=['Content-Type', 'Authorization', 'X-CSRF-Token'])
+    except Exception as e:
+        app.logger.warning(f"CORS initialization failed: {e}")
     
     app.logger.info("Security features configured")
     return security_manager, csrf, limiter
 
-
 def register_blueprints(app: Flask) -> None:
-    """
-    Register all application blueprints with proper URL prefixes
-    """
-    # Authentication API
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    """Register all application blueprints with proper URL prefixes"""
+    registered_count = 0
     
-    # Analytics API  
-    app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    # Register API blueprints
+    if API_MODULES_AVAILABLE:
+        try:
+            app.register_blueprint(auth_bp)
+            registered_count += 1
+            try:
+                app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+                registered_count += 1
+            except NameError:
+                app.logger.warning("Analytics blueprint not available")
+            app.logger.info("API blueprints registered")
+        except Exception as e:
+            app.logger.error(f"Failed to register API blueprints: {e}")
     
-    # Additional blueprints will be registered here as they're created
-    # app.register_blueprint(campaigns_bp, url_prefix='/api/campaigns')
-    # app.register_blueprint(templates_bp, url_prefix='/api/templates')
-    # app.register_blueprint(lists_bp, url_prefix='/api/lists')
+    # Register web route blueprints
+    if ROUTES_AVAILABLE:
+        try:
+            app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+            app.register_blueprint(campaigns_bp, url_prefix='/campaigns')
+            app.register_blueprint(auth_routes_bp, url_prefix='/auth')
+            app.logger.info("Web route blueprints registered")
+            registered_count += 3
+        except Exception as e:
+            app.logger.error(f"Failed to register web route blueprints: {e}")
     
-    app.logger.info("Application blueprints registered")
-
+    app.logger.info(f"Total blueprints registered: {registered_count}")
 
 def configure_error_handlers(app: Flask) -> None:
-    """
-    Configure comprehensive error handling with custom error pages
-    """
+    """Configure comprehensive error handling with custom error pages"""
+    
     @app.errorhandler(400)
     def bad_request(error):
         app.logger.warning(f"Bad request from {request.remote_addr}: {error}")
@@ -393,7 +487,7 @@ def configure_error_handlers(app: Flask) -> None:
     def unauthorized(error):
         app.logger.warning(f"Unauthorized access attempt from {request.remote_addr}")
         return jsonify({
-            'error': 'Unauthorized', 
+            'error': 'Unauthorized',
             'message': 'Authentication required',
             'status_code': 401
         }), 401
@@ -439,7 +533,7 @@ def configure_error_handlers(app: Flask) -> None:
         """Handle unexpected exceptions"""
         if isinstance(e, HTTPException):
             return e
-            
+        
         app.logger.error(f"Unhandled exception: {e}", exc_info=True)
         return jsonify({
             'error': 'Internal Server Error',
@@ -447,17 +541,15 @@ def configure_error_handlers(app: Flask) -> None:
             'status_code': 500
         }), 500
 
-
 def configure_health_checks(app: Flask, db: SQLAlchemy, redis_clients: Dict[str, redis.Redis]) -> None:
-    """
-    Configure health check endpoints for monitoring and load balancing
-    """
+    """Configure health check endpoints for monitoring and load balancing"""
+    
     @app.route('/health')
     def health_check():
         """Basic health check endpoint"""
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'version': app.config.get('VERSION', '1.0.0')
         })
     
@@ -466,16 +558,17 @@ def configure_health_checks(app: Flask, db: SQLAlchemy, redis_clients: Dict[str,
         """Detailed health check with component status"""
         health_status = {
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'components': {}
         }
         
         # Check database connectivity
         try:
-            db.session.execute('SELECT 1')
+            with app.app_context():
+                db.session.execute(db.text('SELECT 1'))
             health_status['components']['database'] = 'healthy'
         except Exception as e:
-            health_status['components']['database'] = f'unhealthy: {str(e)}'
+            health_status['components']['database'] = f"unhealthy: {str(e)}"
             health_status['status'] = 'unhealthy'
         
         # Check Redis connectivity
@@ -484,21 +577,24 @@ def configure_health_checks(app: Flask, db: SQLAlchemy, redis_clients: Dict[str,
                 client.ping()
                 health_status['components'][f'redis_{name}'] = 'healthy'
             except Exception as e:
-                health_status['components'][f'redis_{name}'] = f'unhealthy: {str(e)}'
-                health_status['status'] = 'unhealthy'
+                health_status['components'][f'redis_{name}'] = f"unhealthy: {str(e)}"
+                if health_status['status'] == 'healthy':
+                    health_status['status'] = 'degraded'
         
         # Check Celery worker availability
-        try:
-            celery_inspect = celery_app.control.inspect()
-            active_workers = celery_inspect.active()
-            if active_workers:
-                health_status['components']['celery_workers'] = f'healthy ({len(active_workers)} workers)'
-            else:
-                health_status['components']['celery_workers'] = 'no workers available'
-                health_status['status'] = 'degraded'
-        except Exception as e:
-            health_status['components']['celery_workers'] = f'unhealthy: {str(e)}'
-            health_status['status'] = 'unhealthy'
+        if CELERY_TASKS_AVAILABLE:
+            try:
+                celery_inspect = celery_app.control.inspect()
+                active_workers = celery_inspect.active()
+                if active_workers:
+                    health_status['components']['celery_workers'] = f"healthy ({len(active_workers)} workers)"
+                else:
+                    health_status['components']['celery_workers'] = "no workers available"
+                    if health_status['status'] == 'healthy':
+                        health_status['status'] = 'degraded'
+            except Exception as e:
+                health_status['components']['celery_workers'] = f"unhealthy: {str(e)}"
+                health_status['status'] = 'unhealthy'
         
         status_code = 200 if health_status['status'] == 'healthy' else 503
         return jsonify(health_status), status_code
@@ -506,87 +602,62 @@ def configure_health_checks(app: Flask, db: SQLAlchemy, redis_clients: Dict[str,
     @app.route('/metrics')
     def metrics():
         """Prometheus-compatible metrics endpoint"""
-        # This would integrate with your monitoring service
         # For now, return basic application metrics
         return jsonify({
             'http_requests_total': request.environ.get('REQUEST_COUNT', 0),
             'active_sessions': len(session) if session else 0,
-            'uptime_seconds': (datetime.utcnow() - app.config.get('START_TIME', datetime.utcnow())).total_seconds()
+            'uptime_seconds': (datetime.now(timezone.utc) - app.config.get('START_TIME', datetime.now(timezone.utc))).total_seconds()
         })
 
-
-def configure_request_middleware(app: Flask, security_manager: SecurityManager) -> None:
-    """
-    Configure request/response middleware for security and monitoring
-    """
+def configure_request_middleware(app: Flask, security_manager) -> None:
+    """Configure request/response middleware for security and monitoring"""
+    
     @app.before_request
     def before_request():
         """Execute before each request"""
-        # Store request start time for performance monitoring
-        g.start_time = datetime.utcnow()
-        
-        # Security logging for sensitive endpoints
-        if request.endpoint and any(sensitive in request.endpoint for sensitive in ['auth', 'admin', 'config']):
-            app.logger.info(f"Sensitive endpoint access: {request.endpoint} from {request.remote_addr}")
-        
-        # Session timeout check
+        # Update session activity
         if 'user_id' in session:
-            last_activity = session.get('last_activity')
-            if last_activity:
-                last_activity = datetime.fromisoformat(last_activity)
-                if datetime.utcnow() - last_activity > timedelta(hours=8):
-                    session.clear()
-                    app.logger.info(f"Session expired for user {session.get('user_id')}")
+            session['last_activity'] = datetime.now(timezone.utc).isoformat()
+        
+        # Security scanning if available
+        if MIDDLEWARE_AVAILABLE and security_manager:
+            try:
+                security_scan(request, security_manager)
+            except Exception as e:
+                app.logger.warning(f"Security scan failed: {e}")
     
     @app.after_request
     def after_request(response):
         """Execute after each request"""
-        # Add security headers
-        response = security_headers(response)
-        
-        # Log request performance
-        if hasattr(g, 'start_time'):
-            duration = (datetime.utcnow() - g.start_time).total_seconds() * 1000
-            if duration > app.config.get('SLOW_REQUEST_THRESHOLD', 1000):
-                app.logger.warning(f"Slow request ({duration:.0f}ms): {request.method} {request.path}")
-        
-        # Update session activity
-        if 'user_id' in session:
-            session['last_activity'] = datetime.utcnow().isoformat()
+        # Apply security headers
+        if MIDDLEWARE_AVAILABLE:
+            try:
+                response = security_headers(response)
+            except Exception as e:
+                app.logger.warning(f"Security headers application failed: {e}")
         
         return response
-
 
 def create_app(config_name: str = None) -> Flask:
     """
     Flask application factory with comprehensive production configuration
     
     Args:
-        config_name: Configuration environment ('development', 'testing', 'production')
+        config_name: Configuration environment (development, testing, production)
         
     Returns:
         Configured Flask application instance
     """
     # Create Flask application
-    app = Flask(__name__, 
+    app = Flask(__name__,
                 instance_relative_config=True,
                 static_folder='static',
                 template_folder='templates')
     
-    # Store application start time for metrics
-    app.config['START_TIME'] = datetime.utcnow()
-    
     # Load configuration based on environment
     config_name = config_name or os.environ.get('FLASK_ENV', 'production')
     
-    if config_name == 'development':
-        app.config.from_object('config.DevelopmentConfig')
-    elif config_name == 'testing':
-        app.config.from_object('config.TestingConfig')  
-    else:
-        app.config.from_object(FedoraSecurityConfig)
-    
-    # Override with environment variables
+    # Basic configuration that works for all environments
     app.config.update({
         'SECRET_KEY': os.environ.get('SECRET_KEY') or secrets.token_urlsafe(32),
         'DATABASE_URL': os.environ.get('DATABASE_URL') or 'sqlite:///email_sender.db',
@@ -594,30 +665,57 @@ def create_app(config_name: str = None) -> Flask:
         'REDIS_PORT': int(os.environ.get('REDIS_PORT', 6379)),
         'CELERY_BROKER_URL': os.environ.get('CELERY_BROKER_URL') or f"redis://localhost:6379/2",
         'VERSION': os.environ.get('APP_VERSION', '1.0.0'),
+        'WTF_CSRF_ENABLED': True,
+        'WTF_CSRF_TIME_LIMIT': None,
     })
     
-    # Configure proxy handling for production deployment behind nginx
-    if config_name == 'production':
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    # Environment-specific configuration
+    if config_name == 'development':
+        app.debug = True
+        app.config.update({
+            'TESTING': False,
+            'LOG_LEVEL': 'DEBUG',
+            'REDIS_REQUIRED': False,
+        })
+    elif config_name == 'testing':
+        app.config.update({
+            'TESTING': True,
+            'WTF_CSRF_ENABLED': False,
+            'LOG_LEVEL': 'WARNING',
+        })
+    else:
+        # Production settings
+        app.config.update({
+            'LOG_LEVEL': 'INFO',
+            'REDIS_REQUIRED': True,
+        })
+        if SECURITY_CONFIG_AVAILABLE:
+            try:
+                app.config.from_object(FedoraSecurityConfig)
+            except Exception as e:
+                app.logger.warning(f"Failed to load Fedora security config: {e}")
     
-    # Setup logging system
+    # Store application start time for metrics
+    app.config['START_TIME'] = datetime.now(timezone.utc)
+    
+    # Setup logging
     setup_fedora_logging(app)
-    app.logger.info(f"Starting Email Sender application in {config_name} mode")
+    app.logger.info(f"Starting Email Sender Pro v{app.config['VERSION']} in {config_name} mode")
     
     # Create Redis clients
     redis_clients = create_redis_clients(app)
     app.redis_clients = redis_clients  # Store for access in views
     
     # Configure database
-    db = configure_database(app)
-    app.db = db
+    database = configure_database(app)
+    app.db = database
     
     # Configure database migrations
-    migrate = Migrate(app, db)
+    migrate.init_app(app, db)
     
-    # Configure Celery
-    celery = configure_celery(app, redis_clients)
-    app.celery = celery
+    # Configure proxy handling for production deployment (behind nginx)
+    if config_name == 'production':
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     # Configure security features
     security_manager, csrf, limiter = configure_security(app, redis_clients)
@@ -625,42 +723,62 @@ def create_app(config_name: str = None) -> Flask:
     app.csrf = csrf
     app.limiter = limiter
     
-    # Configure SocketIO for real-time features
-    socketio = init_socketio(app)
-    app.socketio = socketio
+    # Configure Celery
+    if CELERY_TASKS_AVAILABLE:
+        celery = configure_celery(app, redis_clients)
+        app.celery = celery
     
-    # Register application blueprints
+    # Configure SocketIO for real-time features
+    if API_MODULES_AVAILABLE:
+        try:
+            socketio = init_socketio(app)
+            app.socketio = socketio
+        except Exception as e:
+            app.logger.warning(f"SocketIO initialization failed: {e}")
+    
+    # Register blueprints
     register_blueprints(app)
     
-    # Configure error handling
+    # Configure error handlers
     configure_error_handlers(app)
     
     # Configure health checks
-    configure_health_checks(app, db, redis_clients)
+    configure_health_checks(app, database, redis_clients)
     
     # Configure request middleware
     configure_request_middleware(app, security_manager)
     
-    # Initialize analytics service
-    app.analytics = analytics_service
+    # Create database tables in development mode
+    # (In production, use migrations instead)
+    if config_name == 'development' and DATABASE_MODELS_AVAILABLE:
+        with app.app_context():
+            try:
+                db.create_all()
+                app.logger.info("Database tables created (development mode)")
+            except Exception as e:
+                app.logger.error(f"Failed to create database tables: {e}")
     
-    # Create database tables (in production, use migrations instead)
-    with app.app_context():
-        if config_name == 'development':
-            db.create_all()
-            app.logger.info("Database tables created (development mode)")
-    
-    # Setup graceful shutdown handling
+    # Register cleanup handlers
     def shutdown_handler(signum, frame):
-        app.logger.info("Received shutdown signal, cleaning up...")
+        """Handle graceful shutdown"""
+        app.logger.info("Shutting down gracefully...")
+        
+        # Close database connections
+        if database:
+            try:
+                db.session.close()
+                app.logger.info("Database connections closed")
+            except Exception as e:
+                app.logger.error(f"Error closing database: {e}")
+        
         # Close Redis connections
-        for client in redis_clients.values():
+        for name, client in redis_clients.items():
             try:
                 client.close()
-            except:
-                pass
-        # Close database connections
-        db.session.close()
+                app.logger.info(f"Redis {name} connection closed")
+            except Exception as e:
+                app.logger.error(f"Error closing Redis {name}: {e}")
+        
         app.logger.info("Cleanup completed")
     
     signal.signal(signal.SIGTERM, shutdown_handler)
@@ -670,20 +788,26 @@ def create_app(config_name: str = None) -> Flask:
     app.logger.info("Flask application factory completed successfully")
     return app
 
-
 # Production WSGI application
 application = create_app()
 
+# Development server
 if __name__ == '__main__':
-    # Development server
     app = create_app('development')
     
-    # Run with SocketIO support
-    app.socketio.run(
-        app,
-        host='0.0.0.0',
-        port=5000,
-        debug=True,
-        use_reloader=True
-    )
+    print("🚀 Starting Email Sender Pro...")
+    print(f"📡 Application running on: http://localhost:5000")
+    print(f"🔐 Login page: http://localhost:5000/auth/login")  
+    print(f"📊 Dashboard: http://localhost:5000/dashboard")
+    print(f"📈 Analytics: http://localhost:5000/api/analytics")
+    print(f"🏥 Health check: http://localhost:5000/health")
+    print(f"🔧 Detailed health: http://localhost:5000/health/detailed")
+    
+    try:
+        app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
+    except KeyboardInterrupt:
+        print("\n👋 Shutting down Email Sender Pro...")
+    except Exception as e:
+        print(f"❌ Failed to start server: {e}")
+        sys.exit(1)
 

@@ -7,7 +7,7 @@ def require_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth_routes.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -35,3 +35,4 @@ def preview_campaign(campaign_id):
 @require_auth
 def campaign_results(campaign_id):
     return render_template('campaigns/results.html', campaign_id=campaign_id)
+

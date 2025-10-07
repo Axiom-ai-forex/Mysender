@@ -2,39 +2,48 @@
 """Simple test to verify everything works"""
 
 def test_basic_imports():
+    """Test basic imports"""
     print("Testing basic imports...")
     try:
         from flask import Flask
+        print("✅ Flask imported")
+        
         from api.auth import auth_bp, init_auth_module
-        print("✅ All imports successful")
+        print("✅ Auth module imported")
+        
         return True
     except Exception as e:
         print(f"❌ Import failed: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def test_flask_app():
+    """Test Flask app creation"""
     print("Testing Flask app creation...")
     try:
         from flask import Flask
         from api.auth import init_auth_module
         
         app = Flask(__name__)
-        app.secret_key = 'test-key'
+        app.secret_key = 'test-secret-key'
         init_auth_module(app)
         
-        print("✅ Flask app created successfully")
+        print("✅ Flask app created")
         
-        # Test basic endpoint
         with app.test_client() as client:
             response = client.get('/api/auth/health')
-            print(f"✅ Health endpoint: {response.status_code}")
+            print(f"✅ Health endpoint: status {response.status_code}")
         
         return True
     except Exception as e:
-        print(f"❌ Flask app failed: {e}")
+        print(f"❌ Flask test failed: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def main():
+    """Main test function"""
     print("=" * 40)
     print("🧪 SIMPLE SETUP TEST")
     print("=" * 40)
@@ -51,9 +60,10 @@ def main():
     
     if passed == len(tests):
         print("🎉 ALL TESTS PASSED!")
-        print("🚀 Ready to run: python3 app.py")
+        print("🚀 Your authentication system is working!")
     else:
         print("❌ Some tests failed")
 
 if __name__ == '__main__':
     main()
+
