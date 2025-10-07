@@ -1,0 +1,254 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow"> <!-- Prevent search engine indexing -->
+    
+    <!-- Security Headers (CSP will be set via HTTP headers) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Progressive Web App -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Accessibility -->
+    <meta name="color-scheme" content="light dark">
+    
+    <title>
+        {% block title %}Email Sender Pro{% endblock %} - Enterprise Email Marketing
+    </title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{{ url_for('static', filename='css/main.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='js/main.js') }}" as="script">
+    
+    <!-- CSS Framework - Bootstrap 5 with custom theme -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet" 
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" 
+          crossorigin="anonymous">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    
+    <!-- Block for additional CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Theme Detection Script (must be inline to prevent FOUC) -->
+    <script>
+        // Theme detection and application (WCAG compliant)
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemTheme;
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.classList.add(`theme-${theme}`);
+            
+            // Update theme color meta tag
+            const themeColor = theme === 'dark' ? '#1e293b' : '#2563eb';
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
+        })();
+    </script>
+    
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Application Configuration (secure JSON) -->
+    <script id="app-config" type="application/json">
+        {
+            "apiEndpoint": "{{ url_for('analytics.get_campaign_metrics', campaign_id='PLACEHOLDER').replace('PLACEHOLDER', '') }}",
+            "websocketUrl": "{{ request.url_root.rstrip('/') }}",
+            "csrfToken": "{{ csrf_token() }}",
+            "version": "{{ config.VERSION }}",
+            "features": {
+                "realTimeAnalytics": true,
+                "darkMode": true,
+                "notifications": true
+            }
+        }
+    </script>
+</head>
+
+<body class="d-flex flex-column min-vh-100" data-bs-theme="auto">
+    <!-- Skip to main content link for accessibility -->
+    <a class="visually-hidden-focusable btn btn-primary position-absolute top-0 start-0 m-3" 
+       href="#main-content">
+        Skip to main content
+    </a>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay d-none" role="status" aria-live="polite">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="mt-3">Loading...</div>
+    </div>
+    
+    <!-- Alert Container -->
+    <div id="alert-container" class="position-fixed top-0 start-50 translate-middle-x" 
+         style="z-index: 9999; min-width: 300px; margin-top: 20px;" 
+         role="alert" 
+         aria-live="assertive">
+    </div>
+    
+    <!-- Navigation -->
+    {% if session.get('user_id') %}
+        {% include 'components/navbar.html' %}
+    {% endif %}
+    
+    <div class="container-fluid flex-grow-1">
+        <div class="row h-100">
+            <!-- Sidebar (if authenticated) -->
+            {% if session.get('user_id') %}
+                {% include 'components/sidebar.html' %}
+            {% endif %}
+            
+            <!-- Main Content -->
+            <main class="{% if session.get('user_id') %}col-md-9 ms-sm-auto col-lg-10 px-md-4{% else %}col-12{% endif %}" 
+                  id="main-content" 
+                  role="main">
+                
+                <!-- Breadcrumb Navigation -->
+                {% block breadcrumb %}{% endblock %}
+                
+                <!-- Page Header -->
+                {% if self.page_header() %}
+                <header class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    {% block page_header %}
+                        <h1 class="h2">{% block page_title %}Dashboard{% endblock %}</h1>
+                    {% endblock %}
+                </header>
+                {% endif %}
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages mb-4" role="alert" aria-live="polite">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                    <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2" aria-hidden="true"></i>
+                                    {{ message|e }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Main Content Block -->
+                {% block content %}
+                    <div class="text-center py-5">
+                        <h2>Welcome to Email Sender Pro</h2>
+                        <p class="lead text-muted">Enterprise Email Marketing Platform</p>
+                    </div>
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light border-top">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <span class="text-muted small">
+                        © {{ moment().format('YYYY') }} Email Sender Pro. Enterprise Edition v{{ config.VERSION }}
+                    </span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="text-muted small">
+                        System Status: <span id="system-status" class="badge bg-success">Operational</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modals Container -->
+    <div id="modals-container"></div>
+    
+    <!-- Core JavaScript -->
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Socket.IO for real-time features -->
+    {% if session.get('user_id') %}
+        <script src="https://cdn.socket.io/4.7.1/socket.io.min.js" 
+                integrity="sha384-8y6bRn2kL8sTn7kS8kK4iO8yV3k8b0VJ0Km1xk3aQj5tL6QF4a7iu2bK5pPJn0" 
+                crossorigin="anonymous"></script>
+    {% endif %}
+    
+    <!-- Chart.js for analytics -->
+    {% if 'analytics' in request.endpoint or 'dashboard' in request.endpoint %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js" 
+                integrity="sha384-w8WOYz5IEv9C5Hc8b5SqP2dOxT7WYhL8v5X9h6dGz4TqE8W3zP2Kf6RlMnA5s8Ux" 
+                crossorigin="anonymous"></script>
+    {% endif %}
+    
+    <!-- Core Application JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    
+    <!-- Page-specific JavaScript -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Service Worker Registration (PWA) -->
+    {% if not config.DEBUG %}
+    <script>
+        // Register service worker for PWA features
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+    {% endif %}
+    
+    <!-- Accessibility Enhancement Script -->
+    <script>
+        // Enhanced keyboard navigation and screen reader support
+        (function() {
+            // Focus management for modals and dynamic content
+            document.addEventListener('DOMContentLoaded', function() {
+                // Auto-focus first form field when modal opens
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('shown.bs.modal', function() {
+                        const firstInput = modal.querySelector('input, select, textarea');
+                        if (firstInput) firstInput.focus();
+                    });
+                });
+                
+                // Announce dynamic content changes to screen readers
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' && mutation.target.hasAttribute('aria-live')) {
+                            // Content changed in live region - already announced
+                        }
+                    });
+                });
+                
+                // Observe all aria-live regions
+                document.querySelectorAll('[aria-live]').forEach(element => {
+                    observer.observe(element, { childList: true, subtree: true });
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
+

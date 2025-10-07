@@ -1,0 +1,621 @@
+<!-- templates/auth/setup_2fa.html -->
+{% extends "base.html" %}
+
+{% block title %}Setup Two-Factor Authentication{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+.setup-container {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+.setup-card {
+    backdrop-filter: blur(15px);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.qr-container {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.qr-code {
+    border: 4px solid #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    background: white;
+    display: inline-block;
+}
+
+.setup-steps {
+    counter-reset: step-counter;
+}
+
+.setup-step {
+    counter-increment: step-counter;
+    position: relative;
+    padding-left: 4rem;
+    margin-bottom: 2rem;
+}
+
+.setup-step::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bs-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.app-icons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.app-icon {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.app-icon:hover {
+    transform: translateY(-2px);
+    border-color: var(--bs-primary);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.backup-codes {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-family: 'Courier New', monospace;
+}
+
+.backup-code {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.verification-success {
+    background: rgba(40, 167, 69, 0.1);
+    border: 2px solid rgba(40, 167, 69, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    color: #28a745;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container d-flex align-items-center justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="setup-card p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-5">
+                        <div class="setup-icon mb-3">
+                            <i class="fas fa-shield-alt text-primary fa-4x" aria-hidden="true"></i>
+                        </div>
+                        <h1 class="h3 mb-3">Setup Two-Factor Authentication</h1>
+                        <p class="lead text-muted mb-0">
+                            Add an extra layer of security to your Email Sender Pro account
+                        </p>
+                    </div>
+                    
+                    <!-- Setup Form -->
+                    <form id="setup-2fa-form" method="POST" action="{{ url_for('auth.setup_2fa') }}" novalidate>
+                        <!-- CSRF Protection -->
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="secret" id="secret" value="{{ secret }}">
+                        
+                        <div class="row">
+                            <!-- Left Column: Instructions -->
+                            <div class="col-lg-6">
+                                <div class="setup-steps">
+                                    <div class="setup-step">
+                                        <h6 class="mb-2">Download an Authenticator App</h6>
+                                        <p class="text-muted mb-3">
+                                            Install one of these recommended authenticator apps on your phone:
+                                        </p>
+                                        
+                                        <div class="app-icons mb-4">
+                                            <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" 
+                                               target="_blank" 
+                                               class="app-icon"
+                                               title="Google Authenticator (Android)">
+                                                <i class="fab fa-google text-danger fa-2x" aria-hidden="true"></i>
+                                            </a>
+                                            <a href="https://apps.apple.com/app/google-authenticator/id388497605" 
+                                               target="_blank" 
+                                               class="app-icon"
+                                               title="Google Authenticator (iOS)">
+                                                <i class="fab fa-apple text-dark fa-2x" aria-hidden="true"></i>
+                                            </a>
+                                            <a href="https://www.microsoft.com/en-us/account/authenticator" 
+                                               target="_blank" 
+                                               class="app-icon"
+                                               title="Microsoft Authenticator">
+                                                <i class="fab fa-microsoft text-primary fa-2x" aria-hidden="true"></i>
+                                            </a>
+                                            <a href="https://authy.com/download/" 
+                                               target="_blank" 
+                                               class="app-icon"
+                                               title="Authy">
+                                                <i class="fas fa-mobile-alt text-success fa-2x" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="setup-step">
+                                        <h6 class="mb-2">Scan the QR Code</h6>
+                                        <p class="text-muted mb-3">
+                                            Open your authenticator app and scan the QR code shown on the right. 
+                                            If you can't scan it, you can enter the setup key manually.
+                                        </p>
+                                        
+                                        <!-- Manual Entry Option -->
+                                        <div class="manual-entry">
+                                            <button type="button" 
+                                                    class="btn btn-outline-secondary btn-sm" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#manual-entry"
+                                                    aria-expanded="false" 
+                                                    aria-controls="manual-entry">
+                                                <i class="fas fa-keyboard me-1" aria-hidden="true"></i>
+                                                Enter setup key manually
+                                            </button>
+                                            
+                                            <div class="collapse mt-3" id="manual-entry">
+                                                <div class="card border-0 bg-light">
+                                                    <div class="card-body">
+                                                        <p class="small text-muted mb-2">
+                                                            <strong>Account:</strong> {{ current_user.email }}
+                                                        </p>
+                                                        <p class="small text-muted mb-2">
+                                                            <strong>Key:</strong>
+                                                        </p>
+                                                        <div class="input-group">
+                                                            <input type="text" 
+                                                                   class="form-control form-control-sm font-monospace" 
+                                                                   value="{{ secret }}" 
+                                                                   readonly
+                                                                   id="manual-secret">
+                                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                                    type="button" 
+                                                                    onclick="copyToClipboard('manual-secret')"
+                                                                    aria-label="Copy secret key">
+                                                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="setup-step">
+                                        <h6 class="mb-2">Verify Setup</h6>
+                                        <p class="text-muted mb-3">
+                                            Enter the 6-digit code from your authenticator app to verify the setup:
+                                        </p>
+                                        
+                                        <!-- Verification Input -->
+                                        <div class="verification-input mb-3">
+                                            <div class="totp-input-group" role="group" aria-labelledby="setup-verification-label">
+                                                <span id="setup-verification-label" class="visually-hidden">Enter 6-digit verification code</span>
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 1">
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 2">
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 3">
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 4">
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 5">
+                                                <input type="text" class="totp-digit" maxlength="1" pattern="[0-9]" aria-label="Digit 6">
+                                            </div>
+                                            <input type="hidden" name="verification_code" id="verification-code-hidden">
+                                            <div id="verification-error" class="invalid-feedback text-center mt-2" role="alert"></div>
+                                        </div>
+                                        
+                                        <!-- Verify Button -->
+                                        <div class="d-grid">
+                                            <button type="submit" 
+                                                    class="btn btn-primary" 
+                                                    id="verify-setup-btn" 
+                                                    disabled>
+                                                <span class="btn-text">Verify & Enable 2FA</span>
+                                                <span class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: QR Code -->
+                            <div class="col-lg-6">
+                                <div class="sticky-top" style="top: 2rem;">
+                                    <div class="qr-container">
+                                        <h6 class="mb-3">Scan this QR Code</h6>
+                                        <div class="qr-code mb-3">
+                                            <img src="{{ qr_code_url }}" 
+                                                 alt="QR Code for two-factor authentication setup" 
+                                                 class="img-fluid"
+                                                 style="max-width: 200px;">
+                                        </div>
+                                        <p class="small text-muted mb-0">
+                                            Use your authenticator app to scan this code
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Security Tips -->
+                                    <div class="mt-4">
+                                        <div class="alert alert-info border-0 bg-info bg-opacity-10">
+                                            <h6 class="alert-heading mb-2">
+                                                <i class="fas fa-lightbulb me-2" aria-hidden="true"></i>
+                                                Security Tips
+                                            </h6>
+                                            <ul class="mb-0 small">
+                                                <li>Keep your phone secure with a lock screen</li>
+                                                <li>Don't share your authenticator codes</li>
+                                                <li>Save your backup codes in a safe place</li>
+                                                <li>Consider using multiple devices for redundancy</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Backup Codes Section (Hidden initially) -->
+                    <div class="backup-codes-section d-none" id="backup-codes-section">
+                        <hr class="my-5">
+                        
+                        <div class="text-center mb-4">
+                            <i class="fas fa-key text-warning fa-3x mb-3" aria-hidden="true"></i>
+                            <h4 class="mb-2">Save Your Backup Codes</h4>
+                            <p class="text-muted">
+                                Store these backup codes in a safe place. You can use them to access your account 
+                                if you lose access to your authenticator app.
+                            </p>
+                        </div>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="backup-codes" id="backup-codes-container">
+                                    <!-- Backup codes will be inserted here -->
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <button type="button" 
+                                            class="btn btn-outline-primary me-2" 
+                                            onclick="downloadBackupCodes()">
+                                        <i class="fas fa-download me-1" aria-hidden="true"></i>
+                                        Download Codes
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary" 
+                                            onclick="printBackupCodes()">
+                                        <i class="fas fa-print me-1" aria-hidden="true"></i>
+                                        Print Codes
+                                    </button>
+                                </div>
+                                
+                                <div class="alert alert-warning border-0 mt-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-exclamation-triangle fa-2x me-3" aria-hidden="true"></i>
+                                        <div>
+                                            <strong>Important:</strong> Each backup code can only be used once. 
+                                            Generate new codes if you run out.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <button type="button" 
+                                            class="btn btn-success btn-lg" 
+                                            onclick="completeSetup()">
+                                        <i class="fas fa-check me-2" aria-hidden="true"></i>
+                                        I've Saved My Backup Codes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Success Message (Hidden initially) -->
+                    <div class="verification-success d-none" id="success-message">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle fa-3x me-3" aria-hidden="true"></i>
+                            <div>
+                                <h5 class="mb-1">Two-Factor Authentication Enabled!</h5>
+                                <p class="mb-0">Your account is now secured with 2FA. You'll need your authenticator app to sign in.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cancel Setup -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('settings.security') }}" 
+                       class="btn btn-link text-white-50">
+                        <i class="fas fa-arrow-left me-1" aria-hidden="true"></i>
+                        Cancel Setup
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 2FA Setup System
+class TwoFactorSetup {
+    constructor() {
+        this.verificationCode = '';
+        this.backupCodes = [];
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupTOTPInput();
+        this.setupFormSubmission();
+    }
+    
+    setupTOTPInput() {
+        const digits = document.querySelectorAll('.totp-digit');
+        
+        digits.forEach((digit, index) => {
+            digit.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
+                if (e.target.value && index < digits.length - 1) {
+                    digits[index + 1].focus();
+                }
+                
+                this.updateVerificationCode();
+            });
+            
+            digit.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    digits[index - 1].focus();
+                }
+            });
+            
+            digit.addEventListener('focus', (e) => {
+                e.target.select();
+            });
+        });
+    }
+    
+    updateVerificationCode() {
+        const digits = document.querySelectorAll('.totp-digit');
+        this.verificationCode = Array.from(digits).map(d => d.value).join('');
+        document.getElementById('verification-code-hidden').value = this.verificationCode;
+        
+        const verifyBtn = document.getElementById('verify-setup-btn');
+        verifyBtn.disabled = this.verificationCode.length !== 6;
+    }
+    
+    setupFormSubmission() {
+        const form = document.getElementById('setup-2fa-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.verifyAndEnable2FA();
+        });
+    }
+    
+    async verifyAndEnable2FA() {
+        const formData = new FormData(document.getElementById('setup-2fa-form'));
+        const verifyBtn = document.getElementById('verify-setup-btn');
+        
+        this.setLoading(verifyBtn, true);
+        
+        try {
+            const response = await fetch('/api/auth/setup-2fa', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            this.setLoading(verifyBtn, false);
+            
+            if (data.success) {
+                this.backupCodes = data.backup_codes;
+                this.showBackupCodes();
+            } else {
+                this.showError(data.message || 'Verification failed. Please check your code.');
+                this.clearVerificationInput();
+            }
+        } catch (error) {
+            this.setLoading(verifyBtn, false);
+            this.showError('Network error. Please try again.');
+        }
+    }
+    
+    showBackupCodes() {
+        // Hide the main form
+        document.getElementById('setup-2fa-form').style.display = 'none';
+        
+        // Show backup codes section
+        const backupSection = document.getElementById('backup-codes-section');
+        backupSection.classList.remove('d-none');
+        
+        // Populate backup codes
+        const container = document.getElementById('backup-codes-container');
+        container.innerHTML = '';
+        
+        this.backupCodes.forEach(code => {
+            const codeElement = document.createElement('span');
+            codeElement.className = 'backup-code';
+            codeElement.textContent = code;
+            container.appendChild(codeElement);
+        });
+        
+        // Scroll to backup codes
+        backupSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    clearVerificationInput() {
+        document.querySelectorAll('.totp-digit').forEach(digit => {
+            digit.value = '';
+        });
+        this.verificationCode = '';
+        document.getElementById('verification-code-hidden').value = '';
+        document.getElementById('verify-setup-btn').disabled = true;
+        
+        // Focus first digit
+        document.querySelector('.totp-digit').focus();
+    }
+    
+    setLoading(button, loading) {
+        const text = button.querySelector('.btn-text');
+        const spinner = button.querySelector('.spinner-border');
+        
+        if (loading) {
+            button.disabled = true;
+            if (text) text.style.opacity = '0.7';
+            if (spinner) spinner.classList.remove('d-none');
+        } else {
+            button.disabled = this.verificationCode.length !== 6;
+            if (text) text.style.opacity = '1';
+            if (spinner) spinner.classList.add('d-none');
+        }
+    }
+    
+    showError(message) {
+        if (window.alertSystem) {
+            window.alertSystem.error(message);
+        } else {
+            const errorDiv = document.getElementById('verification-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+    }
+}
+
+// Utility functions
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    if (window.alertSystem) {
+        window.alertSystem.success('Copied to clipboard');
+    }
+}
+
+function downloadBackupCodes() {
+    const codes = Array.from(document.querySelectorAll('.backup-code')).map(el => el.textContent);
+    const content = `Email Sender Pro - Two-Factor Authentication Backup Codes\n\nGenerated: ${new Date().toLocaleString()}\nAccount: {{ current_user.email }}\n\nBackup Codes (use each only once):\n${codes.join('\n')}\n\nStore these codes in a safe place. You can use them to access your account if you lose your authenticator device.`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'email-sender-backup-codes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function printBackupCodes() {
+    const codes = Array.from(document.querySelectorAll('.backup-code')).map(el => el.textContent);
+    const printContent = `
+        <html>
+        <head>
+            <title>Email Sender Pro - Backup Codes</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .header { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+                .codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+                .code { padding: 10px; border: 1px solid #ccc; text-align: center; font-family: monospace; font-weight: bold; }
+                .footer { margin-top: 30px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Email Sender Pro</h1>
+                <h2>Two-Factor Authentication Backup Codes</h2>
+                <p><strong>Account:</strong> {{ current_user.email }}</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <div class="codes">
+                ${codes.map(code => `<div class="code">${code}</div>`).join('')}
+            </div>
+            <div class="footer">
+                <p><strong>Important:</strong></p>
+                <ul>
+                    <li>Each code can only be used once</li>
+                    <li>Store these codes in a safe place</li>
+                    <li>Generate new codes if you run out</li>
+                    <li>Keep this document secure and private</li>
+                </ul>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function completeSetup() {
+    // Show success message
+    document.getElementById('backup-codes-section').style.display = 'none';
+    const successMsg = document.getElementById('success-message');
+    successMsg.classList.remove('d-none');
+    
+    // Redirect after delay
+    setTimeout(() => {
+        window.location.href = '/dashboard?setup_complete=2fa';
+    }, 3000);
+}
+
+// Initialize setup system
+document.addEventListener('DOMContentLoaded', function() {
+    window.twoFactorSetup = new TwoFactorSetup();
+});
+</script>
+{% endblock %}
+

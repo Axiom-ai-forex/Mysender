@@ -1,0 +1,1720 @@
+<!-- templates/dashboard/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Enhanced Dashboard Styles */
+:root {
+    --dashboard-primary: #2563eb;
+    --dashboard-success: #10b981;
+    --dashboard-warning: #f59e0b;
+    --dashboard-danger: #ef4444;
+    --dashboard-info: #3b82f6;
+    --dashboard-gray-50: #f9fafb;
+    --dashboard-gray-100: #f3f4f6;
+    --dashboard-gray-200: #e5e7eb;
+    --dashboard-gray-300: #d1d5db;
+    --dashboard-gray-400: #9ca3af;
+    --dashboard-gray-500: #6b7280;
+    --dashboard-gray-600: #4b5563;
+    --dashboard-gray-700: #374151;
+    --dashboard-gray-800: #1f2937;
+    --dashboard-gray-900: #111827;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 0;
+}
+
+.dashboard-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-sidebar {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 999;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    box-shadow: var(--shadow-lg);
+}
+
+.dashboard-sidebar.collapsed {
+    transform: translateX(-280px);
+}
+
+.sidebar-brand {
+    padding: 2rem 1.5rem 1.5rem;
+    border-bottom: 1px solid var(--dashboard-gray-200);
+}
+
+.sidebar-brand h2 {
+    color: var(--dashboard-gray-800);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section-title {
+    color: var(--dashboard-gray-500);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem 0.5rem;
+    margin: 0;
+}
+
+.nav-item {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    color: var(--dashboard-gray-700);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--dashboard-primary);
+}
+
+.nav-item.active {
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--dashboard-primary);
+    font-weight: 600;
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--dashboard-primary);
+}
+
+.nav-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.75rem;
+}
+
+.nav-badge {
+    background: var(--dashboard-danger);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    margin-left: auto;
+    min-width: 18px;
+    text-align: center;
+}
+
+.dashboard-main {
+    margin-left: 280px;
+    padding: 2rem;
+    transition: margin-left 0.3s ease;
+}
+
+.dashboard-main.expanded {
+    margin-left: 0;
+}
+
+.welcome-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.welcome-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.welcome-text h1 {
+    color: var(--dashboard-gray-800);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.welcome-text p {
+    color: var(--dashboard-gray-600);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.quick-action-btn {
+    background: var(--dashboard-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.quick-action-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-action-btn.secondary {
+    background: white;
+    color: var(--dashboard-gray-700);
+    border: 2px solid var(--dashboard-gray-300);
+}
+
+.quick-action-btn.secondary:hover {
+    background: var(--dashboard-gray-50);
+    border-color: var(--dashboard-primary);
+    color: var(--dashboard-primary);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary, #2563eb), var(--color-secondary, #3b82f6));
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.metric-card.success {
+    --color-primary: #10b981;
+    --color-secondary: #34d399;
+}
+
+.metric-card.warning {
+    --color-primary: #f59e0b;
+    --color-secondary: #fbbf24;
+}
+
+.metric-card.danger {
+    --color-primary: #ef4444;
+    --color-secondary: #f87171;
+}
+
+.metric-card.info {
+    --color-primary: #3b82f6;
+    --color-secondary: #60a5fa;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.metric-title {
+    color: var(--dashboard-gray-600);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb, 37, 99, 235), 0.1);
+    color: var(--color-primary, #2563eb);
+    font-size: 1.5rem;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dashboard-gray-800);
+    margin: 0 0 0.5rem 0;
+    line-height: 1;
+}
+
+.metric-change {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.metric-change.positive {
+    color: var(--dashboard-success);
+}
+
+.metric-change.negative {
+    color: var(--dashboard-danger);
+}
+
+.metric-change.neutral {
+    color: var(--dashboard-gray-500);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.card-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--dashboard-gray-100);
+}
+
+.card-title {
+    color: var(--dashboard-gray-800);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.card-action {
+    padding: 0.5rem;
+    border: 1px solid var(--dashboard-gray-300);
+    background: white;
+    border-radius: 8px;
+    color: var(--dashboard-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card-action:hover {
+    background: var(--dashboard-gray-50);
+    color: var(--dashboard-primary);
+    border-color: var(--dashboard-primary);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 1rem 0;
+}
+
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--dashboard-gray-100);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--dashboard-gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--dashboard-gray-700);
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-text {
+    color: var(--dashboard-gray-800);
+    font-size: 0.875rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.activity-time {
+    color: var(--dashboard-gray-500);
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.activity-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.activity-status.success {
+    background: var(--dashboard-success);
+}
+
+.activity-status.warning {
+    background: var(--dashboard-warning);
+}
+
+.activity-status.danger {
+    background: var(--dashboard-danger);
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--dashboard-gray-700);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--dashboard-gray-100);
+}
+
+.dashboard-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+.dashboard-overlay.active {
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    .dashboard-sidebar {
+        transform: translateX(-280px);
+    }
+    
+    .dashboard-sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .dashboard-main {
+        margin-left: 0;
+        padding: 1rem;
+    }
+    
+    .dashboard-header {
+        padding: 1rem;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .welcome-content {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .quick-actions {
+        justify-content: center;
+    }
+}
+
+/* Loading States */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 1rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+.skeleton-title {
+    height: 1.5rem;
+    border-radius: 4px;
+    width: 60%;
+}
+
+.skeleton-metric {
+    height: 3rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Success Messages */
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #065f46;
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #92400e;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Overlay for Mobile -->
+    <div class="dashboard-overlay" id="dashboard-overlay"></div>
+    
+    <!-- Dashboard Sidebar -->
+    <nav class="dashboard-sidebar" id="dashboard-sidebar">
+        <!-- Sidebar Brand -->
+        <div class="sidebar-brand">
+            <h2>
+                <i class="fas fa-envelope-open-text text-primary" aria-hidden="true"></i>
+                Email Sender Pro
+            </h2>
+        </div>
+        
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <h3 class="nav-section-title">Overview</h3>
+                <a href="{{ url_for('dashboard.index') }}" class="nav-item active">
+                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('dashboard.analytics') }}" class="nav-item">
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
+                    Analytics
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3 class="nav-section-title">Campaigns</h3>
+                <a href="{{ url_for('dashboard.campaigns') }}" class="nav-item">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    All Campaigns
+                    <span class="nav-badge">{{ campaign_count or 0 }}</span>
+                </a>
+                <a href="{{ url_for('campaigns.create') }}" class="nav-item">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Create Campaign
+                </a>
+                <a href="{{ url_for('campaigns.templates') }}" class="nav-item">
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
+                    Templates
+                </a>
+                <a href="{{ url_for('campaigns.scheduled') }}" class="nav-item">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                    Scheduled
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3 class="nav-section-title">Contacts</h3>
+                <a href="{{ url_for('contacts.index') }}" class="nav-item">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    All Contacts
+                    <span class="nav-badge">{{ contact_count or 0 }}</span>
+                </a>
+                <a href="{{ url_for('contacts.lists') }}" class="nav-item">
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                    Lists & Segments
+                </a>
+                <a href="{{ url_for('contacts.import') }}" class="nav-item">
+                    <i class="fas fa-upload" aria-hidden="true"></i>
+                    Import Contacts
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3 class="nav-section-title">Reports</h3>
+                <a href="{{ url_for('reports.overview') }}" class="nav-item">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    Overview
+                </a>
+                <a href="{{ url_for('reports.deliverability') }}" class="nav-item">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    Deliverability
+                </a>
+                <a href="{{ url_for('reports.engagement') }}" class="nav-item">
+                    <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                    Engagement
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3 class="nav-section-title">Settings</h3>
+                <a href="{{ url_for('settings.profile') }}" class="nav-item">
+                    <i class="fas fa-user-cog" aria-hidden="true"></i>
+                    Profile
+                </a>
+                <a href="{{ url_for('settings.domains') }}" class="nav-item">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    Domains
+                </a>
+                <a href="{{ url_for('settings.integrations') }}" class="nav-item">
+                    <i class="fas fa-plug" aria-hidden="true"></i>
+                    Integrations
+                </a>
+                <button class="nav-item" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Dashboard Main Content -->
+    <main class="dashboard-main" id="dashboard-main">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="d-flex align-items-center justify-content-between">
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Notification Bell -->
+                    <div class="position-relative">
+                        <button class="btn btn-link text-muted position-relative" id="notifications-toggle" aria-label="Notifications">
+                            <i class="fas fa-bell fa-lg" aria-hidden="true"></i>
+                            {% if unread_notifications > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ unread_notifications }}
+                            </span>
+                            {% endif %}
+                        </button>
+                    </div>
+                    
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-muted dropdown-toggle" id="user-menu" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="{{ current_user.avatar_url or '/static/images/default-avatar.png' }}" 
+                                     alt="{{ current_user.full_name }}" 
+                                     class="rounded-circle" 
+                                     style="width: 32px; height: 32px;">
+                                <span class="d-none d-md-inline text-dark">{{ current_user.full_name }}</span>
+                            </div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="user-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('settings.profile') }}">Profile Settings</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('settings.security') }}">Security</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.index') }}">Billing</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" onclick="signOut()">Sign Out</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success/Setup Messages -->
+        {% if request.args.get('setup_complete') == '2fa' %}
+        <div class="alert alert-success animate-fade-in-up">
+            <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
+            <div>
+                <strong>Two-factor authentication enabled!</strong> Your account is now more secure.
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if request.args.get('welcome') == 'true' %}
+        <div class="alert alert-info animate-fade-in-up">
+            <i class="fas fa-rocket fa-lg" aria-hidden="true"></i>
+            <div>
+                <strong>Welcome to Email Sender Pro!</strong> Let's get you started with your first campaign.
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Welcome Section -->
+        <section class="welcome-section animate-fade-in-up">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h1>Good {{ time_greeting }}, {{ current_user.first_name }}!</h1>
+                    <p>Here's what's happening with your email campaigns today.</p>
+                </div>
+                <div class="quick-actions">
+                    <a href="{{ url_for('campaigns.create') }}" class="quick-action-btn">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        Create Campaign
+                    </a>
+                    <a href="{{ url_for('contacts.import') }}" class="quick-action-btn secondary">
+                        <i class="fas fa-upload" aria-hidden="true"></i>
+                        Import Contacts
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Metrics Grid -->
+        <section class="metrics-grid">
+            <div class="metric-card success animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="metric-header">
+                    <div>
+                        <h3 class="metric-title">Total Sent</h3>
+                        <div class="metric-value" data-counter="{{ metrics.total_sent }}">{{ metrics.total_sent | number_format }}</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                            +{{ metrics.sent_change }}% from last month
+                        </div>
+                    </div>
+                    <div class="metric-icon">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metric-card info animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="metric-header">
+                    <div>
+                        <h3 class="metric-title">Open Rate</h3>
+                        <div class="metric-value">{{ metrics.open_rate }}%</div>
+                        <div class="metric-change {% if metrics.open_rate_change > 0 %}positive{% else %}negative{% endif %}">
+                            <i class="fas fa-arrow-{{ 'up' if metrics.open_rate_change > 0 else 'down' }}" aria-hidden="true"></i>
+                            {{ '+' if metrics.open_rate_change > 0 else '' }}{{ metrics.open_rate_change }}% from last month
+                        </div>
+                    </div>
+                    <div class="metric-icon">
+                        <i class="fas fa-envelope-open" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metric-card warning animate-fade-in-up" style="animation-delay: 0.3s;">
+                <div class="metric-header">
+                    <div>
+                        <h3 class="metric-title">Click Rate</h3>
+                        <div class="metric-value">{{ metrics.click_rate }}%</div>
+                        <div class="metric-change {% if metrics.click_rate_change > 0 %}positive{% else %}negative{% endif %}">
+                            <i class="fas fa-arrow-{{ 'up' if metrics.click_rate_change > 0 else 'down' }}" aria-hidden="true"></i>
+                            {{ '+' if metrics.click_rate_change > 0 else '' }}{{ metrics.click_rate_change }}% from last month
+                        </div>
+                    </div>
+                    <div class="metric-icon">
+                        <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metric-card danger animate-fade-in-up" style="animation-delay: 0.4s;">
+                <div class="metric-header">
+                    <div>
+                        <h3 class="metric-title">Bounce Rate</h3>
+                        <div class="metric-value">{{ metrics.bounce_rate }}%</div>
+                        <div class="metric-change {% if metrics.bounce_rate_change < 0 %}positive{% else %}negative{% endif %}">
+                            <i class="fas fa-arrow-{{ 'down' if metrics.bounce_rate_change < 0 else 'up' }}" aria-hidden="true"></i>
+                            {{ metrics.bounce_rate_change }}% from last month
+                        </div>
+                    </div>
+                    <div class="metric-icon">
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Dashboard Grid -->
+        <section class="dashboard-grid">
+            <!-- Performance Chart -->
+            <div class="dashboard-card animate-fade-in-up" style="animation-delay: 0.5s;">
+                <div class="card-header">
+                    <h2 class="card-title">Campaign Performance</h2>
+                    <div class="card-actions">
+                        <button class="card-action" id="chart-timeframe" data-timeframe="7d" aria-label="Change timeframe">
+                            <i class="fas fa-calendar" aria-hidden="true"></i>
+                        </button>
+                        <button class="card-action" onclick="refreshChart()" aria-label="Refresh chart">
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                        </button>
+                        <button class="card-action" onclick="exportChart()" aria-label="Export chart">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performance-chart" aria-label="Campaign performance chart"></canvas>
+                </div>
+                <div class="chart-legend d-flex justify-content-center gap-4 mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="legend-color" style="width: 12px; height: 12px; background: #10b981; border-radius: 2px;"></div>
+                        <span class="text-muted small">Delivered</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="legend-color" style="width: 12px; height: 12px; background: #3b82f6; border-radius: 2px;"></div>
+                        <span class="text-muted small">Opened</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="legend-color" style="width: 12px; height: 12px; background: #f59e0b; border-radius: 2px;"></div>
+                        <span class="text-muted small">Clicked</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="dashboard-card animate-fade-in-up" style="animation-delay: 0.6s;">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Activity</h2>
+                    <div class="card-actions">
+                        <button class="card-action" onclick="refreshActivity()" aria-label="Refresh activity">
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="activity-list" id="activity-list">
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-avatar">
+                            {{ activity.user_initials }}
+                        </div>
+                        <div class="activity-content">
+                            <p class="activity-text">{{ activity.description | safe }}</p>
+                            <p class="activity-time">{{ activity.created_at | time_ago }}</p>
+                        </div>
+                        <div class="activity-status {{ activity.status }}"></div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if not recent_activities %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-history fa-2x mb-2" aria-hidden="true"></i>
+                        <p class="mb-0">No recent activity to show.</p>
+                        <small>Your campaign activities will appear here.</small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('dashboard.activity') }}" class="btn btn-outline-primary btn-sm">
+                        View All Activity
+                        <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Campaign Overview -->
+        <section class="dashboard-card animate-fade-in-up" style="animation-delay: 0.7s;">
+            <div class="card-header">
+                <h2 class="card-title">Recent Campaigns</h2>
+                <div class="card-actions">
+                    <a href="{{ url_for('dashboard.campaigns') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                        View All
+                    </a>
+                </div>
+            </div>
+            
+            {% if recent_campaigns %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Status</th>
+                            <th>Recipients</th>
+                            <th>Open Rate</th>
+                            <th>Click Rate</th>
+                            <th>Sent Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in recent_campaigns %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="campaign-status-dot bg-{{ campaign.status_color }}"></div>
+                                    <div>
+                                        <div class="fw-medium">{{ campaign.name }}</div>
+                                        <small class="text-muted">{{ campaign.subject | truncate(40) }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ campaign.status_color }}">
+                                    {{ campaign.status | title }}
+                                </span>
+                            </td>
+                            <td>{{ campaign.recipient_count | number_format }}</td>
+                            <td>
+                                <span class="fw-medium">{{ campaign.open_rate }}%</span>
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar bg-info" style="width: {{ campaign.open_rate }}%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ campaign.click_rate }}%</span>
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ campaign.click_rate }}%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <time datetime="{{ campaign.sent_at.isoformat() }}" title="{{ campaign.sent_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                    {{ campaign.sent_at | time_ago }}
+                                </time>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('campaigns.view', id=campaign.id) }}" 
+                                       class="btn btn-outline-primary"
+                                       aria-label="View campaign details">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </a>
+                                    <a href="{{ url_for('campaigns.reports', id=campaign.id) }}" 
+                                       class="btn btn-outline-info"
+                                       aria-label="View campaign reports">
+                                        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-paper-plane fa-3x text-muted mb-3" aria-hidden="true"></i>
+                <h4 class="text-muted">No campaigns yet</h4>
+                <p class="text-muted mb-4">Create your first email campaign to get started.</p>
+                <a href="{{ url_for('campaigns.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1" aria-hidden="true"></i>
+                    Create Your First Campaign
+                </a>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100" 
+     style="background: rgba(255, 255, 255, 0.9); z-index: 9999;">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading dashboard data...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+// Enhanced Dashboard System
+class DashboardSystem {
+    constructor() {
+        this.charts = {};
+        this.refreshIntervals = {};
+        this.mobileBreakpoint = 768;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupMobileMenu();
+        this.setupMetricCounters();
+        this.setupCharts();
+        this.setupRealTimeUpdates();
+        this.setupNotifications();
+        this.setupKeyboardShortcuts();
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            this.animateMetrics();
+            this.loadRecentActivity();
+            
+            // Check for setup completion messages
+            this.handleSetupMessages();
+        });
+    }
+    
+    setupMobileMenu() {
+        const toggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('dashboard-sidebar');
+        const overlay = document.getElementById('dashboard-overlay');
+        const main = document.getElementById('dashboard-main');
+        
+        if (toggle && sidebar) {
+            toggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.classList.toggle('overflow-hidden');
+            });
+            
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.classList.remove('overflow-hidden');
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > this.mobileBreakpoint) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            });
+        }
+    }
+    
+    setupMetricCounters() {
+        const counters = document.querySelectorAll('[data-counter]');
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.dataset.counter);
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+            
+            const updateCounter = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.textContent = Math.floor(current).toLocaleString();
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = target.toLocaleString();
+                }
+            };
+            
+            // Start animation when element comes into view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        updateCounter();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            
+            observer.observe(counter);
+        });
+    }
+    
+    setupCharts() {
+        this.createPerformanceChart();
+    }
+    
+    createPerformanceChart() {
+        const ctx = document.getElementById('performance-chart');
+        if (!ctx) return;
+        
+        const gradient1 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient1.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+        gradient1.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+        
+        const gradient2 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient2.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+        gradient2.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+        
+        const gradient3 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient3.addColorStop(0, 'rgba(245, 158, 11, 0.8)');
+        gradient3.addColorStop(1, 'rgba(245, 158, 11, 0.1)');
+        
+        this.charts.performance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels | tojson }},
+                datasets: [{
+                    label: 'Delivered',
+                    data: {{ delivered_data | tojson }},
+                    borderColor: '#10b981',
+                    backgroundColor: gradient1,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }, {
+                    label: 'Opened',
+                    data: {{ opened_data | tojson }},
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradient2,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }, {
+                    label: 'Clicked',
+                    data: {{ clicked_data | tojson }},
+                    borderColor: '#f59e0b',
+                    backgroundColor: gradient3,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: '#ffffff'
+                    }
+                }
+            }
+        });
+    }
+    
+    setupRealTimeUpdates() {
+        // Update metrics every 30 seconds
+        this.refreshIntervals.metrics = setInterval(() => {
+            this.updateMetrics();
+        }, 30000);
+        
+        // Update activity every 60 seconds
+        this.refreshIntervals.activity = setInterval(() => {
+            this.loadRecentActivity();
+        }, 60000);
+    }
+    
+    async updateMetrics() {
+        try {
+            const response = await fetch('/api/dashboard/metrics');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.updateMetricCards(data.metrics);
+            }
+        } catch (error) {
+            console.error('Error updating metrics:', error);
+        }
+    }
+    
+    updateMetricCards(metrics) {
+        Object.entries(metrics).forEach(([key, value]) => {
+            const element = document.querySelector(`[data-metric="${key}"]`);
+            if (element) {
+                const currentValue = parseInt(element.textContent.replace(/,/g, ''));
+                if (currentValue !== value) {
+                    this.animateValue(element, currentValue, value);
+                }
+            }
+        });
+    }
+    
+    animateValue(element, start, end) {
+        const duration = 1000;
+        const increment = (end - start) / (duration / 16);
+        let current = start;
+        
+        const animate = () => {
+            if ((increment > 0 && current < end) || (increment < 0 && current > end)) {
+                current += increment;
+                element.textContent = Math.floor(current).toLocaleString();
+                requestAnimationFrame(animate);
+            } else {
+                element.textContent = end.toLocaleString();
+            }
+        };
+        
+        animate();
+    }
+    
+    async loadRecentActivity() {
+        try {
+            const response = await fetch('/api/dashboard/activity');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.updateActivityList(data.activities);
+            }
+        } catch (error) {
+            console.error('Error loading activity:', error);
+        }
+    }
+    
+    updateActivityList(activities) {
+        const container = document.getElementById('activity-list');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (activities.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <p class="mb-0">No recent activity to show.</p>
+                    <small>Your campaign activities will appear here.</small>
+                </div>
+            `;
+            return;
+        }
+        
+        activities.forEach(activity => {
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="activity-avatar">${activity.user_initials}</div>
+                <div class="activity-content">
+                    <p class="activity-text">${activity.description}</p>
+                    <p class="activity-time">${this.timeAgo(activity.created_at)}</p>
+                </div>
+                <div class="activity-status ${activity.status}"></div>
+            `;
+            container.appendChild(item);
+        });
+    }
+    
+    setupNotifications() {
+        const notificationsToggle = document.getElementById('notifications-toggle');
+        if (!notificationsToggle) return;
+        
+        notificationsToggle.addEventListener('click', () => {
+            this.showNotifications();
+        });
+        
+        // Check for new notifications periodically
+        setInterval(() => {
+            this.checkNotifications();
+        }, 60000);
+    }
+    
+    async showNotifications() {
+        try {
+            const response = await fetch('/api/notifications');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayNotifications(data.notifications);
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    }
+    
+    displayNotifications(notifications) {
+        // Create notification panel
+        const panel = document.createElement('div');
+        panel.className = 'notification-panel position-fixed';
+        panel.style.cssText = `
+            top: 70px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            overflow: hidden;
+        `;
+        
+        const header = document.createElement('div');
+        header.className = 'p-3 border-bottom bg-light';
+        header.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Notifications</h6>
+                <button class="btn btn-sm btn-link text-muted" onclick="this.closest('.notification-panel').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        const content = document.createElement('div');
+        content.className = 'p-0';
+        content.style.maxHeight = '400px';
+        content.style.overflowY = 'auto';
+        
+        if (notifications.length === 0) {
+            content.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                    <p class="mb-0">No new notifications</p>
+                </div>
+            `;
+        } else {
+            notifications.forEach(notification => {
+                const item = document.createElement('div');
+                item.className = 'notification-item p-3 border-bottom';
+                item.innerHTML = `
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fas fa-${notification.icon} text-${notification.type} mt-1"></i>
+                        <div class="flex-1">
+                            <p class="mb-1 fw-medium">${notification.title}</p>
+                            <p class="mb-1 small text-muted">${notification.message}</p>
+                            <small class="text-muted">${this.timeAgo(notification.created_at)}</small>
+                        </div>
+                    </div>
+                `;
+                content.appendChild(item);
+            });
+        }
+        
+        panel.appendChild(header);
+        panel.appendChild(content);
+        
+        // Remove existing panel
+        const existingPanel = document.querySelector('.notification-panel');
+        if (existingPanel) {
+            existingPanel.remove();
+        }
+        
+        document.body.appendChild(panel);
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+            if (panel.parentNode) {
+                panel.remove();
+            }
+        }, 30000);
+    }
+    
+    async checkNotifications() {
+        try {
+            const response = await fetch('/api/notifications/count');
+            const data = await response.json();
+            
+            if (data.success) {
+                const badge = document.querySelector('#notifications-toggle .badge');
+                if (data.count > 0) {
+                    if (badge) {
+                        badge.textContent = data.count;
+                    } else {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                        newBadge.textContent = data.count;
+                        document.getElementById('notifications-toggle').appendChild(newBadge);
+                    }
+                } else if (badge) {
+                    badge.remove();
+                }
+            }
+        } catch (error) {
+            console.error('Error checking notifications:', error);
+        }
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Only activate shortcuts when not typing in inputs
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            // Cmd/Ctrl + K for quick actions
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                this.showQuickActions();
+            }
+            
+            // Cmd/Ctrl + N for new campaign
+            if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+                e.preventDefault();
+                window.location.href = '/campaigns/create';
+            }
+            
+            // R for refresh
+            if (e.key === 'r' && !e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                this.refreshDashboard();
+            }
+        });
+    }
+    
+    showQuickActions() {
+        // Quick action modal implementation
+        console.log('Quick actions triggered');
+    }
+    
+    async refreshDashboard() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.remove('d-none');
+        
+        try {
+            await Promise.all([
+                this.updateMetrics(),
+                this.loadRecentActivity(),
+                this.refreshChart()
+            ]);
+            
+            // Show success message
+            this.showToast('Dashboard refreshed successfully', 'success');
+        } catch (error) {
+            console.error('Error refreshing dashboard:', error);
+            this.showToast('Error refreshing dashboard', 'error');
+        } finally {
+            loadingOverlay.classList.add('d-none');
+        }
+    }
+    
+    async refreshChart() {
+        try {
+            const response = await fetch('/api/dashboard/chart-data');
+            const data = await response.json();
+            
+            if (data.success && this.charts.performance) {
+                this.charts.performance.data.datasets[0].data = data.delivered;
+                this.charts.performance.data.datasets[1].data = data.opened;
+                this.charts.performance.data.datasets[2].data = data.clicked;
+                this.charts.performance.update('active');
+            }
+        } catch (error) {
+            console.error('Error refreshing chart:', error);
+        }
+    }
+    
+    animateMetrics() {
+        const metrics = document.querySelectorAll('.metric-card');
+        metrics.forEach((metric, index) => {
+            setTimeout(() => {
+                metric.classList.add('animate-fade-in-up');
+            }, index * 100);
+        });
+    }
+    
+    handleSetupMessages() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('setup_complete') === '2fa') {
+            setTimeout(() => {
+                this.showToast('Two-factor authentication enabled successfully!', 'success');
+            }, 1000);
+        }
+        
+        if (urlParams.get('welcome') === 'true') {
+            setTimeout(() => {
+                this.showToast('Welcome to Email Sender Pro!', 'info');
+            }, 500);
+        }
+    }
+    
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${icons[type]} fa-lg me-2"></i>
+                <span>${message}</span>
+                <button class="btn-close ms-auto" onclick="this.closest('.alert').remove()"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    timeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+        return `${Math.floor(seconds / 86400)}d ago`;
+    }
+    
+    cleanup() {
+        // Clear intervals when leaving page
+        Object.values(this.refreshIntervals).forEach(interval => {
+            clearInterval(interval);
+        });
+    }
+}
+
+// Global functions
+function signOut() {
+    if (confirm('Are you sure you want to sign out?')) {
+        window.location.href = '/auth/logout';
+    }
+}
+
+function refreshChart() {
+    if (window.dashboardSystem) {
+        window.dashboardSystem.refreshChart();
+    }
+}
+
+function exportChart() {
+    if (window.dashboardSystem && window.dashboardSystem.charts.performance) {
+        const url = window.dashboardSystem.charts.performance.toBase64Image();
+        const link = document.createElement('a');
+        link.download = 'campaign-performance-chart.png';
+        link.href = url;
+        link.click();
+    }
+}
+
+function refreshActivity() {
+    if (window.dashboardSystem) {
+        window.dashboardSystem.loadRecentActivity();
+    }
+}
+
+// Initialize dashboard system
+document.addEventListener('DOMContentLoaded', function() {
+    window.dashboardSystem = new DashboardSystem();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (window.dashboardSystem) {
+        window.dashboardSystem.cleanup();
+    }
+});
+</script>
+{% endblock %}
+

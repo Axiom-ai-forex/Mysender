@@ -1,0 +1,3041 @@
+<!-- templates/campaigns/edit.html -->
+{% extends "base.html" %}
+
+{% block title %}Edit Campaign - {{ campaign.name }} - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Advanced Campaign Editor Styles */
+:root {
+    --editor-primary: #2563eb;
+    --editor-success: #10b981;
+    --editor-warning: #f59e0b;
+    --editor-danger: #ef4444;
+    --editor-info: #3b82f6;
+    --editor-gray-50: #f9fafb;
+    --editor-gray-100: #f3f4f6;
+    --editor-gray-200: #e5e7eb;
+    --editor-gray-300: #d1d5db;
+    --editor-gray-400: #9ca3af;
+    --editor-gray-500: #6b7280;
+    --editor-gray-600: #4b5563;
+    --editor-gray-700: #374151;
+    --editor-gray-800: #1f2937;
+    --editor-gray-900: #111827;
+    --editor-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --editor-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --editor-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.editor-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 0;
+}
+
+.editor-wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Editor Sidebar */
+.editor-sidebar {
+    width: 320px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--editor-shadow-lg);
+    z-index: 1000;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.editor-sidebar.collapsed {
+    transform: translateX(-320px);
+}
+
+.sidebar-header {
+    padding: 2rem 1.5rem 1rem;
+    border-bottom: 2px solid var(--editor-gray-100);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar-title {
+    color: var(--editor-gray-800);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.campaign-name {
+    color: var(--editor-gray-600);
+    font-size: 0.875rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.sidebar-section {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    color: var(--editor-gray-700);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.section-toggle {
+    background: none;
+    border: none;
+    color: var(--editor-gray-500);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.section-toggle:hover {
+    background: var(--editor-gray-100);
+    color: var(--editor-gray-700);
+}
+
+.section-toggle.collapsed .fa-chevron-down {
+    transform: rotate(-90deg);
+}
+
+.section-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.section-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* Content Blocks */
+.content-blocks {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.content-block {
+    background: white;
+    border: 2px solid var(--editor-gray-200);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
+}
+
+.content-block:hover {
+    border-color: var(--editor-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--editor-shadow-md);
+}
+
+.content-block:active {
+    cursor: grabbing;
+}
+
+.content-block.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.block-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.block-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--editor-primary);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.block-title {
+    color: var(--editor-gray-800);
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin: 0;
+    flex: 1;
+}
+
+.block-description {
+    color: var(--editor-gray-600);
+    font-size: 0.75rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Editor Main Area */
+.editor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--editor-gray-50);
+    position: relative;
+}
+
+.editor-header {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--editor-gray-200);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--editor-shadow);
+    z-index: 100;
+}
+
+.editor-title {
+    color: var(--editor-gray-800);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--editor-gray-100);
+    border-radius: 8px;
+    padding: 0.25rem;
+}
+
+.view-toggle-btn {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: var(--editor-gray-600);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-toggle-btn.active {
+    background: white;
+    color: var(--editor-primary);
+    box-shadow: var(--editor-shadow);
+}
+
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-secondary {
+    background: var(--editor-gray-200);
+    color: var(--editor-gray-700);
+}
+
+.btn-secondary:hover {
+    background: var(--editor-gray-300);
+}
+
+.btn-primary {
+    background: var(--editor-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-success {
+    background: var(--editor-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.mobile-sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--editor-gray-700);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.mobile-sidebar-toggle:hover {
+    background: var(--editor-gray-100);
+}
+
+/* Editor Content Area */
+.editor-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.canvas-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+    background: var(--editor-gray-50);
+}
+
+.email-canvas {
+    width: 100%;
+    max-width: 600px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--editor-shadow-lg);
+    position: relative;
+    min-height: 800px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.email-canvas.drag-over {
+    border-color: var(--editor-primary);
+    background: rgba(37, 99, 235, 0.02);
+}
+
+.canvas-header {
+    background: var(--editor-gray-800);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 16px 16px 0 0;
+    font-size: 0.875rem;
+}
+
+.canvas-body {
+    padding: 2rem 1.5rem;
+    min-height: 700px;
+    position: relative;
+}
+
+.canvas-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--editor-gray-400);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.canvas-placeholder.hidden {
+    display: none;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: var(--editor-gray-300);
+}
+
+.placeholder-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.placeholder-subtext {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Content Elements */
+.canvas-element {
+    position: relative;
+    margin-bottom: 1rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.canvas-element:hover {
+    border-color: var(--editor-primary);
+}
+
+.canvas-element.selected {
+    border-color: var(--editor-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.canvas-element.dragging {
+    opacity: 0.5;
+}
+
+.element-controls {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.canvas-element:hover .element-controls,
+.canvas-element.selected .element-controls {
+    opacity: 1;
+}
+
+.element-control {
+    width: 24px;
+    height: 24px;
+    background: var(--editor-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--editor-shadow);
+}
+
+.element-control:hover {
+    background: #1d4ed8;
+    transform: scale(1.1);
+}
+
+.element-control.delete {
+    background: var(--editor-danger);
+}
+
+.element-control.delete:hover {
+    background: #dc2626;
+}
+
+.element-control.copy {
+    background: var(--editor-success);
+}
+
+.element-control.copy:hover {
+    background: #059669;
+}
+
+.element-control.move {
+    background: var(--editor-gray-500);
+    cursor: grab;
+}
+
+.element-control.move:hover {
+    background: var(--editor-gray-600);
+}
+
+.element-control.move:active {
+    cursor: grabbing;
+}
+
+/* Content Element Types */
+.element-content {
+    padding: 1rem;
+}
+
+.text-element {
+    min-height: 60px;
+}
+
+.text-element [contenteditable="true"] {
+    outline: none;
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.text-element [contenteditable="true"]:focus {
+    background: rgba(37, 99, 235, 0.05);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.image-element {
+    text-align: center;
+}
+
+.image-element img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.image-placeholder {
+    border: 2px dashed var(--editor-gray-300);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--editor-gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.image-placeholder:hover {
+    border-color: var(--editor-primary);
+    color: var(--editor-primary);
+}
+
+.button-element {
+    text-align: center;
+}
+
+.button-element .btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--editor-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.button-element .btn:hover {
+    background: #1d4ed8;
+}
+
+.divider-element {
+    padding: 1rem 0;
+}
+
+.divider-line {
+    height: 2px;
+    background: var(--editor-gray-200);
+    border-radius: 1px;
+    margin: 0.5rem 0;
+}
+
+.social-element {
+    text-align: center;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--editor-gray-600);
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    font-size: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.social-link:hover {
+    background: var(--editor-primary);
+    transform: scale(1.1);
+}
+
+/* Properties Panel */
+.properties-panel {
+    width: 320px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
+    border-left: 1px solid var(--editor-gray-200);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--editor-shadow-lg);
+    transform: translateX(320px);
+    transition: transform 0.3s ease;
+}
+
+.properties-panel.active {
+    transform: translateX(0);
+}
+
+.properties-header {
+    padding: 2rem 1.5rem 1rem;
+    border-bottom: 2px solid var(--editor-gray-100);
+}
+
+.properties-title {
+    color: var(--editor-gray-800);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.properties-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.property-group {
+    margin-bottom: 2rem;
+}
+
+.property-label {
+    display: block;
+    color: var(--editor-gray-700);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.property-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--editor-gray-300);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.property-input:focus {
+    outline: none;
+    border-color: var(--editor-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.property-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5rem;
+    padding-right: 2.5rem;
+}
+
+.property-textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.property-color {
+    height: 40px;
+    padding: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.property-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: var(--editor-gray-300);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.property-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--editor-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.property-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--editor-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.property-checkbox {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Drop Zones */
+.drop-zone {
+    min-height: 80px;
+    border: 2px dashed var(--editor-gray-300);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--editor-gray-400);
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.drop-zone.drag-over {
+    border-color: var(--editor-primary);
+    color: var(--editor-primary);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.drop-zone.hidden {
+    display: none;
+}
+
+/* Code View */
+.code-editor {
+    display: none;
+    height: 100%;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 2rem;
+    background: var(--editor-gray-900);
+    color: #f8f8f2;
+    border: none;
+    outline: none;
+    resize: none;
+    tab-size: 2;
+}
+
+.code-editor.active {
+    display: block;
+}
+
+/* Loading and Saving States */
+.saving-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--editor-success);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 9999;
+    transform: translateX(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.saving-indicator.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.saving-indicator.error {
+    background: var(--editor-danger);
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--editor-gray-200);
+    border-top: 4px solid var(--editor-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .editor-wrapper {
+        flex-direction: column;
+    }
+    
+    .editor-sidebar,
+    .properties-panel {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        z-index: 1001;
+        width: 100%;
+        max-width: 320px;
+    }
+    
+    .editor-main {
+        width: 100%;
+    }
+    
+    .mobile-sidebar-toggle {
+        display: block;
+    }
+    
+    .canvas-area {
+        padding: 1rem;
+    }
+    
+    .email-canvas {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    
+    .editor-actions {
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .view-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .editor-header {
+        padding: 1rem;
+    }
+    
+    .canvas-area {
+        padding: 0.5rem;
+    }
+    
+    .canvas-body {
+        padding: 1rem;
+    }
+    
+    .editor-actions {
+        flex-wrap: wrap;
+    }
+    
+    .property-input,
+    .property-textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Custom Scrollbars */
+.sidebar-content::-webkit-scrollbar,
+.properties-content::-webkit-scrollbar,
+.canvas-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track,
+.properties-content::-webkit-scrollbar-track,
+.canvas-area::-webkit-scrollbar-track {
+    background: var(--editor-gray-100);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb,
+.properties-content::-webkit-scrollbar-thumb,
+.canvas-area::-webkit-scrollbar-thumb {
+    background: var(--editor-gray-400);
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover,
+.properties-content::-webkit-scrollbar-thumb:hover,
+.canvas-area::-webkit-scrollbar-thumb:hover {
+    background: var(--editor-gray-500);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease;
+}
+
+/* Drag and Drop Visual Feedback */
+.drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.8;
+    transform: rotate(5deg);
+    background: white;
+    border: 2px solid var(--editor-primary);
+    border-radius: 8px;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: var(--editor-shadow-lg);
+}
+
+.insertion-indicator {
+    height: 2px;
+    background: var(--editor-primary);
+    margin: 0.25rem 0;
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.insertion-indicator.active {
+    opacity: 1;
+}
+
+/* Context Menu */
+.context-menu {
+    position: fixed;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--editor-shadow-lg);
+    border: 1px solid var(--editor-gray-200);
+    padding: 0.5rem 0;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95);
+    transition: all 0.2s ease;
+}
+
+.context-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.context-menu-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--editor-gray-700);
+    text-decoration: none;
+    font-size: 0.875rem;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background: var(--editor-gray-100);
+    color: var(--editor-gray-900);
+}
+
+.context-menu-item i {
+    width: 16px;
+    margin-right: 0.5rem;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--editor-gray-200);
+    margin: 0.5rem 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Saving Indicator -->
+    <div class="saving-indicator" id="saving-indicator">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span id="saving-text">Saved</span>
+    </div>
+    
+    <div class="editor-wrapper">
+        <!-- Editor Sidebar -->
+        <aside class="editor-sidebar" id="editor-sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-title">
+                    <i class="fas fa-palette" aria-hidden="true"></i>
+                    Email Editor
+                </h1>
+                <p class="campaign-name">{{ campaign.name }}</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Content Blocks Section -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Content Blocks</h2>
+                        <button class="section-toggle" data-section="content-blocks" aria-label="Toggle content blocks">
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="section-content" id="content-blocks-section">
+                        <div class="content-blocks">
+                            <div class="content-block" draggable="true" data-block-type="text">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-align-left" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Text Block</h3>
+                                </div>
+                                <p class="block-description">Add paragraphs, headings, and formatted text content</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="image">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-image" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Image Block</h3>
+                                </div>
+                                <p class="block-description">Insert responsive images with captions</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="button">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Button Block</h3>
+                                </div>
+                                <p class="block-description">Call-to-action buttons with custom styling</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="divider">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-minus" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Divider</h3>
+                                </div>
+                                <p class="block-description">Visual separator between content sections</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="social">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-share-alt" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Social Links</h3>
+                                </div>
+                                <p class="block-description">Social media icons with custom links</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="spacer">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-arrows-alt-v" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Spacer</h3>
+                                </div>
+                                <p class="block-description">Add vertical spacing between elements</p>
+                            </div>
+                            
+                            <div class="content-block" draggable="true" data-block-type="columns">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-columns" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Columns</h3>
+                                </div>
+                                <p class="block-description">Multi-column layout for complex designs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Template Library Section -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Template Library</h2>
+                        <button class="section-toggle" data-section="templates" aria-label="Toggle template library">
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="section-content collapsed" id="templates-section">
+                        <div class="content-blocks">
+                            <div class="content-block" data-template="newsletter">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-newspaper" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Newsletter</h3>
+                                </div>
+                                <p class="block-description">Professional newsletter layout</p>
+                            </div>
+                            
+                            <div class="content-block" data-template="promotional">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-tag" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Promotional</h3>
+                                </div>
+                                <p class="block-description">Sales and marketing template</p>
+                            </div>
+                            
+                            <div class="content-block" data-template="event">
+                                <div class="block-header">
+                                    <div class="block-icon">
+                                        <i class="fas fa-calendar" aria-hidden="true"></i>
+                                    </div>
+                                    <h3 class="block-title">Event</h3>
+                                </div>
+                                <p class="block-description">Event invitation layout</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Editor Main Area -->
+        <main class="editor-main" id="editor-main">
+            <!-- Editor Header -->
+            <div class="editor-header">
+                <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                
+                <h1 class="editor-title">{{ campaign.name }}</h1>
+                
+                <div class="editor-actions">
+                    <!-- View Toggle -->
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn active" data-view="design" aria-label="Design view">
+                            <i class="fas fa-palette" aria-hidden="true"></i>
+                            Design
+                        </button>
+                        <button class="view-toggle-btn" data-view="code" aria-label="Code view">
+                            <i class="fas fa-code" aria-hidden="true"></i>
+                            Code
+                        </button>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <button class="action-btn btn-secondary" id="preview-btn" aria-label="Preview campaign">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                        Preview
+                    </button>
+                    
+                    <button class="action-btn btn-secondary" id="test-send-btn" aria-label="Send test email">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        Test Send
+                    </button>
+                    
+                    <button class="action-btn btn-primary" id="save-btn" aria-label="Save campaign">
+                        <i class="fas fa-save" aria-hidden="true"></i>
+                        Save
+                    </button>
+                    
+                    <button class="action-btn btn-success" id="send-btn" aria-label="Send campaign">
+                        <i class="fas fa-rocket" aria-hidden="true"></i>
+                        Send
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Editor Content -->
+            <div class="editor-content">
+                <!-- Canvas Area -->
+                <div class="canvas-area" id="canvas-area">
+                    <div class="email-canvas" id="email-canvas">
+                        <div class="canvas-header">
+                            <strong>From:</strong> {{ campaign.sender_name }} &lt;{{ campaign.sender_email }}&gt;<br>
+                            <strong>Subject:</strong> {{ campaign.subject_line }}
+                        </div>
+                        
+                        <div class="canvas-body" id="canvas-body">
+                            <!-- Canvas Placeholder -->
+                            <div class="canvas-placeholder" id="canvas-placeholder">
+                                <div class="placeholder-icon">
+                                    <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                                </div>
+                                <h2 class="placeholder-text">Start Building Your Email</h2>
+                                <p class="placeholder-subtext">Drag content blocks from the sidebar to get started</p>
+                            </div>
+                            
+                            <!-- Drop Zone -->
+                            <div class="drop-zone" id="main-drop-zone">
+                                <i class="fas fa-plus-circle me-2" aria-hidden="true"></i>
+                                Drop content blocks here
+                            </div>
+                            
+                            <!-- Existing Content -->
+                            {% if campaign.content %}
+                                {{ campaign.content | safe }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Editor -->
+                <textarea class="code-editor" id="code-editor" placeholder="HTML code will appear here...">{{ campaign.html_content or '' }}</textarea>
+            </div>
+        </main>
+        
+        <!-- Properties Panel -->
+        <aside class="properties-panel" id="properties-panel">
+            <div class="properties-header">
+                <h2 class="properties-title">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                    Properties
+                </h2>
+            </div>
+            
+            <div class="properties-content" id="properties-content">
+                <div id="element-properties">
+                    <!-- Properties will be populated dynamically -->
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-hand-pointer fa-2x mb-3" aria-hidden="true"></i>
+                        <p class="mb-0">Select an element to edit its properties</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <button class="context-menu-item" id="context-edit">
+            <i class="fas fa-edit" aria-hidden="true"></i>
+            Edit
+        </button>
+        <button class="context-menu-item" id="context-copy">
+            <i class="fas fa-copy" aria-hidden="true"></i>
+            Duplicate
+        </button>
+        <button class="context-menu-item" id="context-move-up">
+            <i class="fas fa-arrow-up" aria-hidden="true"></i>
+            Move Up
+        </button>
+        <button class="context-menu-item" id="context-move-down">
+            <i class="fas fa-arrow-down" aria-hidden="true"></i>
+            Move Down
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item" id="context-delete">
+            <i class="fas fa-trash" aria-hidden="true"></i>
+            Delete
+        </button>
+    </div>
+</div>
+
+<!-- Hidden Form for Saving -->
+<form id="campaign-form" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+    <input type="hidden" name="content" id="content-input">
+    <input type="hidden" name="html_content" id="html-content-input">
+</form>
+
+<!-- Test Email Modal -->
+<div class="modal fade" id="testEmailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Test Email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="test-email-address" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="test-email-address" placeholder="test@example.com" value="{{ current_user.email }}">
+                </div>
+                <div class="mb-3">
+                    <label for="test-email-note" class="form-label">Note (Optional)</label>
+                    <textarea class="form-control" id="test-email-note" rows="3" placeholder="Internal note about this test..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="send-test-email">
+                    <i class="fas fa-paper-plane me-1" aria-hidden="true"></i>
+                    Send Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="preview-frame" src="" frameborder="0" style="width: 100%; height: 600px;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="preview-desktop">
+                    <i class="fas fa-desktop me-1" aria-hidden="true"></i>
+                    Desktop View
+                </button>
+                <button type="button" class="btn btn-primary" id="preview-mobile">
+                    <i class="fas fa-mobile-alt me-1" aria-hidden="true"></i>
+                    Mobile View
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/email-editor.js') }}"></script>
+<script>
+// Advanced Email Campaign Editor System
+class EmailEditor {
+    constructor() {
+        this.selectedElement = null;
+        this.clipboard = null;
+        this.draggedElement = null;
+        this.currentView = 'design';
+        this.unsavedChanges = false;
+        this.autoSaveInterval = null;
+        this.touchStartPos = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.setupDragAndDrop();
+        this.setupViewToggle();
+        this.setupAutoSave();
+        this.setupKeyboardShortcuts();
+        this.setupTouchSupport();
+        this.loadExistingContent();
+        
+        // Initialize sidebar state
+        this.updateSidebarVisibility();
+        
+        // Set up initial state
+        this.updateCanvasPlaceholder();
+        
+        console.log('Email Editor initialized successfully');
+    }
+    
+    setupEventListeners() {
+        // Sidebar toggle
+        const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        }
+        
+        // Section toggles
+        document.querySelectorAll('.section-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => this.toggleSection(e.target));
+        });
+        
+        // View toggle
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchView(e.target.dataset.view));
+        });
+        
+        // Action buttons
+        document.getElementById('preview-btn')?.addEventListener('click', () => this.showPreview());
+        document.getElementById('test-send-btn')?.addEventListener('click', () => this.showTestModal());
+        document.getElementById('save-btn')?.addEventListener('click', () => this.saveCampaign());
+        document.getElementById('send-btn')?.addEventListener('click', () => this.sendCampaign());
+        
+        // Test email modal
+        document.getElementById('send-test-email')?.addEventListener('click', () => this.sendTestEmail());
+        
+        // Canvas events
+        const canvas = document.getElementById('canvas-body');
+        if (canvas) {
+            canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+            canvas.addEventListener('contextmenu', (e) => this.showContextMenu(e));
+        }
+        
+        // Context menu events
+        this.setupContextMenuEvents();
+        
+        // Code editor sync
+        const codeEditor = document.getElementById('code-editor');
+        if (codeEditor) {
+            codeEditor.addEventListener('input', () => this.syncFromCode());
+        }
+        
+        // Window events
+        window.addEventListener('resize', () => this.handleResize());
+        window.addEventListener('beforeunload', (e) => this.handleBeforeUnload(e));
+        
+        // Global click to hide context menu
+        document.addEventListener('click', () => this.hideContextMenu());
+    }
+    
+    setupDragAndDrop() {
+        // Content blocks drag start
+        document.querySelectorAll('.content-block[draggable="true"]').forEach(block => {
+            block.addEventListener('dragstart', (e) => this.handleDragStart(e));
+            block.addEventListener('dragend', (e) => this.handleDragEnd(e));
+        });
+        
+        // Canvas drop zone
+        const canvas = document.getElementById('canvas-body');
+        const mainDropZone = document.getElementById('main-drop-zone');
+        
+        [canvas, mainDropZone].forEach(zone => {
+            if (zone) {
+                zone.addEventListener('dragover', (e) => this.handleDragOver(e));
+                zone.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+                zone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+                zone.addEventListener('drop', (e) => this.handleDrop(e));
+            }
+        });
+        
+        // Setup sortable for existing elements
+        this.setupSortable();
+    }
+    
+    setupSortable() {
+        const canvas = document.getElementById('canvas-body');
+        if (!canvas || typeof Sortable === 'undefined') return;
+        
+        new Sortable(canvas, {
+            group: 'canvas-elements',
+            handle: '.element-control.move',
+            animation: 150,
+            ghostClass: 'canvas-element dragging',
+            onStart: () => {
+                document.querySelectorAll('.insertion-indicator').forEach(indicator => {
+                    indicator.classList.add('active');
+                });
+            },
+            onEnd: () => {
+                document.querySelectorAll('.insertion-indicator').forEach(indicator => {
+                    indicator.classList.remove('active');
+                });
+                this.markUnsaved();
+            }
+        });
+    }
+    
+    handleDragStart(e) {
+        const blockType = e.target.dataset.blockType || e.target.dataset.template;
+        e.dataTransfer.setData('text/plain', blockType);
+        e.dataTransfer.effectAllowed = 'copy';
+        
+        this.draggedElement = e.target;
+        e.target.classList.add('dragging');
+        
+        // Create drag ghost
+        this.createDragGhost(e, blockType);
+        
+        // Show drop zones
+        this.showDropZones();
+    }
+    
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+        this.draggedElement = null;
+        this.removeDragGhost();
+        this.hideDropZones();
+    }
+    
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        
+        // Show insertion point
+        this.showInsertionPoint(e);
+    }
+    
+    handleDragEnter(e) {
+        e.preventDefault();
+        if (e.target.classList.contains('drop-zone') || e.target.closest('.email-canvas')) {
+            e.target.classList.add('drag-over');
+        }
+    }
+    
+    handleDragLeave(e) {
+        if (e.target.classList.contains('drop-zone') || e.target.closest('.email-canvas')) {
+            e.target.classList.remove('drag-over');
+        }
+    }
+    
+    handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const blockType = e.dataTransfer.getData('text/plain');
+        if (!blockType) return;
+        
+        // Remove drag styling
+        document.querySelectorAll('.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+        
+        // Create and insert element
+        const element = this.createElement(blockType);
+        if (element) {
+            const insertionPoint = this.getInsertionPoint(e);
+            this.insertElement(element, insertionPoint);
+            this.selectElement(element);
+            this.markUnsaved();
+            this.updateCanvasPlaceholder();
+        }
+    }
+    
+    createElement(blockType) {
+        const templates = {
+            text: () => this.createTextElement(),
+            image: () => this.createImageElement(),
+            button: () => this.createButtonElement(),
+            divider: () => this.createDividerElement(),
+            social: () => this.createSocialElement(),
+            spacer: () => this.createSpacerElement(),
+            columns: () => this.createColumnsElement()
+        };
+        
+        const createFunc = templates[blockType];
+        return createFunc ? createFunc() : null;
+    }
+    
+    createTextElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element text-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div contenteditable="true" data-placeholder="Enter your text here...">
+                    <h2>Your Heading Here</h2>
+                    <p>This is a paragraph of text. You can edit this content directly by clicking on it. Format your text using the properties panel on the right.</p>
+                </div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createImageElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element image-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div class="image-placeholder" onclick="this.querySelector('input').click()">
+                    <i class="fas fa-image fa-3x mb-2" aria-hidden="true"></i>
+                    <p class="mb-2">Click to upload image</p>
+                    <small class="text-muted">Supports JPG, PNG, GIF up to 5MB</small>
+                    <input type="file" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+                </div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createButtonElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element button-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <a href="#" class="btn" contenteditable="true">Click Here</a>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createDividerElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element divider-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div class="divider-line"></div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createSocialElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element social-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div class="social-links">
+                    <a href="#" class="social-link" data-platform="facebook">
+                        <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                    </a>
+                    <a href="#" class="social-link" data-platform="twitter">
+                        <i class="fab fa-twitter" aria-hidden="true"></i>
+                    </a>
+                    <a href="#" class="social-link" data-platform="instagram">
+                        <i class="fab fa-instagram" aria-hidden="true"></i>
+                    </a>
+                    <a href="#" class="social-link" data-platform="linkedin">
+                        <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createSpacerElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element spacer-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div style="height: 40px; background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 12px); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.75rem;">
+                    Spacer (40px)
+                </div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    createColumnsElement() {
+        const element = document.createElement('div');
+        element.className = 'canvas-element columns-element animate-fade-in-up';
+        element.innerHTML = `
+            <div class="element-controls">
+                <button class="element-control move" aria-label="Move element">
+                    <i class="fas fa-arrows-alt" aria-hidden="true"></i>
+                </button>
+                <button class="element-control copy" aria-label="Copy element">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                </button>
+                <button class="element-control delete" aria-label="Delete element">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="element-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
+                        Column 1<br>
+                        <small>Drop content here</small>
+                    </div>
+                    <div style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
+                        Column 2<br>
+                        <small>Drop content here</small>
+                    </div>
+                </div>
+            </div>
+            <div class="insertion-indicator"></div>
+        `;
+        
+        this.setupElementEvents(element);
+        return element;
+    }
+    
+    setupElementEvents(element) {
+        // Element click selection
+        element.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.selectElement(element);
+        });
+        
+        // Control buttons
+        const moveBtn = element.querySelector('.element-control.move');
+        const copyBtn = element.querySelector('.element-control.copy');
+        const deleteBtn = element.querySelector('.element-control.delete');
+        
+        if (moveBtn) {
+            moveBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+        }
+        
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.duplicateElement(element);
+            });
+        }
+        
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteElement(element);
+            });
+        }
+        
+        // Contenteditable elements
+        const editableElements = element.querySelectorAll('[contenteditable="true"]');
+        editableElements.forEach(editable => {
+            editable.addEventListener('input', () => {
+                this.markUnsaved();
+                this.updateProperties();
+            });
+            
+            editable.addEventListener('focus', () => {
+                this.selectElement(element);
+            });
+            
+            editable.addEventListener('blur', () => {
+                this.syncToCode();
+            });
+        });
+    }
+    
+    insertElement(element, insertionPoint) {
+        const canvas = document.getElementById('canvas-body');
+        const dropZone = document.getElementById('main-drop-zone');
+        
+        if (insertionPoint && insertionPoint.nextSibling) {
+            canvas.insertBefore(element, insertionPoint.nextSibling);
+        } else if (insertionPoint) {
+            canvas.insertBefore(element, insertionPoint);
+        } else {
+            // Insert before drop zone
+            canvas.insertBefore(element, dropZone);
+        }
+        
+        // Setup element for interactions
+        this.setupSortable();
+    }
+    
+    selectElement(element) {
+        // Remove previous selection
+        document.querySelectorAll('.canvas-element.selected').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Select new element
+        element.classList.add('selected');
+        this.selectedElement = element;
+        
+        // Show properties panel
+        this.showPropertiesPanel();
+        this.updateProperties();
+    }
+    
+    duplicateElement(element) {
+        const clone = element.cloneNode(true);
+        clone.classList.remove('selected');
+        
+        // Re-setup events for cloned element
+        this.setupElementEvents(clone);
+        
+        // Insert after original
+        element.parentNode.insertBefore(clone, element.nextSibling);
+        
+        this.selectElement(clone);
+        this.markUnsaved();
+        this.setupSortable();
+    }
+    
+    deleteElement(element) {
+        if (confirm('Are you sure you want to delete this element?')) {
+            element.remove();
+            this.selectedElement = null;
+            this.hidePropertiesPanel();
+            this.markUnsaved();
+            this.updateCanvasPlaceholder();
+        }
+    }
+    
+    showPropertiesPanel() {
+        const panel = document.getElementById('properties-panel');
+        panel.classList.add('active');
+    }
+    
+    hidePropertiesPanel() {
+        const panel = document.getElementById('properties-panel');
+        panel.classList.remove('active');
+    }
+    
+    updateProperties() {
+        if (!this.selectedElement) return;
+        
+        const propertiesContent = document.getElementById('properties-content');
+        const elementType = this.getElementType(this.selectedElement);
+        
+        let propertiesHTML = this.generatePropertiesHTML(elementType, this.selectedElement);
+        
+        propertiesContent.innerHTML = `
+            <div id="element-properties">
+                <div class="property-group">
+                    <h3 style="color: var(--editor-gray-800); font-size: 1rem; font-weight: 600; margin: 0 0 1rem 0; text-transform: capitalize;">
+                        ${elementType} Properties
+                    </h3>
+                </div>
+                ${propertiesHTML}
+            </div>
+        `;
+        
+        // Setup property event listeners
+        this.setupPropertyEvents();
+    }
+    
+    getElementType(element) {
+        if (element.classList.contains('text-element')) return 'text';
+        if (element.classList.contains('image-element')) return 'image';
+        if (element.classList.contains('button-element')) return 'button';
+        if (element.classList.contains('divider-element')) return 'divider';
+        if (element.classList.contains('social-element')) return 'social';
+        if (element.classList.contains('spacer-element')) return 'spacer';
+        if (element.classList.contains('columns-element')) return 'columns';
+        return 'unknown';
+    }
+    
+    generatePropertiesHTML(elementType, element) {
+        const generators = {
+            text: () => this.generateTextProperties(element),
+            image: () => this.generateImageProperties(element),
+            button: () => this.generateButtonProperties(element),
+            divider: () => this.generateDividerProperties(element),
+            social: () => this.generateSocialProperties(element),
+            spacer: () => this.generateSpacerProperties(element),
+            columns: () => this.generateColumnsProperties(element)
+        };
+        
+        const generator = generators[elementType];
+        return generator ? generator() : '<p class="text-muted">No properties available</p>';
+    }
+    
+    generateTextProperties(element) {
+        const contentElement = element.querySelector('[contenteditable="true"]');
+        const content = contentElement ? contentElement.innerHTML : '';
+        
+        return `
+            <div class="property-group">
+                <label class="property-label">Text Content</label>
+                <textarea class="property-input property-textarea" id="prop-text-content">${content}</textarea>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Text Alignment</label>
+                <select class="property-input property-select" id="prop-text-align">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                    <option value="justify">Justify</option>
+                </select>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Font Size</label>
+                <input type="range" class="property-input property-range" id="prop-font-size" min="12" max="48" value="16">
+                <span class="text-muted small">16px</span>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Text Color</label>
+                <input type="color" class="property-input property-color" id="prop-text-color" value="#374151">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Background Color</label>
+                <input type="color" class="property-input property-color" id="prop-bg-color" value="#ffffff">
+            </div>
+        `;
+    }
+    
+    generateButtonProperties(element) {
+        const buttonElement = element.querySelector('.btn');
+        const text = buttonElement ? buttonElement.textContent : '';
+        const href = buttonElement ? buttonElement.getAttribute('href') : '#';
+        
+        return `
+            <div class="property-group">
+                <label class="property-label">Button Text</label>
+                <input type="text" class="property-input" id="prop-button-text" value="${text}">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Link URL</label>
+                <input type="url" class="property-input" id="prop-button-href" value="${href}" placeholder="https://example.com">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Button Style</label>
+                <select class="property-input property-select" id="prop-button-style">
+                    <option value="primary">Primary</option>
+                    <option value="secondary">Secondary</option>
+                    <option value="outline">Outline</option>
+                </select>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Button Color</label>
+                <input type="color" class="property-input property-color" id="prop-button-color" value="#2563eb">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Button Alignment</label>
+                <select class="property-input property-select" id="prop-button-align">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+        `;
+    }
+    
+    generateImageProperties(element) {
+        const img = element.querySelector('img');
+        const src = img ? img.getAttribute('src') : '';
+        const alt = img ? img.getAttribute('alt') : '';
+        
+        return `
+            <div class="property-group">
+                <label class="property-label">Image URL</label>
+                <input type="url" class="property-input" id="prop-image-src" value="${src}" placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Alt Text</label>
+                <input type="text" class="property-input" id="prop-image-alt" value="${alt}" placeholder="Describe the image">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Image Alignment</label>
+                <select class="property-input property-select" id="prop-image-align">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Image Width</label>
+                <input type="range" class="property-input property-range" id="prop-image-width" min="10" max="100" value="100">
+                <span class="text-muted small">100%</span>
+            </div>
+            <div class="property-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" class="property-checkbox" id="prop-image-rounded">
+                    <label class="property-label">Rounded Corners</label>
+                </div>
+            </div>
+        `;
+    }
+    
+    generateDividerProperties(element) {
+        return `
+            <div class="property-group">
+                <label class="property-label">Divider Color</label>
+                <input type="color" class="property-input property-color" id="prop-divider-color" value="#e5e7eb">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Divider Thickness</label>
+                <input type="range" class="property-input property-range" id="prop-divider-thickness" min="1" max="10" value="2">
+                <span class="text-muted small">2px</span>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Divider Style</label>
+                <select class="property-input property-select" id="prop-divider-style">
+                    <option value="solid">Solid</option>
+                    <option value="dashed">Dashed</option>
+                    <option value="dotted">Dotted</option>
+                </select>
+            </div>
+        `;
+    }
+    
+    generateSocialProperties(element) {
+        return `
+            <div class="property-group">
+                <label class="property-label">Social Links</label>
+                <div class="mb-2">
+                    <label class="form-label small">Facebook URL</label>
+                    <input type="url" class="property-input" id="prop-social-facebook" placeholder="https://facebook.com/yourpage">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Twitter URL</label>
+                    <input type="url" class="property-input" id="prop-social-twitter" placeholder="https://twitter.com/youraccount">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Instagram URL</label>
+                    <input type="url" class="property-input" id="prop-social-instagram" placeholder="https://instagram.com/youraccount">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">LinkedIn URL</label>
+                    <input type="url" class="property-input" id="prop-social-linkedin" placeholder="https://linkedin.com/company/yourcompany">
+                </div>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Icon Size</label>
+                <input type="range" class="property-input property-range" id="prop-social-size" min="24" max="64" value="40">
+                <span class="text-muted small">40px</span>
+            </div>
+        `;
+    }
+    
+    generateSpacerProperties(element) {
+        return `
+            <div class="property-group">
+                <label class="property-label">Spacer Height</label>
+                <input type="range" class="property-input property-range" id="prop-spacer-height" min="10" max="200" value="40">
+                <span class="text-muted small">40px</span>
+            </div>
+        `;
+    }
+    
+    generateColumnsProperties(element) {
+        return `
+            <div class="property-group">
+                <label class="property-label">Number of Columns</label>
+                <select class="property-input property-select" id="prop-columns-count">
+                    <option value="1">1 Column</option>
+                    <option value="2" selected>2 Columns</option>
+                    <option value="3">3 Columns</option>
+                    <option value="4">4 Columns</option>
+                </select>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Column Gap</label>
+                <input type="range" class="property-input property-range" id="prop-columns-gap" min="0" max="50" value="16">
+                <span class="text-muted small">16px</span>
+            </div>
+        `;
+    }
+    
+    setupPropertyEvents() {
+        // Text properties
+        const textContent = document.getElementById('prop-text-content');
+        if (textContent) {
+            textContent.addEventListener('input', () => {
+                const contentElement = this.selectedElement.querySelector('[contenteditable="true"]');
+                if (contentElement) {
+                    contentElement.innerHTML = textContent.value;
+                    this.markUnsaved();
+                }
+            });
+        }
+        
+        // Button properties
+        const buttonText = document.getElementById('prop-button-text');
+        if (buttonText) {
+            buttonText.addEventListener('input', () => {
+                const buttonElement = this.selectedElement.querySelector('.btn');
+                if (buttonElement) {
+                    buttonElement.textContent = buttonText.value;
+                    this.markUnsaved();
+                }
+            });
+        }
+        
+        const buttonHref = document.getElementById('prop-button-href');
+        if (buttonHref) {
+            buttonHref.addEventListener('input', () => {
+                const buttonElement = this.selectedElement.querySelector('.btn');
+                if (buttonElement) {
+                    buttonElement.setAttribute('href', buttonHref.value);
+                    this.markUnsaved();
+                }
+            });
+        }
+        
+        // Color properties
+        document.querySelectorAll('.property-color').forEach(colorInput => {
+            colorInput.addEventListener('input', () => {
+                this.applyColorProperty(colorInput);
+                this.markUnsaved();
+            });
+        });
+        
+        // Range properties
+        document.querySelectorAll('.property-range').forEach(rangeInput => {
+            rangeInput.addEventListener('input', () => {
+                this.applyRangeProperty(rangeInput);
+                this.markUnsaved();
+            });
+        });
+        
+        // Select properties
+        document.querySelectorAll('.property-select').forEach(selectInput => {
+            selectInput.addEventListener('change', () => {
+                this.applySelectProperty(selectInput);
+                this.markUnsaved();
+            });
+        });
+    }
+    
+    applyColorProperty(input) {
+        const property = input.id;
+        const value = input.value;
+        
+        switch (property) {
+            case 'prop-text-color':
+                const textElement = this.selectedElement.querySelector('[contenteditable="true"]');
+                if (textElement) textElement.style.color = value;
+                break;
+            case 'prop-bg-color':
+                this.selectedElement.style.backgroundColor = value;
+                break;
+            case 'prop-button-color':
+                const buttonElement = this.selectedElement.querySelector('.btn');
+                if (buttonElement) buttonElement.style.backgroundColor = value;
+                break;
+            case 'prop-divider-color':
+                const dividerElement = this.selectedElement.querySelector('.divider-line');
+                if (dividerElement) dividerElement.style.backgroundColor = value;
+                break;
+        }
+    }
+    
+    applyRangeProperty(input) {
+        const property = input.id;
+        const value = input.value;
+        const label = input.nextElementSibling;
+        
+        switch (property) {
+            case 'prop-font-size':
+                const textElement = this.selectedElement.querySelector('[contenteditable="true"]');
+                if (textElement) textElement.style.fontSize = value + 'px';
+                if (label) label.textContent = value + 'px';
+                break;
+            case 'prop-spacer-height':
+                const spacerContent = this.selectedElement.querySelector('.element-content > div');
+                if (spacerContent) spacerContent.style.height = value + 'px';
+                if (label) label.textContent = value + 'px';
+                break;
+            case 'prop-divider-thickness':
+                const dividerElement = this.selectedElement.querySelector('.divider-line');
+                if (dividerElement) dividerElement.style.height = value + 'px';
+                if (label) label.textContent = value + 'px';
+                break;
+            case 'prop-image-width':
+                const imgElement = this.selectedElement.querySelector('img');
+                if (imgElement) imgElement.style.width = value + '%';
+                if (label) label.textContent = value + '%';
+                break;
+            case 'prop-social-size':
+                const socialLinks = this.selectedElement.querySelectorAll('.social-link');
+                socialLinks.forEach(link => {
+                    link.style.width = value + 'px';
+                    link.style.height = value + 'px';
+                });
+                if (label) label.textContent = value + 'px';
+                break;
+        }
+    }
+    
+    applySelectProperty(input) {
+        const property = input.id;
+        const value = input.value;
+        
+        switch (property) {
+            case 'prop-text-align':
+                const textElement = this.selectedElement.querySelector('[contenteditable="true"]');
+                if (textElement) textElement.style.textAlign = value;
+                break;
+            case 'prop-button-align':
+                const buttonContainer = this.selectedElement.querySelector('.element-content');
+                if (buttonContainer) buttonContainer.style.textAlign = value;
+                break;
+            case 'prop-image-align':
+                const imageContainer = this.selectedElement.querySelector('.element-content');
+                if (imageContainer) imageContainer.style.textAlign = value;
+                break;
+            case 'prop-divider-style':
+                const dividerElement = this.selectedElement.querySelector('.divider-line');
+                if (dividerElement) {
+                    dividerElement.style.border = 'none';
+                    dividerElement.style.borderTop = `${dividerElement.style.height || '2px'} ${value} ${dividerElement.style.backgroundColor || '#e5e7eb'}`;
+                }
+                break;
+        }
+    }
+    
+    setupViewToggle() {
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const view = e.target.dataset.view;
+                this.switchView(view);
+            });
+        });
+    }
+    
+    switchView(view) {
+        this.currentView = view;
+        
+        // Update toggle buttons
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
+        
+        // Switch content
+        const canvasArea = document.getElementById('canvas-area');
+        const codeEditor = document.getElementById('code-editor');
+        
+        if (view === 'design') {
+            canvasArea.style.display = 'flex';
+            codeEditor.classList.remove('active');
+        } else {
+            canvasArea.style.display = 'none';
+            codeEditor.classList.add('active');
+            this.syncToCode();
+        }
+    }
+    
+    syncToCode() {
+        const canvas = document.getElementById('canvas-body');
+        const codeEditor = document.getElementById('code-editor');
+        
+        if (canvas && codeEditor) {
+            // Get clean HTML without editor controls
+            const tempDiv = canvas.cloneNode(true);
+            
+            // Remove editor-specific elements
+            tempDiv.querySelectorAll('.element-controls, .insertion-indicator, .canvas-placeholder, .drop-zone').forEach(el => {
+                el.remove();
+            });
+            
+            // Clean up classes
+            tempDiv.querySelectorAll('.canvas-element').forEach(el => {
+                el.classList.remove('selected', 'dragging', 'animate-fade-in-up');
+                el.removeAttribute('draggable');
+            });
+            
+            codeEditor.value = tempDiv.innerHTML;
+        }
+    }
+    
+    syncFromCode() {
+        const codeEditor = document.getElementById('code-editor');
+        const canvas = document.getElementById('canvas-body');
+        
+        if (codeEditor && canvas && this.currentView === 'code') {
+            try {
+                // Parse and rebuild canvas
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = codeEditor.value;
+                
+                // Clear canvas
+                canvas.innerHTML = '';
+                
+                // Add placeholder and drop zone
+                const placeholder = document.createElement('div');
+                placeholder.className = 'canvas-placeholder hidden';
+                placeholder.id = 'canvas-placeholder';
+                placeholder.innerHTML = `
+                    <div class="placeholder-icon">
+                        <i class="fas fa-mouse-pointer"></i>
+                    </div>
+                    <h2 class="placeholder-text">Start Building Your Email</h2>
+                    <p class="placeholder-subtext">Drag content blocks from the sidebar to get started</p>
+                `;
+                canvas.appendChild(placeholder);
+                
+                // Add content from code
+                while (tempDiv.firstChild) {
+                    const element = tempDiv.firstChild;
+                    
+                    // Add canvas element classes and controls if needed
+                    if (element.nodeType === Node.ELEMENT_NODE) {
+                        element.classList.add('canvas-element');
+                        this.addElementControls(element);
+                        this.setupElementEvents(element);
+                    }
+                    
+                    canvas.appendChild(element);
+                }
+                
+                // Add drop zone
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.id = 'main-drop-zone';
+                dropZone.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Drop content blocks here';
+                canvas.appendChild(dropZone);
+                
+                this.updateCanvasPlaceholder();
+                this.markUnsaved();
+                
+            } catch (error) {
+                console.error('Error syncing from code:', error);
+                this.showToast('Error parsing HTML code', 'error');
+            }
+        }
+    }
+    
+    addElementControls(element) {
+        if (element.querySelector('.element-controls')) return;
+        
+        const controls = document.createElement('div');
+        controls.className = 'element-controls';
+        controls.innerHTML = `
+            <button class="element-control move" aria-label="Move element">
+                <i class="fas fa-arrows-alt"></i>
+            </button>
+            <button class="element-control copy" aria-label="Copy element">
+                <i class="fas fa-copy"></i>
+            </button>
+            <button class="element-control delete" aria-label="Delete element">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        
+        element.insertBefore(controls, element.firstChild);
+        
+        const indicator = document.createElement('div');
+        indicator.className = 'insertion-indicator';
+        element.appendChild(indicator);
+    }
+    
+    setupAutoSave() {
+        this.autoSaveInterval = setInterval(() => {
+            if (this.unsavedChanges) {
+                this.saveCampaign(true); // Silent save
+            }
+        }, 30000); // Auto-save every 30 seconds
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveCampaign();
+            }
+            
+            // Delete key to delete selected element
+            if (e.key === 'Delete' && this.selectedElement) {
+                e.preventDefault();
+                this.deleteElement(this.selectedElement);
+            }
+            
+            // Ctrl/Cmd + D to duplicate
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd' && this.selectedElement) {
+                e.preventDefault();
+                this.duplicateElement(this.selectedElement);
+            }
+            
+            // Ctrl/Cmd + Z for undo (basic implementation)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                // Undo functionality could be implemented here
+                console.log('Undo requested');
+            }
+            
+            // Escape to deselect
+            if (e.key === 'Escape') {
+                this.deselectAll();
+                this.hideContextMenu();
+            }
+        });
+    }
+    
+    setupTouchSupport() {
+        // Touch support for mobile devices
+        document.addEventListener('touchstart', (e) => {
+            this.touchStartPos = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            if (this.touchStartPos) {
+                const touchEndPos = {
+                    x: e.changedTouches[0].clientX,
+                    y: e.changedTouches[0].clientY
+                };
+                
+                const distance = Math.sqrt(
+                    Math.pow(touchEndPos.x - this.touchStartPos.x, 2) +
+                    Math.pow(touchEndPos.y - this.touchStartPos.y, 2)
+                );
+                
+                // If touch didn't move much, treat as tap
+                if (distance < 10) {
+                    const target = document.elementFromPoint(touchEndPos.x, touchEndPos.y);
+                    const canvasElement = target?.closest('.canvas-element');
+                    
+                    if (canvasElement) {
+                        this.selectElement(canvasElement);
+                    }
+                }
+                
+                this.touchStartPos = null;
+            }
+        });
+    }
+    
+    loadExistingContent() {
+        // Load existing campaign content if available
+        const canvas = document.getElementById('canvas-body');
+        
+        // If canvas has existing content, setup interactions
+        if (canvas) {
+            const existingElements = canvas.querySelectorAll('.canvas-element');
+            existingElements.forEach(element => {
+                this.setupElementEvents(element);
+            });
+            
+            if (existingElements.length > 0) {
+                document.getElementById('canvas-placeholder')?.classList.add('hidden');
+            }
+        }
+    }
+    
+    updateCanvasPlaceholder() {
+        const placeholder = document.getElementById('canvas-placeholder');
+        const elements = document.querySelectorAll('.canvas-element:not(.drop-zone)');
+        
+        if (placeholder) {
+            if (elements.length === 0) {
+                placeholder.classList.remove('hidden');
+            } else {
+                placeholder.classList.add('hidden');
+            }
+        }
+    }
+    
+    showPreview() {
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const iframe = document.getElementById('preview-frame');
+        
+        // Generate preview HTML
+        const previewContent = this.generatePreviewHTML();
+        const blob = new Blob([previewContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        iframe.src = url;
+        modal.show();
+    }
+    
+    generatePreviewHTML() {
+        const canvas = document.getElementById('canvas-body');
+        const tempDiv = canvas.cloneNode(true);
+        
+        // Clean up for preview
+        tempDiv.querySelectorAll('.element-controls, .insertion-indicator, .canvas-placeholder, .drop-zone').forEach(el => {
+            el.remove();
+        });
+        
+        tempDiv.querySelectorAll('.canvas-element').forEach(el => {
+            el.classList.remove('selected', 'dragging', 'animate-fade-in-up');
+            el.removeAttribute('draggable');
+        });
+        
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Email Preview</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f3f4f6; }
+                    .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+                    .email-header { background: #1f2937; color: white; padding: 1rem 1.5rem; font-size: 0.875rem; }
+                    .email-body { padding: 2rem 1.5rem; }
+                    .btn { display: inline-block; padding: 0.75rem 2rem; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+                    .social-links { display: flex; justify-content: center; gap: 1rem; }
+                    .social-link { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #4b5563; color: white; border-radius: 50%; text-decoration: none; }
+                    .divider-line { height: 2px; background: #e5e7eb; border-radius: 1px; margin: 0.5rem 0; }
+                    img { max-width: 100%; height: auto; }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="email-header">
+                        <strong>From:</strong> {{ campaign.sender_name }} &lt;{{ campaign.sender_email }}&gt;<br>
+                        <strong>Subject:</strong> {{ campaign.subject_line }}
+                    </div>
+                    <div class="email-body">
+                        ${tempDiv.innerHTML}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+    
+    showTestModal() {
+        const modal = new bootstrap.Modal(document.getElementById('testEmailModal'));
+        modal.show();
+    }
+    
+    async sendTestEmail() {
+        const emailAddress = document.getElementById('test-email-address').value;
+        const note = document.getElementById('test-email-note').value;
+        const sendBtn = document.getElementById('send-test-email');
+        
+        if (!emailAddress) {
+            this.showToast('Please enter an email address', 'warning');
+            return;
+        }
+        
+        try {
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+            
+            const formData = {
+                campaign_id: {{ campaign.id }},
+                test_email: emailAddress,
+                note: note,
+                content: this.getCanvasHTML()
+            };
+            
+            const response = await fetch('/api/campaigns/send-test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showToast('Test email sent successfully!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('testEmailModal')).hide();
+            } else {
+                this.showToast(data.message || 'Error sending test email', 'error');
+            }
+        } catch (error) {
+            console.error('Error sending test email:', error);
+            this.showToast('Error sending test email', 'error');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Test';
+        }
+    }
+    
+    async saveCampaign(silent = false) {
+        if (!silent) {
+            this.showLoadingOverlay();
+        }
+        
+        try {
+            const formData = {
+                campaign_id: {{ campaign.id }},
+                content: this.getCanvasHTML(),
+                html_content: document.getElementById('code-editor').value
+            };
+            
+            document.getElementById('content-input').value = formData.content;
+            document.getElementById('html-content-input').value = formData.html_content;
+            
+            const response = await fetch('/campaigns/{{ campaign.id }}/edit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.unsavedChanges = false;
+                if (!silent) {
+                    this.showSavingIndicator('Saved successfully', 'success');
+                }
+            } else {
+                throw new Error(data.message || 'Save failed');
+            }
+        } catch (error) {
+            console.error('Error saving campaign:', error);
+            this.showSavingIndicator('Error saving', 'error');
+        } finally {
+            if (!silent) {
+                this.hideLoadingOverlay();
+            }
+        }
+    }
+    
+    getCanvasHTML() {
+        const canvas = document.getElementById('canvas-body');
+        const tempDiv = canvas.cloneNode(true);
+        
+        // Clean up HTML for saving
+        tempDiv.querySelectorAll('.element-controls, .insertion-indicator, .canvas-placeholder, .drop-zone').forEach(el => {
+            el.remove();
+        });
+        
+        tempDiv.querySelectorAll('.canvas-element').forEach(el => {
+            el.classList.remove('selected', 'dragging', 'animate-fade-in-up');
+            el.removeAttribute('draggable');
+        });
+        
+        return tempDiv.innerHTML;
+    }
+    
+    sendCampaign() {
+        if (confirm('Are you sure you want to send this campaign? This action cannot be undone.')) {
+            window.location.href = `/campaigns/{{ campaign.id }}/send`;
+        }
+    }
+    
+    markUnsaved() {
+        this.unsavedChanges = true;
+        const saveBtn = document.getElementById('save-btn');
+        if (saveBtn && !saveBtn.classList.contains('btn-warning')) {
+            saveBtn.classList.add('btn-warning');
+            saveBtn.classList.remove('btn-primary');
+        }
+    }
+    
+    markSaved() {
+        this.unsavedChanges = false;
+        const saveBtn = document.getElementById('save-btn');
+        if (saveBtn) {
+            saveBtn.classList.remove('btn-warning');
+            saveBtn.classList.add('btn-primary');
+        }
+    }
+    
+    showLoadingOverlay() {
+        document.getElementById('loading-overlay').classList.add('show');
+    }
+    
+    hideLoadingOverlay() {
+        document.getElementById('loading-overlay').classList.remove('show');
+    }
+    
+    showSavingIndicator(message, type = 'success') {
+        const indicator = document.getElementById('saving-indicator');
+        const text = document.getElementById('saving-text');
+        
+        if (indicator && text) {
+            text.textContent = message;
+            indicator.className = `saving-indicator show ${type === 'error' ? 'error' : ''}`;
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+    }
+    
+    showToast(message, type = 'info') {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = `
+            top: 20px; right: 20px; z-index: 9999; min-width: 300px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${icons[type]} fa-lg me-2"></i>
+                <span>${message}</span>
+                <button class="btn-close ms-auto" onclick="this.closest('.alert').remove()"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    toggleSidebar() {
+        const sidebar = document.getElementById('editor-sidebar');
+        sidebar.classList.toggle('collapsed');
+    }
+    
+    toggleSection(toggle) {
+        const isCollapsed = toggle.classList.contains('collapsed');
+        const sectionId = toggle.dataset.section + '-section';
+        const section = document.getElementById(sectionId);
+        
+        if (section) {
+            if (isCollapsed) {
+                section.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            } else {
+                section.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            }
+        }
+    }
+    
+    handleCanvasClick(e) {
+        if (e.target.closest('.canvas-element')) {
+            return; // Element click will handle selection
+        }
+        
+        this.deselectAll();
+    }
+    
+    deselectAll() {
+        document.querySelectorAll('.canvas-element.selected').forEach(el => {
+            el.classList.remove('selected');
+        });
+        this.selectedElement = null;
+        this.hidePropertiesPanel();
+    }
+    
+    showContextMenu(e) {
+        e.preventDefault();
+        
+        const element = e.target.closest('.canvas-element');
+        if (!element) return;
+        
+        this.selectElement(element);
+        
+        const contextMenu = document.getElementById('context-menu');
+        contextMenu.style.left = e.pageX + 'px';
+        contextMenu.style.top = e.pageY + 'px';
+        contextMenu.classList.add('show');
+    }
+    
+    hideContextMenu() {
+        document.getElementById('context-menu').classList.remove('show');
+    }
+    
+    setupContextMenuEvents() {
+        document.getElementById('context-edit')?.addEventListener('click', () => {
+            this.hideContextMenu();
+            this.showPropertiesPanel();
+        });
+        
+        document.getElementById('context-copy')?.addEventListener('click', () => {
+            this.hideContextMenu();
+            if (this.selectedElement) {
+                this.duplicateElement(this.selectedElement);
+            }
+        });
+        
+        document.getElementById('context-move-up')?.addEventListener('click', () => {
+            this.hideContextMenu();
+            if (this.selectedElement && this.selectedElement.previousElementSibling) {
+                this.selectedElement.parentNode.insertBefore(
+                    this.selectedElement,
+                    this.selectedElement.previousElementSibling
+                );
+                this.markUnsaved();
+            }
+        });
+        
+        document.getElementById('context-move-down')?.addEventListener('click', () => {
+            this.hideContextMenu();
+            if (this.selectedElement && this.selectedElement.nextElementSibling) {
+                this.selectedElement.parentNode.insertBefore(
+                    this.selectedElement.nextElementSibling,
+                    this.selectedElement
+                );
+                this.markUnsaved();
+            }
+        });
+        
+        document.getElementById('context-delete')?.addEventListener('click', () => {
+            this.hideContextMenu();
+            if (this.selectedElement) {
+                this.deleteElement(this.selectedElement);
+            }
+        });
+    }
+    
+    updateSidebarVisibility() {
+        // Responsive sidebar handling
+        if (window.innerWidth <= 1024) {
+            document.getElementById('editor-sidebar').classList.add('collapsed');
+        }
+    }
+    
+    handleResize() {
+        this.updateSidebarVisibility();
+    }
+    
+    handleBeforeUnload(e) {
+        if (this.unsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    }
+    
+    // Utility methods
+    createDragGhost(e, blockType) {
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.textContent = blockType.charAt(0).toUpperCase() + blockType.slice(1);
+        ghost.style.left = e.clientX + 'px';
+        ghost.style.top = e.clientY + 'px';
+        document.body.appendChild(ghost);
+    }
+    
+    removeDragGhost() {
+        document.querySelectorAll('.drag-ghost').forEach(ghost => ghost.remove());
+    }
+    
+    showDropZones() {
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.classList.remove('hidden');
+        });
+    }
+    
+    hideDropZones() {
+        document.querySelectorAll('.drop-zone.hidden').forEach(zone => {
+            zone.classList.add('hidden');
+        });
+    }
+    
+    showInsertionPoint(e) {
+        // Logic to show where element will be inserted
+        const targetElement = e.target.closest('.canvas-element');
+        if (targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            
+            if (e.clientY < midY) {
+                // Insert before
+                targetElement.classList.add('insert-before');
+                targetElement.classList.remove('insert-after');
+            } else {
+                // Insert after
+                targetElement.classList.add('insert-after');
+                targetElement.classList.remove('insert-before');
+            }
+        }
+    }
+    
+    getInsertionPoint(e) {
+        const targetElement = e.target.closest('.canvas-element');
+        if (targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            
+            if (e.clientY < midY) {
+                return targetElement;
+            } else {
+                return targetElement.nextElementSibling;
+            }
+        }
+        return null;
+    }
+}
+
+// Global helper functions
+window.handleImageUpload = function(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const placeholder = input.closest('.image-placeholder');
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = 'Uploaded image';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.borderRadius = '8px';
+            
+            placeholder.replaceWith(img);
+            
+            // Mark as unsaved
+            if (window.emailEditor) {
+                window.emailEditor.markUnsaved();
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+// Initialize the email editor when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    window.emailEditor = new EmailEditor();
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes slideOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(100%); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
+

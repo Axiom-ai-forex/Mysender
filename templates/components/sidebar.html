@@ -1,0 +1,496 @@
+<!-- templates/components/sidebar.html -->
+<!--
+Enterprise Sidebar Navigation Component
+Features: Collapsible design, role-based access, real-time indicators, accessibility compliant
+Optimized for email marketing workflows and admin functions
+-->
+<aside class="sidebar bg-white shadow-sm border-end" 
+       id="main-sidebar" 
+       role="navigation" 
+       aria-label="Main sidebar navigation"
+       data-bs-theme="light">
+    
+    <!-- Sidebar Header -->
+    <div class="sidebar-header p-3 border-bottom">
+        <div class="d-flex align-items-center justify-content-between">
+            <!-- Logo/Brand (collapsed state) -->
+            <div class="sidebar-brand d-flex align-items-center">
+                <div class="brand-icon bg-primary rounded p-2 me-3">
+                    <i class="fas fa-envelope-open-text text-white" aria-hidden="true"></i>
+                </div>
+                <div class="brand-text">
+                    <div class="fw-bold text-dark">Email Sender</div>
+                    <small class="text-muted">Professional</small>
+                </div>
+            </div>
+            
+            <!-- Collapse Toggle -->
+            <button class="btn btn-sm btn-outline-secondary d-lg-none" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#sidebar-nav"
+                    aria-controls="sidebar-nav" 
+                    aria-expanded="true" 
+                    aria-label="Toggle sidebar navigation">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav collapse show" id="sidebar-nav" role="menubar">
+        <!-- Primary Navigation -->
+        <div class="nav-section">
+            <div class="nav-section-header px-3 py-2">
+                <small class="text-muted fw-semibold text-uppercase tracking-wide">
+                    Main Menu
+                </small>
+            </div>
+            
+            <ul class="nav flex-column" role="none">
+                <!-- Dashboard -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'dashboard.index' }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('dashboard.index') }}"
+                       role="menuitem"
+                       {{ 'aria-current="page"' if request.endpoint == 'dashboard.index' }}>
+                        <i class="fas fa-tachometer-alt nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Dashboard</span>
+                        {% if unread_notifications > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-auto" 
+                              aria-label="{{ unread_notifications }} unread notifications">
+                            {{ unread_notifications }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <!-- Campaigns -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'campaigns' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('campaigns.list') }}"
+                       role="menuitem"
+                       {{ 'aria-current="page"' if 'campaigns' in request.endpoint }}>
+                        <i class="fas fa-paper-plane nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Campaigns</span>
+                        {% if active_campaigns > 0 %}
+                        <span class="badge bg-success rounded-pill ms-auto pulse" 
+                              aria-label="{{ active_campaigns }} active campaigns"
+                              title="{{ active_campaigns }} campaigns currently running">
+                            {{ active_campaigns }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <!-- Templates -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'templates' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('templates.library') }}"
+                       role="menuitem"
+                       {{ 'aria-current="page"' if 'templates' in request.endpoint }}>
+                        <i class="fas fa-palette nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Templates</span>
+                        <small class="ms-auto text-muted">{{ template_count|default(0) }}</small>
+                    </a>
+                </li>
+                
+                <!-- Contact Lists -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'lists' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('lists.manage') }}"
+                       role="menuitem"
+                       {{ 'aria-current="page"' if 'lists' in request.endpoint }}>
+                        <i class="fas fa-users nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Contact Lists</span>
+                        <small class="ms-auto text-muted">{{ total_contacts|default(0)|number_format }}</small>
+                    </a>
+                </li>
+                
+                <!-- Analytics -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'analytics' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('analytics.overview') }}"
+                       role="menuitem"
+                       {{ 'aria-current="page"' if 'analytics' in request.endpoint }}>
+                        <i class="fas fa-chart-bar nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Analytics</span>
+                        <i class="fas fa-circle text-success ms-auto" 
+                           style="font-size: 0.5rem;" 
+                           aria-hidden="true"
+                           title="Real-time data available"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Tools & Utilities -->
+        <div class="nav-section">
+            <div class="nav-section-header px-3 py-2 mt-3">
+                <small class="text-muted fw-semibold text-uppercase tracking-wide">
+                    Tools & Utilities
+                </small>
+            </div>
+            
+            <ul class="nav flex-column" role="none">
+                <!-- A/B Testing -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'testing' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('testing.overview') }}"
+                       role="menuitem">
+                        <i class="fas fa-flask nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">A/B Testing</span>
+                        {% if running_tests > 0 %}
+                        <span class="badge bg-info rounded-pill ms-auto" 
+                              aria-label="{{ running_tests }} running tests">
+                            {{ running_tests }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <!-- Automation -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'automation' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('automation.workflows') }}"
+                       role="menuitem">
+                        <i class="fas fa-robot nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Automation</span>
+                        {% if active_workflows > 0 %}
+                        <span class="badge bg-warning rounded-pill ms-auto" 
+                              aria-label="{{ active_workflows }} active workflows">
+                            {{ active_workflows }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <!-- Deliverability -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'deliverability' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('deliverability.dashboard') }}"
+                       role="menuitem">
+                        <i class="fas fa-shield-check nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Deliverability</span>
+                        <span class="ms-auto">
+                            <i class="fas fa-circle {{ 'text-success' if deliverability_score >= 90 else 'text-warning' if deliverability_score >= 70 else 'text-danger' }}" 
+                               style="font-size: 0.5rem;" 
+                               aria-hidden="true"
+                               title="Deliverability Score: {{ deliverability_score|default(0) }}%"></i>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Administration (Role-based access) -->
+        {% if current_user.has_role('admin') %}
+        <div class="nav-section">
+            <div class="nav-section-header px-3 py-2 mt-3">
+                <small class="text-muted fw-semibold text-uppercase tracking-wide">
+                    <i class="fas fa-lock me-1" aria-hidden="true"></i>
+                    Administration
+                </small>
+            </div>
+            
+            <ul class="nav flex-column" role="none">
+                <!-- System Settings -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'admin.settings' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('admin.settings') }}"
+                       role="menuitem">
+                        <i class="fas fa-cogs nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">System Settings</span>
+                    </a>
+                </li>
+                
+                <!-- User Management -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'admin.users' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('admin.users') }}"
+                       role="menuitem">
+                        <i class="fas fa-user-cog nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">User Management</span>
+                        <small class="ms-auto text-muted">{{ total_users|default(0) }}</small>
+                    </a>
+                </li>
+                
+                <!-- Security Audit -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'admin.security' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('admin.security') }}"
+                       role="menuitem">
+                        <i class="fas fa-shield-alt nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">Security Audit</span>
+                        {% if security_alerts > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-auto" 
+                              aria-label="{{ security_alerts }} security alerts">
+                            {{ security_alerts }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <!-- System Logs -->
+                <li class="nav-item" role="none">
+                    <a class="nav-link {{ 'active' if 'admin.logs' in request.endpoint }} d-flex align-items-center py-2 px-3" 
+                       href="{{ url_for('admin.logs') }}"
+                       role="menuitem">
+                        <i class="fas fa-file-alt nav-icon me-3" aria-hidden="true"></i>
+                        <span class="nav-text">System Logs</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </nav>
+    
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer mt-auto p-3 border-top">
+        <!-- System Status -->
+        <div class="system-status mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <small class="text-muted">System Status</small>
+                <span class="badge {{ 'bg-success' if system_healthy else 'bg-warning' }} rounded-pill">
+                    <i class="fas fa-{{ 'check' if system_healthy else 'exclamation-triangle' }} me-1" aria-hidden="true"></i>
+                    {{ 'Healthy' if system_healthy else 'Warning' }}
+                </span>
+            </div>
+            
+            <!-- Queue Status -->
+            <div class="progress mb-2" style="height: 4px;" role="progressbar" 
+                 aria-valuenow="{{ queue_usage_percent|default(0) }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100"
+                 aria-label="Email queue usage">
+                <div class="progress-bar {{ 'bg-success' if queue_usage_percent < 70 else 'bg-warning' if queue_usage_percent < 90 else 'bg-danger' }}" 
+                     style="width: {{ queue_usage_percent|default(0) }}%"></div>
+            </div>
+            <small class="text-muted">
+                Queue: {{ pending_emails|default(0)|number_format }} pending
+            </small>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions d-grid gap-2">
+            <button type="button" class="btn btn-primary btn-sm" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#quick-campaign-modal"
+                    aria-label="Create new campaign">
+                <i class="fas fa-plus me-2" aria-hidden="true"></i>
+                New Campaign
+            </button>
+            
+            <div class="btn-group btn-group-sm w-100">
+                <button type="button" class="btn btn-outline-secondary" 
+                        onclick="window.location.href='{{ url_for('lists.import') }}'"
+                        aria-label="Import contact list">
+                    <i class="fas fa-upload me-1" aria-hidden="true"></i>
+                    Import
+                </button>
+                <button type="button" class="btn btn-outline-secondary" 
+                        onclick="refreshDashboard()"
+                        aria-label="Refresh dashboard">
+                    <i class="fas fa-sync-alt me-1" aria-hidden="true"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Collapse Toggle for Desktop -->
+        <div class="sidebar-toggle d-none d-lg-block mt-3 text-center">
+            <button class="btn btn-sm btn-outline-secondary" 
+                    id="sidebar-collapse-btn"
+                    aria-label="Collapse sidebar">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay d-lg-none" id="sidebar-overlay" data-bs-dismiss="offcanvas"></div>
+
+<style>
+/* Sidebar Styles */
+.sidebar {
+    width: 280px;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .nav-section-header,
+.sidebar.collapsed .system-status small,
+.sidebar.collapsed .quick-actions {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar.collapsed .brand-icon {
+    margin-right: 0;
+}
+
+.nav-link {
+    border-radius: 8px;
+    margin: 2px 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    transform: translateX(4px);
+}
+
+.nav-link.active {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
+    color: var(--bs-primary);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background-color: var(--bs-primary);
+    border-radius: 0 2px 2px 0;
+}
+
+.nav-icon {
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.tracking-wide {
+    letter-spacing: 0.05em;
+}
+
+/* Mobile Responsive */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .sidebar {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .nav-link {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .nav-link:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .nav-link.active {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+</style>
+
+<script>
+// Sidebar functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('main-sidebar');
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    // Desktop sidebar collapse
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+            
+            // Update aria-label
+            this.setAttribute('aria-label', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+            
+            // Update icon
+            const icon = this.querySelector('i');
+            icon.className = `fas fa-chevron-${isCollapsed ? 'right' : 'left'}`;
+        });
+        
+        // Restore sidebar state
+        const savedState = localStorage.getItem('sidebar-collapsed');
+        if (savedState === 'true') {
+            sidebar.classList.add('collapsed');
+            collapseBtn.setAttribute('aria-label', 'Expand sidebar');
+            collapseBtn.querySelector('i').className = 'fas fa-chevron-right';
+        }
+    }
+    
+    // Mobile sidebar handling
+    function handleMobile() {
+        if (window.innerWidth < 992) {
+            // Mobile mode
+            sidebar.classList.add('d-lg-none');
+            overlay.style.display = 'block';
+        } else {
+            // Desktop mode
+            sidebar.classList.remove('d-lg-none');
+            overlay.style.display = 'none';
+        }
+    }
+    
+    window.addEventListener('resize', handleMobile);
+    handleMobile(); // Initial call
+});
+</script>
+

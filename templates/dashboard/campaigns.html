@@ -1,0 +1,1276 @@
+<!-- templates/dashboard/campaigns.html -->
+{% extends "base.html" %}
+
+{% block title %}Campaigns - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/campaigns.css') }}">
+<style>
+/* Enhanced Campaigns Styles */
+.campaigns-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.campaigns-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.filter-bar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.campaign-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.campaign-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.campaign-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--status-color, #2563eb), var(--status-color-light, #3b82f6));
+}
+
+.campaign-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.campaign-card.sent {
+    --status-color: #10b981;
+    --status-color-light: #34d399;
+}
+
+.campaign-card.draft {
+    --status-color: #6b7280;
+    --status-color-light: #9ca3af;
+}
+
+.campaign-card.scheduled {
+    --status-color: #3b82f6;
+    --status-color-light: #60a5fa;
+}
+
+.campaign-card.sending {
+    --status-color: #f59e0b;
+    --status-color-light: #fbbf24;
+}
+
+.campaign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.campaign-status {
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.campaign-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dashboard-gray-800);
+    margin: 0 0 0.5rem 0;
+}
+
+.campaign-subject {
+    color: var(--dashboard-gray-600);
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.campaign-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-item {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dashboard-gray-800);
+    margin: 0 0 0.25rem 0;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--dashboard-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.campaign-progress {
+    margin-bottom: 1.5rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--dashboard-gray-700);
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    border-radius: 4px;
+}
+
+.campaign-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+}
+
+.view-toggle button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    color: var(--dashboard-gray-600);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.view-toggle button.active {
+    background: white;
+    color: var(--dashboard-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-view {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.campaigns-table {
+    margin: 0;
+}
+
+.campaigns-table th {
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+.campaigns-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    vertical-align: middle;
+}
+
+.campaigns-table tr:last-child td {
+    border-bottom: none;
+}
+
+.campaigns-table tr:hover {
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--dashboard-gray-600);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding-left: 2.5rem;
+    border-radius: 12px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.search-box input:focus {
+    border-color: var(--dashboard-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dashboard-gray-400);
+}
+
+.filter-dropdown {
+    border-radius: 12px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.filter-dropdown:focus {
+    border-color: var(--dashboard-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.performance-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.performance-indicator.excellent {
+    background: rgba(16, 185, 129, 0.1);
+    color: #065f46;
+}
+
+.performance-indicator.good {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+.performance-indicator.poor {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.bulk-actions {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: none;
+}
+
+.bulk-actions.active {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .campaigns-container {
+        padding: 1rem;
+    }
+    
+    .campaigns-header,
+    .filter-bar {
+        padding: 1.5rem;
+    }
+    
+    .campaign-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .campaign-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .campaigns-table {
+        font-size: 0.875rem;
+    }
+    
+    .campaigns-table th,
+    .campaigns-table td {
+        padding: 0.75rem;
+    }
+}
+
+/* Loading states */
+.campaign-card.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.campaign-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid rgba(37, 99, 235, 0.3);
+    border-top: 2px solid var(--dashboard-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="campaigns-container">
+    <div class="container-fluid">
+        <!-- Campaigns Header -->
+        <div class="campaigns-header animate-fade-in-up">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="h2 mb-2">Email Campaigns</h1>
+                    <p class="text-muted mb-0">Create, manage, and analyze your email marketing campaigns</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ url_for('campaigns.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2" aria-hidden="true"></i>
+                        New Campaign
+                    </a>
+                    <a href="{{ url_for('campaigns.templates') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-2" aria-hidden="true"></i>
+                        Templates
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-label="More actions">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.import') }}">Import Campaigns</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.export') }}">Export Data</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" onclick="showBulkActions()">Bulk Actions</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Bar -->
+        <div class="filter-bar animate-fade-in-up" style="animation-delay: 0.1s;">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Search campaigns..." id="campaign-search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select filter-dropdown" id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="sent">Sent</option>
+                        <option value="draft">Draft</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="sending">Sending</option>
+                        <option value="paused">Paused</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select filter-dropdown" id="date-filter">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select filter-dropdown" id="type-filter">
+                        <option value="">All Types</option>
+                        <option value="newsletter">Newsletter</option>
+                        <option value="promotional">Promotional</option>
+                        <option value="transactional">Transactional</option>
+                        <option value="automation">Automation</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="view-toggle">
+                        <button class="active" data-view="grid" aria-label="Grid view">
+                            <i class="fas fa-th" aria-hidden="true"></i>
+                        </button>
+                        <button data-view="table" aria-label="Table view">
+                            <i class="fas fa-list" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions" id="bulk-actions">
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-medium">
+                    <span id="selected-count">0</span> campaigns selected
+                </span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="duplicateSelected()">
+                        <i class="fas fa-copy me-1" aria-hidden="true"></i>
+                        Duplicate
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="pauseSelected()">
+                        <i class="fas fa-pause me-1" aria-hidden="true"></i>
+                        Pause
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSelected()">
+                        <i class="fas fa-trash me-1" aria-hidden="true"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-link" onclick="clearSelection()">
+                Clear Selection
+            </button>
+        </div>
+        
+        <!-- Campaigns Grid View -->
+        <div id="campaigns-grid" class="campaign-grid">
+            {% for campaign in campaigns %}
+            <div class="campaign-card {{ campaign.status }} animate-fade-in-up" 
+                 style="animation-delay: {{ loop.index0 * 0.1 }}s;"
+                 data-campaign-id="{{ campaign.id }}"
+                 data-status="{{ campaign.status }}"
+                 data-type="{{ campaign.type }}"
+                 data-date="{{ campaign.created_at.isoformat() }}">
+                
+                <div class="campaign-header">
+                    <span class="campaign-status bg-{{ campaign.status_color }} text-white">
+                        {{ campaign.status | title }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted dropdown-toggle" data-bs-toggle="dropdown" aria-label="Campaign actions">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.view', id=campaign.id) }}">View Details</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.edit', id=campaign.id) }}">Edit</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.duplicate', id=campaign.id) }}">Duplicate</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('campaigns.reports', id=campaign.id) }}">View Reports</a></li>
+                            {% if campaign.status == 'scheduled' %}
+                            <li><button class="dropdown-item" onclick="pauseCampaign({{ campaign.id }})">Pause</button></li>
+                            {% endif %}
+                            {% if campaign.status in ['draft', 'paused'] %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item text-danger" onclick="deleteCampaign({{ campaign.id }})">Delete</button></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3 class="campaign-title">{{ campaign.name }}</h3>
+                <p class="campaign-subject">{{ campaign.subject | truncate(60) }}</p>
+                
+                {% if campaign.status == 'sent' %}
+                <div class="campaign-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">{{ campaign.delivered_count | number_format }}</div>
+                        <div class="metric-label">Delivered</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ campaign.open_rate }}%</div>
+                        <div class="metric-label">Opened</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ campaign.click_rate }}%</div>
+                        <div class="metric-label">Clicked</div>
+                    </div>
+                </div>
+                
+                <div class="performance-indicator {{ campaign.performance_class }}">
+                    <i class="fas fa-{{ campaign.performance_icon }}" aria-hidden="true"></i>
+                    {{ campaign.performance_text }}
+                </div>
+                
+                {% elif campaign.status == 'sending' %}
+                <div class="campaign-progress">
+                    <div class="progress-label">
+                        <span>Sending Progress</span>
+                        <span>{{ campaign.sent_count }}/{{ campaign.recipient_count }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: {{ campaign.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                
+                {% elif campaign.status == 'scheduled' %}
+                <div class="scheduled-info">
+                    <div class="d-flex align-items-center gap-2 text-muted">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        <span>Scheduled for {{ campaign.scheduled_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">{{ campaign.recipient_count | number_format }} recipients</small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="campaign-actions">
+                    <a href="{{ url_for('campaigns.view', id=campaign.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                        View
+                    </a>
+                    {% if campaign.status == 'sent' %}
+                    <a href="{{ url_for('campaigns.reports', id=campaign.id) }}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-chart-line me-1" aria-hidden="true"></i>
+                        Reports
+                    </a>
+                    {% endif %}
+                    {% if campaign.status in ['draft', 'paused'] %}
+                    <a href="{{ url_for('campaigns.edit', id=campaign.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit me-1" aria-hidden="true"></i>
+                        Edit
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="campaign-meta mt-3 pt-3 border-top">
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>
+                            <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                            {{ campaign.created_at.strftime('%b %d, %Y') }}
+                        </span>
+                        <span>
+                            <i class="fas fa-tag me-1" aria-hidden="true"></i>
+                            {{ campaign.type | title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not campaigns %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <h3>No campaigns found</h3>
+                    <p>Create your first email campaign to get started with Email Sender Pro.</p>
+                    <a href="{{ url_for('campaigns.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2" aria-hidden="true"></i>
+                        Create Your First Campaign
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Table View -->
+        <div id="campaigns-table" class="table-view d-none animate-fade-in-up">
+            <div class="table-responsive">
+                <table class="table campaigns-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="select-all">
+                                </div>
+                            </th>
+                            <th>Campaign</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>Recipients</th>
+                            <th>Open Rate</th>
+                            <th>Click Rate</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaigns-table-body">
+                        {% for campaign in campaigns %}
+                        <tr data-campaign-id="{{ campaign.id }}">
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input campaign-checkbox" type="checkbox" value="{{ campaign.id }}">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-medium">{{ campaign.name }}</div>
+                                    <small class="text-muted">{{ campaign.subject | truncate(50) }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ campaign.status_color }}">
+                                    {{ campaign.status | title }}
+                                </span>
+                            </td>
+                            <td>{{ campaign.type | title }}</td>
+                            <td>{{ campaign.recipient_count | number_format }}</td>
+                            <td>
+                                {% if campaign.status == 'sent' %}
+                                    <span class="fw-medium">{{ campaign.open_rate }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if campaign.status == 'sent' %}
+                                    <span class="fw-medium">{{ campaign.click_rate }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <time datetime="{{ campaign.created_at.isoformat() }}" title="{{ campaign.created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                    {{ campaign.created_at.strftime('%b %d, %Y') }}
+                                </time>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('campaigns.view', id=campaign.id) }}" 
+                                       class="btn btn-outline-primary"
+                                       aria-label="View campaign">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </a>
+                                    {% if campaign.status == 'sent' %}
+                                    <a href="{{ url_for('campaigns.reports', id=campaign.id) }}" 
+                                       class="btn btn-outline-info"
+                                       aria-label="View reports">
+                                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                                    </a>
+                                    {% endif %}
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" 
+                                                data-bs-toggle="dropdown" aria-label="More actions">
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{{ url_for('campaigns.edit', id=campaign.id) }}">Edit</a></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('campaigns.duplicate', id=campaign.id) }}">Duplicate</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" onclick="deleteCampaign({{ campaign.id }})">Delete</button></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Campaign pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.campaigns', page=pagination.prev_num, **request.args) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                        {% if page != pagination.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('dashboard.campaigns', page=page, **request.args) }}">{{ page }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ page }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.campaigns', page=pagination.next_num, **request.args) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/campaigns.js') }}"></script>
+<script>
+// Enhanced Campaigns System
+class CampaignsSystem {
+    constructor() {
+        this.currentView = 'grid';
+        this.selectedCampaigns = new Set();
+        this.filters = {
+            search: '',
+            status: '',
+            date: '',
+            type: ''
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupViewToggle();
+        this.setupFilters();
+        this.setupBulkSelection();
+        this.setupSearch();
+        this.setupRealTimeUpdates();
+    }
+    
+    setupViewToggle() {
+        const toggleButtons = document.querySelectorAll('.view-toggle button');
+        const gridView = document.getElementById('campaigns-grid');
+        const tableView = document.getElementById('campaigns-table');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const view = button.dataset.view;
+                
+                // Update active state
+                toggleButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Switch views
+                if (view === 'grid') {
+                    gridView.classList.remove('d-none');
+                    tableView.classList.add('d-none');
+                    this.currentView = 'grid';
+                } else {
+                    gridView.classList.add('d-none');
+                    tableView.classList.remove('d-none');
+                    this.currentView = 'table';
+                }
+                
+                // Clear selection when switching views
+                this.clearSelection();
+            });
+        });
+    }
+    
+    setupFilters() {
+        const searchInput = document.getElementById('campaign-search');
+        const statusFilter = document.getElementById('status-filter');
+        const dateFilter = document.getElementById('date-filter');
+        const typeFilter = document.getElementById('type-filter');
+        
+        const applyFilters = () => {
+            this.filters.search = searchInput.value.toLowerCase();
+            this.filters.status = statusFilter.value;
+            this.filters.date = dateFilter.value;
+            this.filters.type = typeFilter.value;
+            
+            this.filterCampaigns();
+        };
+        
+        searchInput.addEventListener('input', this.debounce(applyFilters, 300));
+        statusFilter.addEventListener('change', applyFilters);
+        dateFilter.addEventListener('change', applyFilters);
+        typeFilter.addEventListener('change', applyFilters);
+    }
+    
+    filterCampaigns() {
+        const campaigns = document.querySelectorAll('[data-campaign-id]');
+        let visibleCount = 0;
+        
+        campaigns.forEach(campaign => {
+            const matchesSearch = this.matchesSearch(campaign);
+            const matchesStatus = this.matchesStatus(campaign);
+            const matchesDate = this.matchesDate(campaign);
+            const matchesType = this.matchesType(campaign);
+            
+            const isVisible = matchesSearch && matchesStatus && matchesDate && matchesType;
+            
+            if (isVisible) {
+                campaign.style.display = '';
+                visibleCount++;
+            } else {
+                campaign.style.display = 'none';
+                // Remove from selection if hidden
+                this.selectedCampaigns.delete(campaign.dataset.campaignId);
+            }
+        });
+        
+        this.updateBulkActions();
+        this.showNoResults(visibleCount === 0);
+    }
+    
+    matchesSearch(campaign) {
+        if (!this.filters.search) return true;
+        
+        const title = campaign.querySelector('.campaign-title')?.textContent.toLowerCase() || '';
+        const subject = campaign.querySelector('.campaign-subject')?.textContent.toLowerCase() || '';
+        
+        return title.includes(this.filters.search) || subject.includes(this.filters.search);
+    }
+    
+    matchesStatus(campaign) {
+        if (!this.filters.status) return true;
+        return campaign.dataset.status === this.filters.status;
+    }
+    
+    matchesDate(campaign) {
+        if (!this.filters.date) return true;
+        
+        const campaignDate = new Date(campaign.dataset.date);
+        const now = new Date();
+        
+        switch (this.filters.date) {
+            case 'today':
+                return campaignDate.toDateString() === now.toDateString();
+            case 'week':
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return campaignDate >= weekAgo;
+            case 'month':
+                return campaignDate.getMonth() === now.getMonth() && 
+                       campaignDate.getFullYear() === now.getFullYear();
+            case 'quarter':
+                const quarter = Math.floor(now.getMonth() / 3);
+                const campaignQuarter = Math.floor(campaignDate.getMonth() / 3);
+                return campaignQuarter === quarter && 
+                       campaignDate.getFullYear() === now.getFullYear();
+            case 'year':
+                return campaignDate.getFullYear() === now.getFullYear();
+            default:
+                return true;
+        }
+    }
+    
+    matchesType(campaign) {
+        if (!this.filters.type) return true;
+        return campaign.dataset.type === this.filters.type;
+    }
+    
+    showNoResults(show) {
+        let noResultsElement = document.querySelector('.no-results');
+        
+        if (show && !noResultsElement) {
+            noResultsElement = document.createElement('div');
+            noResultsElement.className = 'no-results col-12';
+            noResultsElement.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <h3>No campaigns found</h3>
+                    <p>Try adjusting your search terms or filters.</p>
+                    <button class="btn btn-outline-primary" onclick="window.campaignsSystem.clearFilters()">
+                        Clear Filters
+                    </button>
+                </div>
+            `;
+            
+            if (this.currentView === 'grid') {
+                document.getElementById('campaigns-grid').appendChild(noResultsElement);
+            }
+        } else if (!show && noResultsElement) {
+            noResultsElement.remove();
+        }
+    }
+    
+    clearFilters() {
+        document.getElementById('campaign-search').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('date-filter').value = '';
+        document.getElementById('type-filter').value = '';
+        
+        this.filters = { search: '', status: '', date: '', type: '' };
+        this.filterCampaigns();
+    }
+    
+    setupBulkSelection() {
+        const selectAllCheckbox = document.getElementById('select-all');
+        const campaignCheckboxes = document.querySelectorAll('.campaign-checkbox');
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                campaignCheckboxes.forEach(checkbox => {
+                    if (checkbox.closest('tr').style.display !== 'none') {
+                        checkbox.checked = isChecked;
+                        if (isChecked) {
+                            this.selectedCampaigns.add(checkbox.value);
+                        } else {
+                            this.selectedCampaigns.delete(checkbox.value);
+                        }
+                    }
+                });
+                this.updateBulkActions();
+            });
+        }
+        
+        campaignCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.selectedCampaigns.add(e.target.value);
+                } else {
+                    this.selectedCampaigns.delete(e.target.value);
+                }
+                this.updateBulkActions();
+            });
+        });
+    }
+    
+    updateBulkActions() {
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+        const selectAllCheckbox = document.getElementById('select-all');
+        
+        if (selectedCount) {
+            selectedCount.textContent = this.selectedCampaigns.size;
+        }
+        
+        if (bulkActions) {
+            if (this.selectedCampaigns.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+        
+        // Update select all checkbox state
+        if (selectAllCheckbox) {
+            const visibleCheckboxes = document.querySelectorAll('.campaign-checkbox:not([style*="display: none"])');
+            const checkedVisibleCheckboxes = Array.from(visibleCheckboxes).filter(cb => cb.checked);
+            
+            selectAllCheckbox.checked = visibleCheckboxes.length > 0 && checkedVisibleCheckboxes.length === visibleCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedVisibleCheckboxes.length > 0 && checkedVisibleCheckboxes.length < visibleCheckboxes.length;
+        }
+    }
+    
+    setupSearch() {
+        const searchInput = document.getElementById('campaign-search');
+        if (searchInput) {
+            // Add keyboard shortcut for search
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        }
+    }
+    
+    setupRealTimeUpdates() {
+        // Update campaign statuses every 30 seconds
+        setInterval(() => {
+            this.updateCampaignStatuses();
+        }, 30000);
+    }
+    
+    async updateCampaignStatuses() {
+        try {
+            const response = await fetch('/api/campaigns/statuses');
+            const data = await response.json();
+            
+            if (data.success) {
+                data.campaigns.forEach(campaign => {
+                    this.updateCampaignStatus(campaign.id, campaign.status, campaign.stats);
+                });
+            }
+        } catch (error) {
+            console.error('Error updating campaign statuses:', error);
+        }
+    }
+    
+    updateCampaignStatus(campaignId, status, stats) {
+        const campaignCards = document.querySelectorAll(`[data-campaign-id="${campaignId}"]`);
+        
+        campaignCards.forEach(card => {
+            // Update status badge
+            const statusBadge = card.querySelector('.campaign-status');
+            if (statusBadge) {
+                statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusBadge.className = `campaign-status bg-${this.getStatusColor(status)} text-white`;
+            }
+            
+            // Update progress for sending campaigns
+            if (status === 'sending' && stats) {
+                const progressBar = card.querySelector('.progress-bar');
+                const progressLabel = card.querySelector('.progress-label span:last-child');
+                
+                if (progressBar) {
+                    progressBar.style.width = `${stats.progress_percentage}%`;
+                }
+                if (progressLabel) {
+                    progressLabel.textContent = `${stats.sent_count}/${stats.recipient_count}`;
+                }
+            }
+            
+            // Update metrics for completed campaigns
+            if (status === 'sent' && stats) {
+                const deliveredMetric = card.querySelector('.metric-item:first-child .metric-value');
+                const openRateMetric = card.querySelector('.metric-item:nth-child(2) .metric-value');
+                const clickRateMetric = card.querySelector('.metric-item:last-child .metric-value');
+                
+                if (deliveredMetric) deliveredMetric.textContent = stats.delivered_count.toLocaleString();
+                if (openRateMetric) openRateMetric.textContent = `${stats.open_rate}%`;
+                if (clickRateMetric) clickRateMetric.textContent = `${stats.click_rate}%`;
+            }
+        });
+    }
+    
+    getStatusColor(status) {
+        const colors = {
+            sent: 'success',
+            draft: 'secondary',
+            scheduled: 'info',
+            sending: 'warning',
+            paused: 'secondary',
+            failed: 'danger'
+        };
+        return colors[status] || 'secondary';
+    }
+    
+    clearSelection() {
+        this.selectedCampaigns.clear();
+        document.querySelectorAll('.campaign-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        const selectAllCheckbox = document.getElementById('select-all');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+        this.updateBulkActions();
+    }
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+}
+
+// Global functions
+function showBulkActions() {
+    const bulkActions = document.getElementById('bulk-actions');
+    if (bulkActions) {
+        bulkActions.classList.add('active');
+    }
+}
+
+function duplicateSelected() {
+    const selected = Array.from(window.campaignsSystem.selectedCampaigns);
+    if (selected.length === 0) return;
+    
+    if (confirm(`Duplicate ${selected.length} selected campaign(s)?`)) {
+        // Make API call to duplicate campaigns
+        fetch('/api/campaigns/bulk-duplicate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ campaign_ids: selected })
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error duplicating campaigns: ' + data.message);
+              }
+          });
+    }
+}
+
+function pauseSelected() {
+    const selected = Array.from(window.campaignsSystem.selectedCampaigns);
+    if (selected.length === 0) return;
+    
+    if (confirm(`Pause ${selected.length} selected campaign(s)?`)) {
+        // Make API call to pause campaigns
+        fetch('/api/campaigns/bulk-pause', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ campaign_ids: selected })
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error pausing campaigns: ' + data.message);
+              }
+          });
+    }
+}
+
+function deleteSelected() {
+    const selected = Array.from(window.campaignsSystem.selectedCampaigns);
+    if (selected.length === 0) return;
+    
+    if (confirm(`Delete ${selected.length} selected campaign(s)? This action cannot be undone.`)) {
+        // Make API call to delete campaigns
+        fetch('/api/campaigns/bulk-delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ campaign_ids: selected })
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error deleting campaigns: ' + data.message);
+              }
+          });
+    }
+}
+
+function clearSelection() {
+    window.campaignsSystem.clearSelection();
+}
+
+function pauseCampaign(campaignId) {
+    if (confirm('Pause this campaign?')) {
+        const card = document.querySelector(`[data-campaign-id="${campaignId}"]`);
+        if (card) {
+            card.classList.add('loading');
+        }
+        
+        fetch(`/api/campaigns/${campaignId}/pause`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  location.reload();
+              } else {
+                  alert('Error pausing campaign: ' + data.message);
+                  if (card) {
+                      card.classList.remove('loading');
+                  }
+              }
+          });
+    }
+}
+
+function deleteCampaign(campaignId) {
+    if (confirm('Delete this campaign? This action cannot be undone.')) {
+        const card = document.querySelector(`[data-campaign-id="${campaignId}"]`);
+        if (card) {
+            card.classList.add('loading');
+        }
+        
+        fetch(`/api/campaigns/${campaignId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Animate removal
+                  if (card) {
+                      card.style.transform = 'scale(0)';
+                      card.style.opacity = '0';
+                      setTimeout(() => card.remove(), 300);
+                  }
+              } else {
+                  alert('Error deleting campaign: ' + data.message);
+                  if (card) {
+                      card.classList.remove('loading');
+                  }
+              }
+          });
+    }
+}
+
+// Initialize campaigns system
+document.addEventListener('DOMContentLoaded', function() {
+    window.campaignsSystem = new CampaignsSystem();
+});
+</script>
+{% endblock %}
+

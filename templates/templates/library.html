@@ -1,0 +1,1349 @@
+<!-- templates/templates/library.html -->
+{% extends "base.html" %}
+
+{% block title %}Template Library - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Advanced Template Library System */
+:root {
+    --library-primary: #2563eb;
+    --library-secondary: #64748b;
+    --library-success: #10b981;
+    --library-warning: #f59e0b;
+    --library-danger: #ef4444;
+    --library-purple: #8b5cf6;
+    --library-pink: #ec4899;
+    --library-indigo: #6366f1;
+    --library-teal: #14b8a6;
+    --library-orange: #f97316;
+    --library-gray-50: #f9fafb;
+    --library-gray-100: #f3f4f6;
+    --library-gray-200: #e5e7eb;
+    --library-gray-300: #d1d5db;
+    --library-gray-400: #9ca3af;
+    --library-gray-500: #6b7280;
+    --library-gray-600: #4b5563;
+    --library-gray-700: #374151;
+    --library-gray-800: #1f2937;
+    --library-gray-900: #111827;
+    --library-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --library-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --library-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body {
+    background: var(--library-gray-50);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.library-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Section */
+.library-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 24px;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.library-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="0,100 0,0 1000,0 1000,80"/></svg>') no-repeat;
+    background-size: cover;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    gap: 2rem;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.library-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.1;
+}
+
+.library-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin: 0 0 1.5rem 0;
+    font-weight: 400;
+}
+
+.library-stats {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+}
+
+.btn-white {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-white:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+/* Filter and Search Section */
+.filters-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--library-shadow);
+    margin-bottom: 2rem;
+}
+
+.filters-header {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filters-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--library-gray-900);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--library-gray-100);
+    border-radius: 8px;
+    padding: 0.25rem;
+    gap: 0.25rem;
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--library-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.view-btn:hover {
+    color: var(--library-gray-900);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.view-btn.active {
+    background: white;
+    color: var(--library-primary);
+    box-shadow: var(--library-shadow);
+}
+
+.filters-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--library-gray-700);
+    margin: 0;
+}
+
+.filter-input,
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--library-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--library-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input {
+    position: relative;
+}
+
+.search-input input {
+    padding-left: 2.5rem;
+}
+
+.search-input .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--library-gray-400);
+    pointer-events: none;
+}
+
+.filter-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--library-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* Template Grid */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.templates-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.template-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--library-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.template-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--library-shadow-lg);
+}
+
+.template-card.list-view {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.template-preview {
+    position: relative;
+    height: 200px;
+    background: var(--library-gray-100);
+    overflow: hidden;
+}
+
+.template-card.list-view .template-preview {
+    height: 120px;
+    border-radius: 8px;
+}
+
+.template-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.template-card:hover .template-image {
+    transform: scale(1.05);
+}
+
+.template-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.template-card:hover .template-overlay {
+    opacity: 1;
+}
+
+.template-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--library-gray-700);
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.action-icon:hover {
+    background: white;
+    color: var(--library-primary);
+    transform: scale(1.1);
+}
+
+.template-content {
+    padding: 1.5rem;
+}
+
+.template-card.list-view .template-content {
+    padding: 0;
+    flex: 1;
+}
+
+.template-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: between;
+    margin-bottom: 0.75rem;
+}
+
+.template-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--library-gray-900);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.template-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-premium {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+    color: #92400e;
+}
+
+.badge-free {
+    background: var(--library-gray-100);
+    color: var(--library-gray-600);
+}
+
+.badge-custom {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--library-purple);
+}
+
+.template-description {
+    font-size: 0.875rem;
+    color: var(--library-gray-600);
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.template-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--library-gray-500);
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.template-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tag {
+    padding: 0.25rem 0.5rem;
+    background: var(--library-gray-100);
+    color: var(--library-gray-700);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.template-footer {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    gap: 1rem;
+}
+
+.template-card.list-view .template-footer {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.template-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.125rem;
+}
+
+.star {
+    width: 14px;
+    height: 14px;
+    color: #fbbf24;
+}
+
+.star.empty {
+    color: var(--library-gray-300);
+}
+
+.rating-count {
+    font-size: 0.75rem;
+    color: var(--library-gray-500);
+    margin-left: 0.25rem;
+}
+
+.template-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-template {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-preview {
+    background: var(--library-gray-100);
+    color: var(--library-gray-700);
+}
+
+.btn-preview:hover {
+    background: var(--library-gray-200);
+    text-decoration: none;
+}
+
+.btn-use {
+    background: var(--library-primary);
+    color: white;
+}
+
+.btn-use:hover {
+    background: #1d4ed8;
+    text-decoration: none;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--library-shadow);
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--library-gray-100);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--library-gray-400);
+}
+
+.empty-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--library-gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-message {
+    font-size: 0.875rem;
+    color: var(--library-gray-600);
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+}
+
+/* Pagination */
+.pagination-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 0;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: white;
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: var(--library-shadow);
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--library-gray-600);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+    background: var(--library-gray-100);
+    color: var(--library-gray-900);
+}
+
+.page-btn.active {
+    background: var(--library-primary);
+    color: white;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .library-container {
+        padding: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .filters-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .templates-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    
+    .template-card.list-view {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .library-header {
+        padding: 2rem 1rem;
+    }
+    
+    .library-title {
+        font-size: 1.75rem;
+    }
+    
+    .filters-section {
+        padding: 1.5rem;
+    }
+    
+    .filters-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .templates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .template-card.list-view {
+        padding: 1rem;
+    }
+    
+    .template-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .template-buttons {
+        justify-content: center;
+    }
+}
+
+/* Loading States */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-template {
+    height: 320px;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--library-shadow);
+}
+
+.skeleton-preview {
+    height: 200px;
+    background: var(--library-gray-200);
+}
+
+.skeleton-content {
+    padding: 1.5rem;
+}
+
+.skeleton-line {
+    height: 1rem;
+    background: var(--library-gray-200);
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+.skeleton-line.short {
+    width: 60%;
+}
+
+.skeleton-line.medium {
+    width: 80%;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.4s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="library-container">
+    <!-- Library Header -->
+    <div class="library-header animate-fade-in-up">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="library-title">Template Library</h1>
+                <p class="library-subtitle">Choose from professionally designed email templates</p>
+                <div class="library-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <span>{{ templates|length }} templates</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-tags" aria-hidden="true"></i>
+                        <span>12 categories</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        <span>Highly rated</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('templates.editor') }}" class="action-btn btn-white">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Create New
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters Section -->
+    <div class="filters-section animate-slide-in-left" style="animation-delay: 0.1s">
+        <div class="filters-header">
+            <h2 class="filters-title">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+                Find Templates
+            </h2>
+            <div class="view-toggle">
+                <button class="view-btn active" data-view="grid" aria-label="Grid view">
+                    <i class="fas fa-th-large" aria-hidden="true"></i>
+                </button>
+                <button class="view-btn" data-view="list" aria-label="List view">
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="filters-content">
+            <div class="filter-group">
+                <label class="filter-label" for="search-templates">Search Templates</label>
+                <div class="search-input">
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                    <input type="text" class="filter-input" id="search-templates" placeholder="Search by name, description, or tags...">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label" for="category-filter">Category</label>
+                <select class="filter-select" id="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="newsletter">Newsletter</option>
+                    <option value="promotional">Promotional</option>
+                    <option value="transactional">Transactional</option>
+                    <option value="event">Event</option>
+                    <option value="welcome">Welcome</option>
+                    <option value="ecommerce">E-commerce</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label" for="type-filter">Type</label>
+                <select class="filter-select" id="type-filter">
+                    <option value="">All Types</option>
+                    <option value="free">Free</option>
+                    <option value="premium">Premium</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label" for="sort-filter">Sort By</label>
+                <select class="filter-select" id="sort-filter">
+                    <option value="popular">Most Popular</option>
+                    <option value="newest">Newest</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="name">Name A-Z</option>
+                </select>
+            </div>
+            
+            <button class="filter-btn" id="apply-filters">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                Search
+            </button>
+        </div>
+    </div>
+    
+    <!-- Templates Grid -->
+    <div class="templates-grid animate-slide-in-left" style="animation-delay: 0.2s" id="templates-grid">
+        {% for template in templates %}
+        <div class="template-card" data-category="{{ template.category }}" data-type="{{ template.type }}" data-name="{{ template.name }}">
+            <div class="template-preview">
+                <img src="{{ template.thumbnail_url or '/static/images/template-placeholder.jpg' }}" alt="{{ template.name }}" class="template-image">
+                <div class="template-overlay">
+                    <div class="template-actions">
+                        <button class="action-icon" title="Preview" onclick="previewTemplate('{{ template.id }}')">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                        <button class="action-icon" title="Favorite" onclick="toggleFavorite('{{ template.id }}')">
+                            <i class="fas fa-heart" aria-hidden="true"></i>
+                        </button>
+                        <button class="action-icon" title="Clone" onclick="cloneTemplate('{{ template.id }}')">
+                            <i class="fas fa-clone" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-content">
+                <div class="template-header">
+                    <h3 class="template-name">{{ template.name }}</h3>
+                    <span class="template-badge badge-{{ template.type }}">{{ template.type|title }}</span>
+                </div>
+                
+                <p class="template-description">{{ template.description }}</p>
+                
+                <div class="template-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar" aria-hidden="true"></i>
+                        <span>{{ template.created_at.strftime('%b %Y') }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span>{{ template.usage_count or 0 }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                        <span>Responsive</span>
+                    </div>
+                </div>
+                
+                <div class="template-tags">
+                    {% for tag in template.tags %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="template-footer">
+                    <div class="template-rating">
+                        <div class="star-rating">
+                            {% set rating = template.rating or 4.5 %}
+                            {% for i in range(5) %}
+                            <i class="fas fa-star star {% if i >= rating %}empty{% endif %}" aria-hidden="true"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="rating-count">({{ template.review_count or 0 }})</span>
+                    </div>
+                    
+                    <div class="template-buttons">
+                        <a href="{{ url_for('templates.preview', id=template.id) }}" class="btn-template btn-preview">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            Preview
+                        </a>
+                        <a href="{{ url_for('templates.use', id=template.id) }}" class="btn-template btn-use">
+                            <i class="fas fa-rocket" aria-hidden="true"></i>
+                            Use Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </div>
+            <h3 class="empty-title">No Templates Found</h3>
+            <p class="empty-message">Try adjusting your search criteria or browse our complete collection of professional email templates.</p>
+            <a href="{{ url_for('templates.editor') }}" class="action-btn btn-white">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                Create Your First Template
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if templates|length > 0 %}
+    <div class="pagination-section">
+        <div class="pagination">
+            <button class="page-btn" id="prev-page" disabled>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <span class="page-btn">...</span>
+            <button class="page-btn">10</button>
+            <button class="page-btn" id="next-page">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Advanced Template Library System
+class TemplateLibrary {
+    constructor() {
+        this.currentView = 'grid';
+        this.currentFilters = {
+            search: '',
+            category: '',
+            type: '',
+            sort: 'popular'
+        };
+        this.currentPage = 1;
+        this.templatesPerPage = 12;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupViewToggle();
+        this.setupFilters();
+        this.setupSearch();
+        this.setupPagination();
+        this.loadTemplates();
+        
+        console.log('Template Library initialized');
+    }
+    
+    setupViewToggle() {
+        const viewButtons = document.querySelectorAll('.view-btn');
+        const grid = document.getElementById('templates-grid');
+        
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                this.switchView(view);
+                
+                // Update button states
+                viewButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+    
+    switchView(view) {
+        const grid = document.getElementById('templates-grid');
+        const cards = grid.querySelectorAll('.template-card');
+        
+        this.currentView = view;
+        
+        if (view === 'list') {
+            grid.classList.add('list-view');
+            cards.forEach(card => card.classList.add('list-view'));
+        } else {
+            grid.classList.remove('list-view');
+            cards.forEach(card => card.classList.remove('list-view'));
+        }
+    }
+    
+    setupFilters() {
+        const categoryFilter = document.getElementById('category-filter');
+        const typeFilter = document.getElementById('type-filter');
+        const sortFilter = document.getElementById('sort-filter');
+        const applyBtn = document.getElementById('apply-filters');
+        
+        const updateFilter = (key, value) => {
+            this.currentFilters[key] = value;
+            this.currentPage = 1;
+            this.applyFilters();
+        };
+        
+        categoryFilter?.addEventListener('change', (e) => updateFilter('category', e.target.value));
+        typeFilter?.addEventListener('change', (e) => updateFilter('type', e.target.value));
+        sortFilter?.addEventListener('change', (e) => updateFilter('sort', e.target.value));
+        applyBtn?.addEventListener('click', () => this.applyFilters());
+    }
+    
+    setupSearch() {
+        const searchInput = document.getElementById('search-templates');
+        let searchTimeout;
+        
+        searchInput?.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.currentFilters.search = e.target.value.toLowerCase();
+                this.currentPage = 1;
+                this.applyFilters();
+            }, 300);
+        });
+        
+        // Enter key support
+        searchInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                this.currentFilters.search = e.target.value.toLowerCase();
+                this.currentPage = 1;
+                this.applyFilters();
+            }
+        });
+    }
+    
+    applyFilters() {
+        const cards = document.querySelectorAll('.template-card');
+        const grid = document.getElementById('templates-grid');
+        
+        let visibleCards = [];
+        
+        cards.forEach(card => {
+            const name = card.dataset.name.toLowerCase();
+            const category = card.dataset.category;
+            const type = card.dataset.type;
+            
+            let visible = true;
+            
+            // Search filter
+            if (this.currentFilters.search) {
+                const searchTerm = this.currentFilters.search;
+                const description = card.querySelector('.template-description')?.textContent.toLowerCase() || '';
+                const tags = Array.from(card.querySelectorAll('.tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+                
+                visible = visible && (
+                    name.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    tags.includes(searchTerm)
+                );
+            }
+            
+            // Category filter
+            if (this.currentFilters.category) {
+                visible = visible && category === this.currentFilters.category;
+            }
+            
+            // Type filter
+            if (this.currentFilters.type) {
+                visible = visible && type === this.currentFilters.type;
+            }
+            
+            if (visible) {
+                visibleCards.push(card);
+            }
+            
+            card.style.display = visible ? 'block' : 'none';
+        });
+        
+        // Sort visible cards
+        this.sortCards(visibleCards);
+        
+        // Update empty state
+        this.updateEmptyState(visibleCards.length === 0);
+        
+        // Update pagination
+        this.updatePagination(visibleCards.length);
+    }
+    
+    sortCards(cards) {
+        const grid = document.getElementById('templates-grid');
+        
+        cards.sort((a, b) => {
+            switch (this.currentFilters.sort) {
+                case 'newest':
+                    // Sort by creation date (newest first)
+                    return new Date(b.dataset.created || 0) - new Date(a.dataset.created || 0);
+                case 'rating':
+                    // Sort by rating (highest first)
+                    const ratingA = parseFloat(a.querySelector('.star-rating')?.dataset.rating || 0);
+                    const ratingB = parseFloat(b.querySelector('.star-rating')?.dataset.rating || 0);
+                    return ratingB - ratingA;
+                case 'name':
+                    // Sort alphabetically
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'popular':
+                default:
+                    // Sort by usage count (most popular first)
+                    const usageA = parseInt(a.dataset.usage || 0);
+                    const usageB = parseInt(b.dataset.usage || 0);
+                    return usageB - usageA;
+            }
+        });
+        
+        // Reorder DOM elements
+        cards.forEach(card => grid.appendChild(card));
+    }
+    
+    updateEmptyState(isEmpty) {
+        let emptyState = document.querySelector('.empty-state');
+        
+        if (isEmpty && !emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </div>
+                <h3 class="empty-title">No Templates Found</h3>
+                <p class="empty-message">Try adjusting your search criteria or browse our complete collection.</p>
+                <a href="/templates/editor" class="action-btn btn-white">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Create New Template
+                </a>
+            `;
+            document.getElementById('templates-grid').appendChild(emptyState);
+        } else if (!isEmpty && emptyState) {
+            emptyState.remove();
+        }
+    }
+    
+    setupPagination() {
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        
+        prevBtn?.addEventListener('click', () => this.changePage(this.currentPage - 1));
+        nextBtn?.addEventListener('click', () => this.changePage(this.currentPage + 1));
+        
+        // Page number buttons
+        document.querySelectorAll('.page-btn:not(#prev-page):not(#next-page)').forEach(btn => {
+            if (!btn.textContent.includes('...')) {
+                btn.addEventListener('click', () => {
+                    const page = parseInt(btn.textContent);
+                    this.changePage(page);
+                });
+            }
+        });
+    }
+    
+    changePage(page) {
+        this.currentPage = page;
+        this.loadTemplates();
+        
+        // Update pagination buttons
+        document.querySelectorAll('.page-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent === page.toString()) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    
+    updatePagination(totalTemplates) {
+        const totalPages = Math.ceil(totalTemplates / this.templatesPerPage);
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        
+        if (prevBtn) prevBtn.disabled = this.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = this.currentPage >= totalPages;
+    }
+    
+    loadTemplates() {
+        // In a real application, this would fetch templates from the server
+        // For now, we just apply the current filters
+        this.applyFilters();
+    }
+}
+
+// Template actions
+function previewTemplate(templateId) {
+    window.open(`/templates/preview/${templateId}`, '_blank', 'width=800,height=600');
+}
+
+function toggleFavorite(templateId) {
+    // Implement favorite functionality
+    const button = event.target.closest('.action-icon');
+    const icon = button.querySelector('i');
+    
+    if (icon.classList.contains('fas')) {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        showNotification('Removed from favorites', 'info');
+    } else {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        showNotification('Added to favorites', 'success');
+    }
+}
+
+function cloneTemplate(templateId) {
+    // Implement clone functionality
+    showNotification('Template cloned successfully!', 'success');
+    setTimeout(() => {
+        window.location.href = `/templates/editor?clone=${templateId}`;
+    }, 1000);
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#2563eb'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: var(--library-shadow-lg);
+        animation: slideInRight 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    `;
+    
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    
+    notification.innerHTML = `
+        <i class="fas fa-${icons[type]} fa-lg"></i>
+        <span>${message}</span>
+        <button onclick="this.closest('.notification').remove()" 
+                style="background: none; border: none; color: white; margin-left: auto; cursor: pointer; font-size: 1.25rem;">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-templates')?.focus();
+    }
+    
+    // G for grid view, L for list view
+    if (e.key === 'g' && !e.ctrlKey && !e.metaKey) {
+        document.querySelector('[data-view="grid"]')?.click();
+    }
+    if (e.key === 'l' && !e.ctrlKey && !e.metaKey) {
+        document.querySelector('[data-view="list"]')?.click();
+    }
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the template library
+document.addEventListener('DOMContentLoaded', function() {
+    window.templateLibrary = new TemplateLibrary();
+});
+</script>
+{% endblock %}
+

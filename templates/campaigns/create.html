@@ -1,0 +1,2625 @@
+<!-- templates/campaigns/create.html -->
+{% extends "base.html" %}
+
+{% block title %}Create Campaign - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Enhanced Campaign Creation Wizard Styles */
+:root {
+    --wizard-primary: #2563eb;
+    --wizard-success: #10b981;
+    --wizard-warning: #f59e0b;
+    --wizard-danger: #ef4444;
+    --wizard-gray-50: #f9fafb;
+    --wizard-gray-100: #f3f4f6;
+    --wizard-gray-200: #e5e7eb;
+    --wizard-gray-300: #d1d5db;
+    --wizard-gray-400: #9ca3af;
+    --wizard-gray-500: #6b7280;
+    --wizard-gray-600: #4b5563;
+    --wizard-gray-700: #374151;
+    --wizard-gray-800: #1f2937;
+    --wizard-gray-900: #111827;
+}
+
+.wizard-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.wizard-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Wizard Header */
+.wizard-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wizard-title {
+    color: var(--wizard-gray-800);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.wizard-subtitle {
+    color: var(--wizard-gray-600);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Step Progress Bar */
+.step-progress {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--wizard-gray-200);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.progress-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 2px;
+    background: var(--wizard-primary);
+    transform: translateY(-50%);
+    z-index: 2;
+    transition: width 0.5s ease;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    min-width: 0;
+}
+
+.step-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--wizard-gray-200);
+    color: var(--wizard-gray-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.step-item.active .step-circle {
+    background: var(--wizard-primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+}
+
+.step-item.completed .step-circle {
+    background: var(--wizard-success);
+    color: white;
+}
+
+.step-item.completed .step-circle i {
+    font-size: 1.2rem;
+}
+
+.step-label {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--wizard-gray-600);
+    text-align: center;
+    transition: color 0.3s ease;
+}
+
+.step-item.active .step-label {
+    color: var(--wizard-primary);
+}
+
+.step-item.completed .step-label {
+    color: var(--wizard-success);
+}
+
+/* Wizard Content */
+.wizard-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
+    min-height: 600px;
+    position: relative;
+}
+
+.step-panel {
+    display: none;
+    animation: fadeInUp 0.5s ease;
+}
+
+.step-panel.active {
+    display: block;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-title {
+    color: var(--wizard-gray-800);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.step-description {
+    color: var(--wizard-gray-600);
+    font-size: 1rem;
+    margin: 0 0 2rem 0;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    display: block;
+    color: var(--wizard-gray-700);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--wizard-gray-300);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--wizard-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input.error {
+    border-color: var(--wizard-danger);
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5rem;
+    padding-right: 3rem;
+}
+
+.form-error {
+    color: var(--wizard-danger);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.form-error.show {
+    display: block;
+}
+
+.form-help {
+    color: var(--wizard-gray-500);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Template Selection */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.template-card {
+    border: 2px solid var(--wizard-gray-200);
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.template-card:hover {
+    border-color: var(--wizard-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.template-card.selected {
+    border-color: var(--wizard-primary);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.template-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-top: 20px solid var(--wizard-primary);
+    border-left: 20px solid transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.template-card.selected::after {
+    opacity: 1;
+}
+
+.template-preview {
+    width: 100%;
+    height: 180px;
+    background: var(--wizard-gray-100);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.template-preview i {
+    font-size: 3rem;
+    color: var(--wizard-gray-400);
+}
+
+.template-name {
+    font-weight: 600;
+    color: var(--wizard-gray-800);
+    margin: 0 0 0.5rem 0;
+}
+
+.template-description {
+    color: var(--wizard-gray-600);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.template-tag {
+    display: inline-block;
+    background: var(--wizard-gray-100);
+    color: var(--wizard-gray-700);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    margin: 0.5rem 0.5rem 0 0;
+}
+
+.template-tag.popular {
+    background: var(--wizard-warning);
+    color: white;
+}
+
+.template-tag.new {
+    background: var(--wizard-success);
+    color: white;
+}
+
+/* Recipient Settings */
+.recipient-section {
+    margin: 2rem 0;
+}
+
+.recipient-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: var(--wizard-gray-100);
+    padding: 0.25rem;
+    border-radius: 12px;
+}
+
+.recipient-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    color: var(--wizard-gray-600);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.recipient-tab.active {
+    background: white;
+    color: var(--wizard-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recipient-content {
+    display: none;
+}
+
+.recipient-content.active {
+    display: block;
+}
+
+.contact-list {
+    border: 2px solid var(--wizard-gray-200);
+    border-radius: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--wizard-gray-200);
+    transition: background-color 0.2s ease;
+}
+
+.contact-item:hover {
+    background: var(--wizard-gray-50);
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+}
+
+.contact-checkbox {
+    width: 18px;
+    height: 18px;
+}
+
+.contact-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.contact-name {
+    font-weight: 600;
+    color: var(--wizard-gray-800);
+    margin: 0 0 0.25rem 0;
+}
+
+.contact-email {
+    color: var(--wizard-gray-600);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.selected-count {
+    background: var(--wizard-primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    margin-left: auto;
+}
+
+/* Email Editor */
+.editor-container {
+    border: 2px solid var(--wizard-gray-200);
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 2rem 0;
+}
+
+.editor-toolbar {
+    background: var(--wizard-gray-50);
+    padding: 1rem;
+    border-bottom: 1px solid var(--wizard-gray-200);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 0.25rem;
+    margin-right: 1rem;
+}
+
+.toolbar-button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--wizard-gray-300);
+    background: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--wizard-gray-600);
+}
+
+.toolbar-button:hover {
+    background: var(--wizard-gray-100);
+    color: var(--wizard-gray-800);
+}
+
+.toolbar-button.active {
+    background: var(--wizard-primary);
+    color: white;
+    border-color: var(--wizard-primary);
+}
+
+.editor-content {
+    min-height: 400px;
+    padding: 1.5rem;
+    background: white;
+}
+
+.editor-preview {
+    background: var(--wizard-gray-50);
+    padding: 1.5rem;
+    border-left: 1px solid var(--wizard-gray-200);
+    min-height: 400px;
+}
+
+/* Scheduling */
+.schedule-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.schedule-card {
+    border: 2px solid var(--wizard-gray-200);
+    border-radius: 16px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    background: white;
+    position: relative;
+}
+
+.schedule-card:hover {
+    border-color: var(--wizard-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-card.selected {
+    border-color: var(--wizard-primary);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.schedule-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--wizard-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem auto;
+    transition: transform 0.3s ease;
+}
+
+.schedule-card:hover .schedule-icon {
+    transform: scale(1.1);
+}
+
+.schedule-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--wizard-gray-800);
+    margin: 0 0 0.5rem 0;
+}
+
+.schedule-description {
+    color: var(--wizard-gray-600);
+    margin: 0;
+}
+
+.datetime-picker {
+    display: none;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--wizard-gray-50);
+    border-radius: 12px;
+}
+
+.datetime-picker.show {
+    display: block;
+}
+
+.datetime-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* Review and Summary */
+.review-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.review-card {
+    border: 2px solid var(--wizard-gray-200);
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+}
+
+.review-header {
+    background: var(--wizard-gray-50);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--wizard-gray-200);
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.review-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--wizard-gray-800);
+    margin: 0;
+}
+
+.review-edit {
+    color: var(--wizard-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.review-content {
+    padding: 1.5rem;
+}
+
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.review-item:last-child {
+    margin-bottom: 0;
+}
+
+.review-label {
+    color: var(--wizard-gray-600);
+    font-weight: 500;
+}
+
+.review-value {
+    color: var(--wizard-gray-800);
+    font-weight: 600;
+}
+
+/* Wizard Navigation */
+.wizard-navigation {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-button {
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--wizard-gray-200);
+    color: var(--wizard-gray-700);
+    border: 2px solid var(--wizard-gray-300);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--wizard-gray-300);
+}
+
+.btn-primary {
+    background: var(--wizard-primary);
+    color: white;
+    border: 2px solid var(--wizard-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.btn-success {
+    background: var(--wizard-success);
+    color: white;
+    border: 2px solid var(--wizard-success);
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #059669;
+    border-color: #059669;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--wizard-gray-200);
+    border-top: 4px solid var(--wizard-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wizard-wrapper {
+        padding: 0 1rem;
+    }
+    
+    .wizard-header,
+    .wizard-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .progress-steps {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .step-item {
+        min-width: 100px;
+    }
+    
+    .template-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .schedule-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .datetime-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .wizard-navigation {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Success Animation */
+.success-checkmark {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: var(--wizard-success);
+    stroke-miterlimit: 10;
+    margin: 2rem auto;
+    box-shadow: inset 0px 0px 0px var(--wizard-success);
+    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+}
+
+.success-checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: var(--wizard-success);
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.success-checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0px 0px 0px 30px var(--wizard-success);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <div class="wizard-wrapper">
+        <!-- Wizard Header -->
+        <div class="wizard-header animate-fade-in-up">
+            <h1 class="wizard-title">Create Email Campaign</h1>
+            <p class="wizard-subtitle">Build and send beautiful email campaigns in just a few steps</p>
+        </div>
+        
+        <!-- Step Progress -->
+        <div class="step-progress animate-fade-in-up" style="animation-delay: 0.1s;">
+            <div class="progress-steps">
+                <div class="progress-line" id="progress-line"></div>
+                
+                <div class="step-item active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Campaign Details</div>
+                </div>
+                
+                <div class="step-item" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Template & Content</div>
+                </div>
+                
+                <div class="step-item" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Recipients</div>
+                </div>
+                
+                <div class="step-item" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Schedule</div>
+                </div>
+                
+                <div class="step-item" data-step="5">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Review & Send</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wizard Content -->
+        <div class="wizard-content animate-fade-in-up" style="animation-delay: 0.2s;">
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+            
+            <form id="campaign-wizard-form" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Step 1: Campaign Details -->
+                <div class="step-panel active" id="step-1">
+                    <h2 class="step-title">Campaign Details</h2>
+                    <p class="step-description">Start by giving your campaign a name and choosing its type.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="campaign_name">
+                                    Campaign Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="campaign_name" 
+                                       name="campaign_name" 
+                                       class="form-input" 
+                                       placeholder="e.g., Welcome Series - Week 1"
+                                       required>
+                                <div class="form-error" id="campaign_name_error"></div>
+                                <div class="form-help">Choose a descriptive name to help you identify this campaign later.</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="subject_line">
+                                    Subject Line <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="subject_line" 
+                                       name="subject_line" 
+                                       class="form-input" 
+                                       placeholder="e.g., Welcome to our community!"
+                                       required>
+                                <div class="form-error" id="subject_line_error"></div>
+                                <div class="form-help">
+                                    <span id="subject-length">0</span>/78 characters. Keep it under 78 for better mobile display.
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="preheader_text">
+                                    Preheader Text
+                                </label>
+                                <input type="text" 
+                                       id="preheader_text" 
+                                       name="preheader_text" 
+                                       class="form-input" 
+                                       placeholder="e.g., Get started with these helpful resources..."
+                                       maxlength="140">
+                                <div class="form-help">
+                                    Optional preview text that appears next to the subject line in email clients.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="campaign_type">
+                                    Campaign Type <span class="text-danger">*</span>
+                                </label>
+                                <select id="campaign_type" name="campaign_type" class="form-input form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option value="newsletter">Newsletter</option>
+                                    <option value="promotional">Promotional</option>
+                                    <option value="welcome">Welcome Series</option>
+                                    <option value="announcement">Announcement</option>
+                                    <option value="event">Event Invitation</option>
+                                    <option value="product_update">Product Update</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="feedback">Feedback Request</option>
+                                </select>
+                                <div class="form-error" id="campaign_type_error"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="sender_name">
+                                    Sender Name
+                                </label>
+                                <input type="text" 
+                                       id="sender_name" 
+                                       name="sender_name" 
+                                       class="form-input" 
+                                       value="{{ current_user.full_name }}"
+                                       placeholder="Your Name or Company">
+                                <div class="form-help">Name that appears in the "From" field.</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="reply_to_email">
+                                    Reply-To Email
+                                </label>
+                                <input type="email" 
+                                       id="reply_to_email" 
+                                       name="reply_to_email" 
+                                       class="form-input" 
+                                       value="{{ current_user.email }}"
+                                       placeholder="reply@example.com">
+                                <div class="form-help">Where replies will be sent.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Template & Content -->
+                <div class="step-panel" id="step-2">
+                    <h2 class="step-title">Choose Template & Create Content</h2>
+                    <p class="step-description">Select a template and customize your email content.</p>
+                    
+                    <!-- Template Selection -->
+                    <h3 class="h5 mb-3">Email Templates</h3>
+                    <div class="template-grid">
+                        <div class="template-card" data-template="blank">
+                            <div class="template-preview">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                            </div>
+                            <h4 class="template-name">Blank Template</h4>
+                            <p class="template-description">Start from scratch with a blank canvas</p>
+                            <div class="template-tag">Custom</div>
+                        </div>
+                        
+                        <div class="template-card" data-template="newsletter">
+                            <div class="template-preview" style="background-image: url('/static/images/templates/newsletter-preview.jpg');">
+                            </div>
+                            <h4 class="template-name">Newsletter</h4>
+                            <p class="template-description">Clean layout perfect for regular updates</p>
+                            <div class="template-tag popular">Popular</div>
+                        </div>
+                        
+                        <div class="template-card" data-template="promotional">
+                            <div class="template-preview" style="background-image: url('/static/images/templates/promotional-preview.jpg');">
+                            </div>
+                            <h4 class="template-name">Promotional</h4>
+                            <p class="template-description">Eye-catching design for sales and offers</p>
+                            <div class="template-tag">Marketing</div>
+                        </div>
+                        
+                        <div class="template-card" data-template="welcome">
+                            <div class="template-preview" style="background-image: url('/static/images/templates/welcome-preview.jpg');">
+                            </div>
+                            <h4 class="template-name">Welcome</h4>
+                            <p class="template-description">Warm introduction for new subscribers</p>
+                            <div class="template-tag new">New</div>
+                        </div>
+                        
+                        <div class="template-card" data-template="event">
+                            <div class="template-preview" style="background-image: url('/static/images/templates/event-preview.jpg');">
+                            </div>
+                            <h4 class="template-name">Event Invitation</h4>
+                            <p class="template-description">Perfect for webinars and meetups</p>
+                            <div class="template-tag">Events</div>
+                        </div>
+                        
+                        <div class="template-card" data-template="product">
+                            <div class="template-preview" style="background-image: url('/static/images/templates/product-preview.jpg');">
+                            </div>
+                            <h4 class="template-name">Product Showcase</h4>
+                            <p class="template-description">Highlight your latest products</p>
+                            <div class="template-tag">E-commerce</div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="selected_template" id="selected_template" value="">
+                    
+                    <!-- Content Editor -->
+                    <div id="content-editor-section" style="display: none;">
+                        <h3 class="h5 mb-3 mt-4">Email Content</h3>
+                        <div class="editor-container">
+                            <div class="editor-toolbar">
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-button" data-action="bold" aria-label="Bold">
+                                        <i class="fas fa-bold" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="italic" aria-label="Italic">
+                                        <i class="fas fa-italic" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="underline" aria-label="Underline">
+                                        <i class="fas fa-underline" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-button" data-action="insertOrderedList" aria-label="Numbered list">
+                                        <i class="fas fa-list-ol" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="insertUnorderedList" aria-label="Bullet list">
+                                        <i class="fas fa-list-ul" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-button" data-action="createLink" aria-label="Insert link">
+                                        <i class="fas fa-link" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="insertImage" aria-label="Insert image">
+                                        <i class="fas fa-image" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-button" data-action="justifyLeft" aria-label="Align left">
+                                        <i class="fas fa-align-left" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="justifyCenter" aria-label="Align center">
+                                        <i class="fas fa-align-center" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="toolbar-button" data-action="justifyRight" aria-label="Align right">
+                                        <i class="fas fa-align-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group ms-auto">
+                                    <button type="button" class="toolbar-button" id="preview-toggle" aria-label="Toggle preview">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-0">
+                                <div class="col-md-6">
+                                    <div class="editor-content" 
+                                         id="email-editor" 
+                                         contenteditable="true"
+                                         data-placeholder="Start typing your email content here...">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 d-none" id="editor-preview">
+                                    <div class="editor-preview">
+                                        <div id="preview-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="email_content" id="email_content">
+                    </div>
+                </div>
+                
+                <!-- Step 3: Recipients -->
+                <div class="step-panel" id="step-3">
+                    <h2 class="step-title">Select Recipients</h2>
+                    <p class="step-description">Choose who will receive your email campaign.</p>
+                    
+                    <div class="recipient-section">
+                        <div class="recipient-tabs">
+                            <button type="button" class="recipient-tab active" data-tab="lists">Contact Lists</button>
+                            <button type="button" class="recipient-tab" data-tab="segments">Segments</button>
+                            <button type="button" class="recipient-tab" data-tab="individual">Individual Contacts</button>
+                        </div>
+                        
+                        <!-- Contact Lists -->
+                        <div class="recipient-content active" id="lists-content">
+                            <div class="contact-list">
+                                {% for list in contact_lists %}
+                                <div class="contact-item">
+                                    <input type="checkbox" 
+                                           class="contact-checkbox list-checkbox" 
+                                           name="contact_lists[]" 
+                                           value="{{ list.id }}"
+                                           id="list_{{ list.id }}">
+                                    <label for="list_{{ list.id }}" class="contact-info">
+                                        <div class="contact-name">{{ list.name }}</div>
+                                        <div class="contact-email">{{ list.contact_count }} contacts</div>
+                                    </label>
+                                    <div class="selected-count">{{ list.contact_count }}</div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if not contact_lists %}
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fas fa-list fa-2x mb-2" aria-hidden="true"></i>
+                                    <p class="mb-0">No contact lists found.</p>
+                                    <a href="{{ url_for('contacts.create_list') }}" class="btn btn-outline-primary btn-sm mt-2">
+                                        Create Your First List
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Segments -->
+                        <div class="recipient-content" id="segments-content">
+                            <div class="contact-list">
+                                {% for segment in contact_segments %}
+                                <div class="contact-item">
+                                    <input type="checkbox" 
+                                           class="contact-checkbox segment-checkbox" 
+                                           name="contact_segments[]" 
+                                           value="{{ segment.id }}"
+                                           id="segment_{{ segment.id }}">
+                                    <label for="segment_{{ segment.id }}" class="contact-info">
+                                        <div class="contact-name">{{ segment.name }}</div>
+                                        <div class="contact-email">{{ segment.contact_count }} contacts • {{ segment.description }}</div>
+                                    </label>
+                                    <div class="selected-count">{{ segment.contact_count }}</div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if not contact_segments %}
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fas fa-chart-pie fa-2x mb-2" aria-hidden="true"></i>
+                                    <p class="mb-0">No segments found.</p>
+                                    <a href="{{ url_for('contacts.create_segment') }}" class="btn btn-outline-primary btn-sm mt-2">
+                                        Create Your First Segment
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Individual Contacts -->
+                        <div class="recipient-content" id="individual-content">
+                            <div class="form-group mb-3">
+                                <input type="text" 
+                                       class="form-input" 
+                                       id="contact-search" 
+                                       placeholder="Search contacts by name or email...">
+                            </div>
+                            
+                            <div class="contact-list" id="individual-contacts">
+                                {% for contact in contacts[:20] %}
+                                <div class="contact-item" data-name="{{ contact.name.lower() }}" data-email="{{ contact.email.lower() }}">
+                                    <input type="checkbox" 
+                                           class="contact-checkbox individual-checkbox" 
+                                           name="individual_contacts[]" 
+                                           value="{{ contact.id }}"
+                                           id="contact_{{ contact.id }}">
+                                    <label for="contact_{{ contact.id }}" class="contact-info">
+                                        <div class="contact-name">{{ contact.name }}</div>
+                                        <div class="contact-email">{{ contact.email }}</div>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if contact_count > 20 %}
+                                <div class="text-center py-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="load-more-contacts">
+                                        Load More Contacts
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 p-3 bg-light rounded-3">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Total Recipients: <span id="total-recipients">0</span></strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted">Estimated Delivery: <span id="estimated-delivery">-</span></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted">Credits Required: <span id="credits-required">0</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Schedule -->
+                <div class="step-panel" id="step-4">
+                    <h2 class="step-title">Schedule Your Campaign</h2>
+                    <p class="step-description">Choose when to send your email campaign.</p>
+                    
+                    <div class="schedule-options">
+                        <div class="schedule-card" data-schedule="now">
+                            <div class="schedule-icon">
+                                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                            </div>
+                            <h3 class="schedule-title">Send Now</h3>
+                            <p class="schedule-description">Send the campaign immediately after review</p>
+                        </div>
+                        
+                        <div class="schedule-card" data-schedule="later">
+                            <div class="schedule-icon">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                            </div>
+                            <h3 class="schedule-title">Schedule for Later</h3>
+                            <p class="schedule-description">Choose a specific date and time to send</p>
+                        </div>
+                        
+                        <div class="schedule-card" data-schedule="optimal">
+                            <div class="schedule-icon">
+                                <i class="fas fa-magic" aria-hidden="true"></i>
+                            </div>
+                            <h3 class="schedule-title">Send at Optimal Time</h3>
+                            <p class="schedule-description">AI-powered timing based on recipient behavior</p>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="schedule_type" id="schedule_type">
+                    
+                    <div class="datetime-picker" id="datetime-picker">
+                        <h4 class="h5 mb-3">Schedule Details</h4>
+                        <div class="datetime-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="schedule_date">Send Date</label>
+                                <input type="date" 
+                                       id="schedule_date" 
+                                       name="schedule_date" 
+                                       class="form-input"
+                                       min="{{ today }}">
+                                <div class="form-error" id="schedule_date_error"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="schedule_time">Send Time</label>
+                                <input type="time" 
+                                       id="schedule_time" 
+                                       name="schedule_time" 
+                                       class="form-input">
+                                <div class="form-error" id="schedule_time_error"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="timezone">Timezone</label>
+                            <select id="timezone" name="timezone" class="form-input form-select">
+                                <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                <option value="America/New_York">Eastern Time (ET)</option>
+                                <option value="America/Chicago">Central Time (CT)</option>
+                                <option value="America/Denver">Mountain Time (MT)</option>
+                                <option value="America/Los_Angeles" selected>Pacific Time (PT)</option>
+                                <option value="Europe/London">Greenwich Mean Time (GMT)</option>
+                                <option value="Europe/Paris">Central European Time (CET)</option>
+                                <option value="Asia/Tokyo">Japan Standard Time (JST)</option>
+                                <option value="Australia/Sydney">Australian Eastern Time (AET)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Review & Send -->
+                <div class="step-panel" id="step-5">
+                    <h2 class="step-title">Review & Send</h2>
+                    <p class="step-description">Review your campaign settings before sending.</p>
+                    
+                    <div class="review-sections">
+                        <!-- Campaign Details Review -->
+                        <div class="review-card">
+                            <div class="review-header">
+                                <h3 class="review-title">Campaign Details</h3>
+                                <a href="#" class="review-edit" data-step="1">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                    Edit
+                                </a>
+                            </div>
+                            <div class="review-content">
+                                <div class="review-item">
+                                    <span class="review-label">Campaign Name:</span>
+                                    <span class="review-value" id="review-campaign-name">-</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Subject Line:</span>
+                                    <span class="review-value" id="review-subject-line">-</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Campaign Type:</span>
+                                    <span class="review-value" id="review-campaign-type">-</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Sender:</span>
+                                    <span class="review-value" id="review-sender">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Template Review -->
+                        <div class="review-card">
+                            <div class="review-header">
+                                <h3 class="review-title">Template & Content</h3>
+                                <a href="#" class="review-edit" data-step="2">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                    Edit
+                                </a>
+                            </div>
+                            <div class="review-content">
+                                <div class="review-item">
+                                    <span class="review-label">Template:</span>
+                                    <span class="review-value" id="review-template">-</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Content Length:</span>
+                                    <span class="review-value" id="review-content-length">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recipients Review -->
+                        <div class="review-card">
+                            <div class="review-header">
+                                <h3 class="review-title">Recipients</h3>
+                                <a href="#" class="review-edit" data-step="3">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                    Edit
+                                </a>
+                            </div>
+                            <div class="review-content">
+                                <div class="review-item">
+                                    <span class="review-label">Total Recipients:</span>
+                                    <span class="review-value" id="review-total-recipients">0</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Lists Selected:</span>
+                                    <span class="review-value" id="review-lists">0</span>
+                                </div>
+                                <div class="review-item">
+                                    <span class="review-label">Segments Selected:</span>
+                                    <span class="review-value" id="review-segments">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Schedule Review -->
+                        <div class="review-card">
+                            <div class="review-header">
+                                <h3 class="review-title">Schedule</h3>
+                                <a href="#" class="review-edit" data-step="4">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                    Edit
+                                </a>
+                            </div>
+                            <div class="review-content">
+                                <div class="review-item">
+                                    <span class="review-label">Send Time:</span>
+                                    <span class="review-value" id="review-schedule">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Test Email Section -->
+                    <div class="review-card mt-4">
+                        <div class="review-header">
+                            <h3 class="review-title">Send Test Email</h3>
+                        </div>
+                        <div class="review-content">
+                            <p class="text-muted mb-3">Send a test email to verify how your campaign looks.</p>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="email" 
+                                           class="form-input" 
+                                           id="test-email" 
+                                           placeholder="Enter email address for test"
+                                           value="{{ current_user.email }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-outline-primary w-100" id="send-test-email">
+                                        <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>
+                                        Send Test
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Wizard Navigation -->
+        <div class="wizard-navigation animate-fade-in-up" style="animation-delay: 0.3s;">
+            <button type="button" class="nav-button btn-secondary" id="prev-step" disabled>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                Previous
+            </button>
+            
+            <div class="step-indicator">
+                Step <span id="current-step">1</span> of 5
+            </div>
+            
+            <button type="button" class="nav-button btn-primary" id="next-step">
+                Next
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            
+            <button type="button" class="nav-button btn-success d-none" id="create-campaign">
+                <i class="fas fa-rocket" aria-hidden="true"></i>
+                Create Campaign
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <svg class="success-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="success-checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="success-checkmark__check" fill="none" d="m14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+                
+                <h2 class="h4 mb-3">Campaign Created Successfully!</h2>
+                <p class="text-muted mb-4">Your email campaign has been created and is ready to send.</p>
+                
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('dashboard.campaigns') }}" class="btn btn-outline-primary">
+                        View All Campaigns
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Create Another
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/campaign-wizard.js') }}"></script>
+<script>
+// Enhanced Campaign Creation Wizard System
+class CampaignWizard {
+    constructor() {
+        this.currentStep = 1;
+        this.totalSteps = 5;
+        this.formData = {};
+        this.validation = {};
+        this.isSubmitting = false;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.setupValidation();
+        this.setupEditor();
+        this.updateStepProgress();
+        this.loadFormData();
+        
+        // Auto-save draft every 30 seconds
+        setInterval(() => {
+            this.saveDraft();
+        }, 30000);
+    }
+    
+    setupEventListeners() {
+        // Navigation buttons
+        document.getElementById('next-step').addEventListener('click', () => this.nextStep());
+        document.getElementById('prev-step').addEventListener('click', () => this.prevStep());
+        document.getElementById('create-campaign').addEventListener('click', () => this.createCampaign());
+        
+        // Form inputs
+        this.setupFormListeners();
+        
+        // Template selection
+        this.setupTemplateSelection();
+        
+        // Recipient selection
+        this.setupRecipientSelection();
+        
+        // Schedule selection
+        this.setupScheduleSelection();
+        
+        // Review edit links
+        this.setupReviewLinks();
+        
+        // Test email
+        document.getElementById('send-test-email').addEventListener('click', () => this.sendTestEmail());
+    }
+    
+    setupFormListeners() {
+        // Campaign name and subject line
+        const campaignName = document.getElementById('campaign_name');
+        const subjectLine = document.getElementById('subject_line');
+        const subjectLength = document.getElementById('subject-length');
+        
+        campaignName.addEventListener('input', (e) => {
+            this.validateField('campaign_name', e.target.value);
+            this.updateFormData('campaign_name', e.target.value);
+        });
+        
+        subjectLine.addEventListener('input', (e) => {
+            const length = e.target.value.length;
+            subjectLength.textContent = length;
+            subjectLength.className = length > 78 ? 'text-warning' : '';
+            
+            this.validateField('subject_line', e.target.value);
+            this.updateFormData('subject_line', e.target.value);
+        });
+        
+        // All other form inputs
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.updateFormData(e.target.name, e.target.value);
+                if (e.target.hasAttribute('required')) {
+                    this.validateField(e.target.name, e.target.value);
+                }
+            });
+        });
+        
+        // Contact search
+        const contactSearch = document.getElementById('contact-search');
+        if (contactSearch) {
+            contactSearch.addEventListener('input', this.debounce((e) => {
+                this.filterContacts(e.target.value);
+            }, 300));
+        }
+    }
+    
+    setupTemplateSelection() {
+        const templateCards = document.querySelectorAll('.template-card');
+        const selectedTemplateInput = document.getElementById('selected_template');
+        const editorSection = document.getElementById('content-editor-section');
+        
+        templateCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove selection from all cards
+                templateCards.forEach(c => c.classList.remove('selected'));
+                
+                // Select current card
+                card.classList.add('selected');
+                
+                const template = card.dataset.template;
+                selectedTemplateInput.value = template;
+                this.updateFormData('selected_template', template);
+                
+                // Show editor section
+                editorSection.style.display = 'block';
+                
+                // Load template content
+                this.loadTemplate(template);
+                
+                // Validate template selection
+                this.validateField('selected_template', template);
+            });
+        });
+    }
+    
+    setupRecipientSelection() {
+        // Recipient tabs
+        const recipientTabs = document.querySelectorAll('.recipient-tab');
+        const recipientContents = document.querySelectorAll('.recipient-content');
+        
+        recipientTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Update active tab
+                recipientTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                recipientContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${targetTab}-content`).classList.add('active');
+            });
+        });
+        
+        // Checkboxes
+        const checkboxes = document.querySelectorAll('.contact-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updateRecipientCount();
+            });
+        });
+        
+        // Load more contacts
+        const loadMoreBtn = document.getElementById('load-more-contacts');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => this.loadMoreContacts());
+        }
+    }
+    
+    setupScheduleSelection() {
+        const scheduleCards = document.querySelectorAll('.schedule-card');
+        const scheduleTypeInput = document.getElementById('schedule_type');
+        const datetimePicker = document.getElementById('datetime-picker');
+        
+        scheduleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove selection from all cards
+                scheduleCards.forEach(c => c.classList.remove('selected'));
+                
+                // Select current card
+                card.classList.add('selected');
+                
+                const scheduleType = card.dataset.schedule;
+                scheduleTypeInput.value = scheduleType;
+                this.updateFormData('schedule_type', scheduleType);
+                
+                // Show/hide datetime picker
+                if (scheduleType === 'later') {
+                    datetimePicker.classList.add('show');
+                } else {
+                    datetimePicker.classList.remove('show');
+                }
+                
+                // Validate schedule selection
+                this.validateField('schedule_type', scheduleType);
+            });
+        });
+    }
+    
+    setupReviewLinks() {
+        const reviewLinks = document.querySelectorAll('.review-edit');
+        reviewLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const step = parseInt(link.dataset.step);
+                this.goToStep(step);
+            });
+        });
+    }
+    
+    setupValidation() {
+        this.validation = {
+            1: {
+                fields: ['campaign_name', 'subject_line', 'campaign_type'],
+                rules: {
+                    campaign_name: {
+                        required: true,
+                        minLength: 3,
+                        maxLength: 100
+                    },
+                    subject_line: {
+                        required: true,
+                        minLength: 10,
+                        maxLength: 150
+                    },
+                    campaign_type: {
+                        required: true
+                    }
+                }
+            },
+            2: {
+                fields: ['selected_template'],
+                rules: {
+                    selected_template: {
+                        required: true
+                    }
+                },
+                custom: () => {
+                    const content = document.getElementById('email-editor').innerHTML;
+                    return content.trim().length > 0 ? null : 'Email content is required';
+                }
+            },
+            3: {
+                custom: () => {
+                    const totalRecipients = this.getTotalRecipients();
+                    return totalRecipients > 0 ? null : 'Please select at least one recipient';
+                }
+            },
+            4: {
+                fields: ['schedule_type'],
+                rules: {
+                    schedule_type: {
+                        required: true
+                    }
+                },
+                custom: () => {
+                    const scheduleType = document.getElementById('schedule_type').value;
+                    if (scheduleType === 'later') {
+                        const date = document.getElementById('schedule_date').value;
+                        const time = document.getElementById('schedule_time').value;
+                        if (!date || !time) {
+                            return 'Please select both date and time for scheduled sending';
+                        }
+                        
+                        const scheduleDateTime = new Date(`${date}T${time}`);
+                        const now = new Date();
+                        if (scheduleDateTime <= now) {
+                            return 'Scheduled time must be in the future';
+                        }
+                    }
+                    return null;
+                }
+            },
+            5: {
+                custom: () => {
+                    // Final validation - all steps must pass
+                    for (let step = 1; step <= 4; step++) {
+                        if (!this.validateStep(step)) {
+                            return `Please complete Step ${step} correctly before proceeding`;
+                        }
+                    }
+                    return null;
+                }
+            }
+        };
+    }
+    
+    setupEditor() {
+        const editor = document.getElementById('email-editor');
+        const toolbarButtons = document.querySelectorAll('.toolbar-button');
+        const previewToggle = document.getElementById('preview-toggle');
+        const previewContent = document.getElementById('preview-content');
+        const editorPreview = document.getElementById('editor-preview');
+        
+        // Toolbar functionality
+        toolbarButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const action = button.dataset.action;
+                
+                if (action === 'createLink') {
+                    const url = prompt('Enter URL:');
+                    if (url) {
+                        document.execCommand(action, false, url);
+                    }
+                } else if (action === 'insertImage') {
+                    const url = prompt('Enter image URL:');
+                    if (url) {
+                        document.execCommand(action, false, url);
+                    }
+                } else {
+                    document.execCommand(action, false, null);
+                }
+                
+                // Update button state
+                this.updateToolbarState();
+                
+                // Update content
+                this.updateEditorContent();
+            });
+        });
+        
+        // Preview toggle
+        previewToggle.addEventListener('click', () => {
+            const isPreviewVisible = !editorPreview.classList.contains('d-none');
+            
+            if (isPreviewVisible) {
+                editorPreview.classList.add('d-none');
+                editor.parentElement.classList.remove('col-md-6');
+                editor.parentElement.classList.add('col-md-12');
+                previewToggle.innerHTML = '<i class="fas fa-eye"></i>';
+            } else {
+                editorPreview.classList.remove('d-none');
+                editor.parentElement.classList.remove('col-md-12');
+                editor.parentElement.classList.add('col-md-6');
+                previewToggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                
+                // Update preview content
+                previewContent.innerHTML = editor.innerHTML;
+            }
+        });
+        
+        // Editor content updates
+        editor.addEventListener('input', () => {
+            this.updateEditorContent();
+            
+            // Update preview if visible
+            if (!editorPreview.classList.contains('d-none')) {
+                previewContent.innerHTML = editor.innerHTML;
+            }
+        });
+        
+        // Placeholder handling
+        this.setupEditorPlaceholder(editor);
+    }
+    
+    setupEditorPlaceholder(editor) {
+        const placeholder = editor.dataset.placeholder;
+        
+        const updatePlaceholder = () => {
+            if (editor.innerHTML.trim() === '' || editor.innerHTML === '<br>') {
+                editor.classList.add('empty');
+                if (editor.innerHTML !== `<div class="placeholder">${placeholder}</div>`) {
+                    editor.innerHTML = `<div class="placeholder">${placeholder}</div>`;
+                }
+            } else {
+                editor.classList.remove('empty');
+                const placeholderDiv = editor.querySelector('.placeholder');
+                if (placeholderDiv) {
+                    placeholderDiv.remove();
+                }
+            }
+        };
+        
+        editor.addEventListener('focus', () => {
+            if (editor.classList.contains('empty')) {
+                editor.innerHTML = '';
+                editor.classList.remove('empty');
+            }
+        });
+        
+        editor.addEventListener('blur', updatePlaceholder);
+        
+        updatePlaceholder();
+    }
+    
+    updateToolbarState() {
+        const toolbarButtons = document.querySelectorAll('.toolbar-button');
+        
+        toolbarButtons.forEach(button => {
+            const command = button.dataset.action;
+            if (document.queryCommandState && document.queryCommandState(command)) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+    
+    updateEditorContent() {
+        const editor = document.getElementById('email-editor');
+        const contentInput = document.getElementById('email_content');
+        
+        contentInput.value = editor.innerHTML;
+        this.updateFormData('email_content', editor.innerHTML);
+    }
+    
+    async loadTemplate(templateId) {
+        const editor = document.getElementById('email-editor');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        try {
+            loadingOverlay.classList.add('show');
+            
+            const response = await fetch(`/api/templates/${templateId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                editor.innerHTML = data.content || '';
+                this.updateEditorContent();
+            }
+        } catch (error) {
+            console.error('Error loading template:', error);
+            this.showToast('Error loading template', 'error');
+        } finally {
+            loadingOverlay.classList.remove('show');
+        }
+    }
+    
+    filterContacts(searchTerm) {
+        const contactItems = document.querySelectorAll('#individual-contacts .contact-item');
+        const lowerSearch = searchTerm.toLowerCase();
+        
+        contactItems.forEach(item => {
+            const name = item.dataset.name;
+            const email = item.dataset.email;
+            
+            if (name.includes(lowerSearch) || email.includes(lowerSearch)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    async loadMoreContacts() {
+        const loadMoreBtn = document.getElementById('load-more-contacts');
+        const contactsList = document.getElementById('individual-contacts');
+        const currentCount = contactsList.querySelectorAll('.contact-item').length;
+        
+        try {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'Loading...';
+            
+            const response = await fetch(`/api/contacts?offset=${currentCount}&limit=20`);
+            const data = await response.json();
+            
+            if (data.success && data.contacts.length > 0) {
+                data.contacts.forEach(contact => {
+                    const contactItem = document.createElement('div');
+                    contactItem.className = 'contact-item';
+                    contactItem.setAttribute('data-name', contact.name.toLowerCase());
+                    contactItem.setAttribute('data-email', contact.email.toLowerCase());
+                    
+                    contactItem.innerHTML = `
+                        <input type="checkbox" 
+                               class="contact-checkbox individual-checkbox" 
+                               name="individual_contacts[]" 
+                               value="${contact.id}"
+                               id="contact_${contact.id}">
+                        <label for="contact_${contact.id}" class="contact-info">
+                            <div class="contact-name">${contact.name}</div>
+                            <div class="contact-email">${contact.email}</div>
+                        </label>
+                    `;
+                    
+                    contactsList.appendChild(contactItem);
+                    
+                    // Add event listener to new checkbox
+                    const checkbox = contactItem.querySelector('.contact-checkbox');
+                    checkbox.addEventListener('change', () => {
+                        this.updateRecipientCount();
+                    });
+                });
+                
+                if (data.contacts.length < 20) {
+                    loadMoreBtn.style.display = 'none';
+                }
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error loading contacts:', error);
+            this.showToast('Error loading contacts', 'error');
+        } finally {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.textContent = 'Load More Contacts';
+        }
+    }
+    
+    updateRecipientCount() {
+        const listCheckboxes = document.querySelectorAll('.list-checkbox:checked');
+        const segmentCheckboxes = document.querySelectorAll('.segment-checkbox:checked');
+        const individualCheckboxes = document.querySelectorAll('.individual-checkbox:checked');
+        
+        let totalRecipients = 0;
+        
+        // Count from lists
+        listCheckboxes.forEach(checkbox => {
+            const contactItem = checkbox.closest('.contact-item');
+            const count = parseInt(contactItem.querySelector('.selected-count').textContent);
+            totalRecipients += count;
+        });
+        
+        // Count from segments
+        segmentCheckboxes.forEach(checkbox => {
+            const contactItem = checkbox.closest('.contact-item');
+            const count = parseInt(contactItem.querySelector('.selected-count').textContent);
+            totalRecipients += count;
+        });
+        
+        // Count individual contacts
+        totalRecipients += individualCheckboxes.length;
+        
+        // Update display
+        document.getElementById('total-recipients').textContent = totalRecipients.toLocaleString();
+        document.getElementById('credits-required').textContent = totalRecipients.toLocaleString();
+        
+        // Calculate estimated delivery time
+        const estimatedMinutes = Math.ceil(totalRecipients / 1000); // Assume 1000 emails per minute
+        document.getElementById('estimated-delivery').textContent = 
+            estimatedMinutes < 1 ? 'Less than 1 minute' : 
+            estimatedMinutes === 1 ? '1 minute' : 
+            `${estimatedMinutes} minutes`;
+    }
+    
+    getTotalRecipients() {
+        const totalElement = document.getElementById('total-recipients');
+        return parseInt(totalElement.textContent.replace(/,/g, '')) || 0;
+    }
+    
+    nextStep() {
+        if (this.validateStep(this.currentStep)) {
+            if (this.currentStep < this.totalSteps) {
+                this.currentStep++;
+                this.showStep(this.currentStep);
+                this.updateStepProgress();
+                this.updateNavigation();
+                this.updateReviewData();
+            }
+        }
+    }
+    
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.showStep(this.currentStep);
+            this.updateStepProgress();
+            this.updateNavigation();
+        }
+    }
+    
+    goToStep(step) {
+        if (step >= 1 && step <= this.totalSteps) {
+            this.currentStep = step;
+            this.showStep(this.currentStep);
+            this.updateStepProgress();
+            this.updateNavigation();
+        }
+    }
+    
+    showStep(step) {
+        // Hide all panels
+        document.querySelectorAll('.step-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        
+        // Show current panel
+        document.getElementById(`step-${step}`).classList.add('active');
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    updateStepProgress() {
+        const progressLine = document.getElementById('progress-line');
+        const stepItems = document.querySelectorAll('.step-item');
+        
+        // Update step items
+        stepItems.forEach((item, index) => {
+            const stepNumber = index + 1;
+            const circle = item.querySelector('.step-circle');
+            
+            if (stepNumber < this.currentStep) {
+                item.classList.add('completed');
+                item.classList.remove('active');
+                circle.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (stepNumber === this.currentStep) {
+                item.classList.add('active');
+                item.classList.remove('completed');
+                circle.textContent = stepNumber;
+            } else {
+                item.classList.remove('active', 'completed');
+                circle.textContent = stepNumber;
+            }
+        });
+        
+        // Update progress line
+        const progressPercentage = ((this.currentStep - 1) / (this.totalSteps - 1)) * 100;
+        progressLine.style.width = `${progressPercentage}%`;
+        
+        // Update step indicator
+        document.getElementById('current-step').textContent = this.currentStep;
+    }
+    
+    updateNavigation() {
+        const prevButton = document.getElementById('prev-step');
+        const nextButton = document.getElementById('next-step');
+        const createButton = document.getElementById('create-campaign');
+        
+        prevButton.disabled = this.currentStep === 1;
+        
+        if (this.currentStep === this.totalSteps) {
+            nextButton.classList.add('d-none');
+            createButton.classList.remove('d-none');
+        } else {
+            nextButton.classList.remove('d-none');
+            createButton.classList.add('d-none');
+        }
+    }
+    
+    validateStep(step) {
+        const stepValidation = this.validation[step];
+        if (!stepValidation) return true;
+        
+        let isValid = true;
+        
+        // Validate required fields
+        if (stepValidation.fields) {
+            stepValidation.fields.forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    const fieldValid = this.validateField(fieldName, field.value);
+                    if (!fieldValid) isValid = false;
+                }
+            });
+        }
+        
+        // Custom validation
+        if (stepValidation.custom) {
+            const customError = stepValidation.custom();
+            if (customError) {
+                this.showToast(customError, 'error');
+                isValid = false;
+            }
+        }
+        
+        return isValid;
+    }
+    
+    validateField(fieldName, value) {
+        const stepValidation = this.validation[this.currentStep];
+        if (!stepValidation || !stepValidation.rules || !stepValidation.rules[fieldName]) {
+            return true;
+        }
+        
+        const rules = stepValidation.rules[fieldName];
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        const errorElement = document.getElementById(`${fieldName}_error`);
+        
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Required validation
+        if (rules.required && (!value || value.trim() === '')) {
+            errorMessage = 'This field is required.';
+            isValid = false;
+        }
+        
+        // Min length validation
+        if (isValid && rules.minLength && value.length < rules.minLength) {
+            errorMessage = `Minimum ${rules.minLength} characters required.`;
+            isValid = false;
+        }
+        
+        // Max length validation
+        if (isValid && rules.maxLength && value.length > rules.maxLength) {
+            errorMessage = `Maximum ${rules.maxLength} characters allowed.`;
+            isValid = false;
+        }
+        
+        // Email validation
+        if (isValid && rules.email && value && !this.isValidEmail(value)) {
+            errorMessage = 'Please enter a valid email address.';
+            isValid = false;
+        }
+        
+        // Update field appearance
+        if (field) {
+            if (isValid) {
+                field.classList.remove('error');
+            } else {
+                field.classList.add('error');
+            }
+        }
+        
+        // Update error message
+        if (errorElement) {
+            if (isValid) {
+                errorElement.classList.remove('show');
+                errorElement.textContent = '';
+            } else {
+                errorElement.classList.add('show');
+                errorElement.textContent = errorMessage;
+            }
+        }
+        
+        return isValid;
+    }
+    
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    updateReviewData() {
+        if (this.currentStep !== 5) return;
+        
+        // Campaign Details
+        document.getElementById('review-campaign-name').textContent = 
+            document.getElementById('campaign_name').value || '-';
+        document.getElementById('review-subject-line').textContent = 
+            document.getElementById('subject_line').value || '-';
+        document.getElementById('review-campaign-type').textContent = 
+            document.getElementById('campaign_type').selectedOptions[0]?.text || '-';
+        
+        const senderName = document.getElementById('sender_name').value;
+        const replyEmail = document.getElementById('reply_to_email').value;
+        document.getElementById('review-sender').textContent = 
+            senderName ? `${senderName} <${replyEmail}>` : replyEmail || '-';
+        
+        // Template & Content
+        const selectedTemplate = document.getElementById('selected_template').value;
+        const templateName = document.querySelector(`[data-template="${selectedTemplate}"] .template-name`)?.textContent || '-';
+        document.getElementById('review-template').textContent = templateName;
+        
+        const editorContent = document.getElementById('email-editor').innerHTML;
+        const contentLength = editorContent.replace(/<[^>]*>/g, '').length;
+        document.getElementById('review-content-length').textContent = `${contentLength} characters`;
+        
+        // Recipients
+        const totalRecipients = this.getTotalRecipients();
+        document.getElementById('review-total-recipients').textContent = totalRecipients.toLocaleString();
+        
+        const selectedLists = document.querySelectorAll('.list-checkbox:checked').length;
+        const selectedSegments = document.querySelectorAll('.segment-checkbox:checked').length;
+        
+        document.getElementById('review-lists').textContent = selectedLists;
+        document.getElementById('review-segments').textContent = selectedSegments;
+        
+        // Schedule
+        const scheduleType = document.getElementById('schedule_type').value;
+        let scheduleText = '-';
+        
+        if (scheduleType === 'now') {
+            scheduleText = 'Send immediately';
+        } else if (scheduleType === 'later') {
+            const date = document.getElementById('schedule_date').value;
+            const time = document.getElementById('schedule_time').value;
+            const timezone = document.getElementById('timezone').selectedOptions[0]?.text;
+            scheduleText = `${date} at ${time} (${timezone})`;
+        } else if (scheduleType === 'optimal') {
+            scheduleText = 'Send at optimal time (AI-powered)';
+        }
+        
+        document.getElementById('review-schedule').textContent = scheduleText;
+    }
+    
+    async sendTestEmail() {
+        const testEmailInput = document.getElementById('test-email');
+        const testEmail = testEmailInput.value.trim();
+        const sendButton = document.getElementById('send-test-email');
+        
+        if (!testEmail) {
+            this.showToast('Please enter an email address', 'warning');
+            testEmailInput.focus();
+            return;
+        }
+        
+        if (!this.isValidEmail(testEmail)) {
+            this.showToast('Please enter a valid email address', 'error');
+            testEmailInput.focus();
+            return;
+        }
+        
+        try {
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+            
+            const formData = this.getFormData();
+            formData.test_email = testEmail;
+            
+            const response = await fetch('/api/campaigns/send-test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showToast('Test email sent successfully!', 'success');
+            } else {
+                this.showToast(data.message || 'Error sending test email', 'error');
+            }
+        } catch (error) {
+            console.error('Error sending test email:', error);
+            this.showToast('Error sending test email', 'error');
+        } finally {
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Test';
+        }
+    }
+    
+    async createCampaign() {
+        if (this.isSubmitting) return;
+        
+        if (!this.validateStep(5)) return;
+        
+        try {
+            this.isSubmitting = true;
+            const createButton = document.getElementById('create-campaign');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            createButton.disabled = true;
+            createButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Campaign...';
+            loadingOverlay.classList.add('show');
+            
+            const formData = this.getFormData();
+            
+            const response = await fetch('/campaigns/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Clear saved draft
+                localStorage.removeItem('campaign_draft');
+                
+                // Show success modal
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+                
+                // Optional redirect after delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/dashboard/campaigns';
+                }, 3000);
+            } else {
+                this.showToast(data.message || 'Error creating campaign', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating campaign:', error);
+            this.showToast('Error creating campaign', 'error');
+        } finally {
+            this.isSubmitting = false;
+            const createButton = document.getElementById('create-campaign');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            createButton.disabled = false;
+            createButton.innerHTML = '<i class="fas fa-rocket me-2"></i>Create Campaign';
+            loadingOverlay.classList.remove('show');
+        }
+    }
+    
+    getFormData() {
+        const formData = {
+            // Step 1: Campaign Details
+            campaign_name: document.getElementById('campaign_name').value,
+            subject_line: document.getElementById('subject_line').value,
+            preheader_text: document.getElementById('preheader_text').value,
+            campaign_type: document.getElementById('campaign_type').value,
+            sender_name: document.getElementById('sender_name').value,
+            reply_to_email: document.getElementById('reply_to_email').value,
+            
+            // Step 2: Template & Content
+            selected_template: document.getElementById('selected_template').value,
+            email_content: document.getElementById('email-editor').innerHTML,
+            
+            // Step 3: Recipients
+            contact_lists: Array.from(document.querySelectorAll('.list-checkbox:checked')).map(cb => cb.value),
+            contact_segments: Array.from(document.querySelectorAll('.segment-checkbox:checked')).map(cb => cb.value),
+            individual_contacts: Array.from(document.querySelectorAll('.individual-checkbox:checked')).map(cb => cb.value),
+            
+            // Step 4: Schedule
+            schedule_type: document.getElementById('schedule_type').value,
+            schedule_date: document.getElementById('schedule_date').value,
+            schedule_time: document.getElementById('schedule_time').value,
+            timezone: document.getElementById('timezone').value,
+        };
+        
+        return formData;
+    }
+    
+    updateFormData(field, value) {
+        this.formData[field] = value;
+        this.saveDraft();
+    }
+    
+    saveDraft() {
+        try {
+            const draftData = {
+                ...this.formData,
+                currentStep: this.currentStep,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('campaign_draft', JSON.stringify(draftData));
+        } catch (error) {
+            console.error('Error saving draft:', error);
+        }
+    }
+    
+    loadFormData() {
+        try {
+            const savedDraft = localStorage.getItem('campaign_draft');
+            if (savedDraft) {
+                const draftData = JSON.parse(savedDraft);
+                
+                // Check if draft is recent (within 24 hours)
+                const isRecent = Date.now() - draftData.timestamp < 24 * 60 * 60 * 1000;
+                
+                if (isRecent && confirm('Would you like to continue with your saved draft?')) {
+                    this.formData = draftData;
+                    this.restoreFormState();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading draft:', error);
+        }
+    }
+    
+    restoreFormState() {
+        // Restore form field values
+        Object.entries(this.formData).forEach(([field, value]) => {
+            const element = document.querySelector(`[name="${field}"], #${field}`);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = value;
+                } else {
+                    element.value = value;
+                }
+            }
+        });
+        
+        // Restore template selection
+        if (this.formData.selected_template) {
+            const templateCard = document.querySelector(`[data-template="${this.formData.selected_template}"]`);
+            if (templateCard) {
+                templateCard.click();
+            }
+        }
+        
+        // Restore schedule selection
+        if (this.formData.schedule_type) {
+            const scheduleCard = document.querySelector(`[data-schedule="${this.formData.schedule_type}"]`);
+            if (scheduleCard) {
+                scheduleCard.click();
+            }
+        }
+        
+        // Update recipient count
+        this.updateRecipientCount();
+        
+        // Go to saved step if it was beyond step 1
+        if (this.formData.currentStep && this.formData.currentStep > 1) {
+            this.goToStep(this.formData.currentStep);
+        }
+    }
+    
+    showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${icons[type]} fa-lg me-2"></i>
+                <span>${message}</span>
+                <button class="btn-close ms-auto" onclick="this.closest('.alert').remove()"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+}
+
+// Initialize wizard system
+document.addEventListener('DOMContentLoaded', function() {
+    window.campaignWizard = new CampaignWizard();
+});
+
+// Add custom styles for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    }
+    
+    .editor-content.empty::before {
+        content: attr(data-placeholder);
+        color: #9ca3af;
+        font-style: italic;
+        pointer-events: none;
+    }
+    
+    .placeholder {
+        color: #9ca3af;
+        font-style: italic;
+        pointer-events: none;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
+

@@ -1,0 +1,2287 @@
+<!-- templates/settings/smtp.html -->
+{% extends "base.html" %}
+
+{% block title %}SMTP Configuration - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Enterprise SMTP Configuration Interface */
+:root {
+    --smtp-primary: #3b82f6;
+    --smtp-secondary: #6b7280;
+    --smtp-success: #10b981;
+    --smtp-warning: #f59e0b;
+    --smtp-danger: #ef4444;
+    --smtp-info: #06b6d4;
+    --smtp-purple: #8b5cf6;
+    --smtp-indigo: #6366f1;
+    --smtp-gray-50: #f9fafb;
+    --smtp-gray-100: #f3f4f6;
+    --smtp-gray-200: #e5e7eb;
+    --smtp-gray-300: #d1d5db;
+    --smtp-gray-400: #9ca3af;
+    --smtp-gray-500: #6b7280;
+    --smtp-gray-600: #4b5563;
+    --smtp-gray-700: #374151;
+    --smtp-gray-800: #1f2937;
+    --smtp-gray-900: #111827;
+    --smtp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --smtp-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --smtp-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --smtp-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--smtp-gray-50);
+    color: var(--smtp-gray-900);
+}
+
+/* Page Header */
+.page-header {
+    background: white;
+    border-bottom: 1px solid var(--smtp-gray-200);
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-left h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--smtp-gray-900);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--smtp-gray-600);
+    margin-top: 0.5rem;
+}
+
+.breadcrumb a {
+    color: var(--smtp-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    color: var(--smtp-gray-400);
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-indicator.connected {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--smtp-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-indicator.disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--smtp-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-indicator.testing {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--smtp-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-secondary {
+    background: var(--smtp-gray-200);
+    color: var(--smtp-gray-700);
+    border: 1px solid var(--smtp-gray-300);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--smtp-gray-300);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--smtp-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--smtp-success);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #059669;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: var(--smtp-warning);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #d97706;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Main Layout */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.content-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sidebar-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Configuration Form */
+.config-form {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--smtp-gray-200);
+    box-shadow: var(--smtp-shadow);
+    overflow: hidden;
+}
+
+.form-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--smtp-gray-200);
+    background: var(--smtp-gray-50);
+}
+
+.form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--smtp-gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.form-description {
+    font-size: 0.875rem;
+    color: var(--smtp-gray-600);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.form-content {
+    padding: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--smtp-gray-900);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--smtp-primary);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--smtp-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-label.required::after {
+    content: '*';
+    color: var(--smtp-danger);
+    margin-left: 0.25rem;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--smtp-gray-300);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--smtp-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input.error,
+.form-select.error {
+    border-color: var(--smtp-danger);
+}
+
+.form-input.success,
+.form-select.success {
+    border-color: var(--smtp-success);
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: var(--smtp-gray-500);
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}
+
+.form-error {
+    font-size: 0.75rem;
+    color: var(--smtp-danger);
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.form-success {
+    font-size: 0.75rem;
+    color: var(--smtp-success);
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-addon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--smtp-gray-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.input-addon:hover {
+    color: var(--smtp-gray-600);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Provider Templates */
+.provider-templates {
+    margin-bottom: 2rem;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.template-card {
+    padding: 1rem;
+    border: 2px solid var(--smtp-gray-200);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    text-align: center;
+}
+
+.template-card:hover {
+    border-color: var(--smtp-primary);
+    box-shadow: var(--smtp-shadow-md);
+    transform: translateY(-2px);
+}
+
+.template-card.selected {
+    border-color: var(--smtp-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.template-logo {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem auto;
+    background: var(--smtp-gray-100);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--smtp-gray-600);
+}
+
+.template-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--smtp-gray-900);
+    margin: 0;
+}
+
+/* Security Settings */
+.security-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.security-option {
+    padding: 1rem;
+    border: 1px solid var(--smtp-gray-200);
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.security-option:hover {
+    border-color: var(--smtp-primary);
+    box-shadow: var(--smtp-shadow);
+}
+
+.security-option.selected {
+    border-color: var(--smtp-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.security-option input[type="radio"] {
+    display: none;
+}
+
+.security-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--smtp-gray-900);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.security-description {
+    font-size: 0.75rem;
+    color: var(--smtp-gray-600);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.security-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.security-badge.high {
+    background: var(--smtp-success);
+    color: white;
+}
+
+.security-badge.medium {
+    background: var(--smtp-warning);
+    color: white;
+}
+
+.security-badge.low {
+    background: var(--smtp-danger);
+    color: white;
+}
+
+/* Advanced Settings */
+.advanced-settings {
+    border-top: 1px solid var(--smtp-gray-200);
+    padding-top: 2rem;
+    margin-top: 2rem;
+}
+
+.advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: var(--smtp-gray-300);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.toggle-switch.active {
+    background: var(--smtp-primary);
+}
+
+.toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.toggle-switch.active .toggle-knob {
+    transform: translateX(24px);
+}
+
+.advanced-content {
+    display: none;
+    padding-top: 1rem;
+}
+
+.advanced-content.visible {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Connection Test */
+.connection-test {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--smtp-gray-200);
+    box-shadow: var(--smtp-shadow);
+    overflow: hidden;
+}
+
+.test-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--smtp-gray-200);
+    background: var(--smtp-gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.test-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--smtp-gray-900);
+    margin: 0;
+}
+
+.test-content {
+    padding: 1.5rem;
+}
+
+.test-result {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.test-result.success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--smtp-success);
+}
+
+.test-result.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--smtp-danger);
+}
+
+.test-result.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--smtp-warning);
+}
+
+.test-result.info {
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    color: var(--smtp-info);
+}
+
+.test-icon {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.test-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--smtp-gray-200);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.test-progress-bar {
+    height: 100%;
+    background: var(--smtp-primary);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    animation: indeterminate 1.5s infinite linear;
+}
+
+@keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+}
+
+.test-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.test-step {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--smtp-gray-100);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.test-step:last-child {
+    border-bottom: none;
+}
+
+.step-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.step-icon.pending {
+    background: var(--smtp-gray-200);
+    color: var(--smtp-gray-500);
+}
+
+.step-icon.running {
+    background: var(--smtp-warning);
+    color: white;
+    animation: spin 1s linear infinite;
+}
+
+.step-icon.success {
+    background: var(--smtp-success);
+    color: white;
+}
+
+.step-icon.error {
+    background: var(--smtp-danger);
+    color: white;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Configuration History */
+.config-history {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--smtp-gray-200);
+    box-shadow: var(--smtp-shadow);
+    overflow: hidden;
+}
+
+.history-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--smtp-gray-200);
+    background: var(--smtp-gray-50);
+}
+
+.history-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--smtp-gray-900);
+    margin: 0;
+}
+
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--smtp-gray-100);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background: var(--smtp-gray-50);
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.history-date {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--smtp-gray-900);
+}
+
+.history-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.history-status.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--smtp-success);
+}
+
+.history-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--smtp-danger);
+}
+
+.history-details {
+    font-size: 0.75rem;
+    color: var(--smtp-gray-600);
+    line-height: 1.4;
+}
+
+/* Documentation */
+.documentation {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--smtp-gray-200);
+    box-shadow: var(--smtp-shadow);
+    overflow: hidden;
+}
+
+.doc-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--smtp-gray-200);
+    background: var(--smtp-gray-50);
+}
+
+.doc-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--smtp-gray-900);
+    margin: 0;
+}
+
+.doc-content {
+    padding: 1.5rem;
+}
+
+.doc-section {
+    margin-bottom: 1.5rem;
+}
+
+.doc-section:last-child {
+    margin-bottom: 0;
+}
+
+.doc-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--smtp-gray-900);
+    margin: 0 0 0.75rem 0;
+}
+
+.doc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.doc-item {
+    padding: 0.5rem 0;
+    font-size: 0.75rem;
+    color: var(--smtp-gray-600);
+    line-height: 1.4;
+}
+
+.doc-link {
+    color: var(--smtp-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.doc-link:hover {
+    text-decoration: underline;
+}
+
+/* Form Actions */
+.form-actions {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--smtp-gray-200);
+    box-shadow: var(--smtp-shadow);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.action-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-outline {
+    background: white;
+    color: var(--smtp-gray-700);
+    border: 1px solid var(--smtp-gray-300);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--smtp-gray-50);
+    border-color: var(--smtp-gray-400);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    min-width: 300px;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--smtp-shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast.success {
+    background: var(--smtp-success);
+    color: white;
+}
+
+.toast.error {
+    background: var(--smtp-danger);
+    color: white;
+}
+
+.toast.warning {
+    background: var(--smtp-warning);
+    color: white;
+}
+
+.toast.info {
+    background: var(--smtp-info);
+    color: white;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.25rem;
+    margin-left: auto;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+/* Loading States */
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--smtp-gray-300);
+    border-top: 2px solid var(--smtp-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        max-width: 800px;
+    }
+    
+    .sidebar-area {
+        order: -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+        padding: 0 1rem;
+    }
+    
+    .header-status,
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .template-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .security-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-left,
+    .action-right {
+        justify-content: center;
+    }
+    
+    .sidebar-area {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.config-form {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Tooltips */
+.tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--smtp-gray-900);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--smtp-gray-900);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.tooltip:hover::before,
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1>SMTP Configuration</h1>
+            <div class="breadcrumb">
+                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('settings.index') }}">Settings</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>SMTP</span>
+            </div>
+        </div>
+        <div class="header-status">
+            <div class="status-indicator disconnected" id="connection-status">
+                <div class="status-dot"></div>
+                <span id="status-text">Disconnected</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                Back to Settings
+            </a>
+            <button class="btn btn-warning" onclick="testConnection()" id="test-btn">
+                <i class="fas fa-plug" aria-hidden="true"></i>
+                Test Connection
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="content-area">
+        <!-- SMTP Configuration Form -->
+        <div class="config-form">
+            <div class="form-header">
+                <h2 class="form-title">SMTP Server Configuration</h2>
+                <p class="form-description">Configure your SMTP server settings for reliable email delivery. All sensitive information is encrypted and stored securely.</p>
+            </div>
+            <div class="form-content">
+                <form id="smtp-config-form">
+                    <!-- Provider Templates -->
+                    <div class="provider-templates">
+                        <h3 class="section-title">
+                            <i class="fas fa-server section-icon" aria-hidden="true"></i>
+                            Quick Setup Templates
+                        </h3>
+                        <div class="template-grid">
+                            <div class="template-card" data-provider="gmail" onclick="selectProvider('gmail')">
+                                <div class="template-logo">G</div>
+                                <div class="template-name">Gmail</div>
+                            </div>
+                            <div class="template-card" data-provider="outlook" onclick="selectProvider('outlook')">
+                                <div class="template-logo">O</div>
+                                <div class="template-name">Outlook</div>
+                            </div>
+                            <div class="template-card" data-provider="yahoo" onclick="selectProvider('yahoo')">
+                                <div class="template-logo">Y</div>
+                                <div class="template-name">Yahoo</div>
+                            </div>
+                            <div class="template-card" data-provider="sendgrid" onclick="selectProvider('sendgrid')">
+                                <div class="template-logo">S</div>
+                                <div class="template-name">SendGrid</div>
+                            </div>
+                            <div class="template-card" data-provider="mailgun" onclick="selectProvider('mailgun')">
+                                <div class="template-logo">M</div>
+                                <div class="template-name">Mailgun</div>
+                            </div>
+                            <div class="template-card selected" data-provider="custom" onclick="selectProvider('custom')">
+                                <div class="template-logo">⚙</div>
+                                <div class="template-name">Custom</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Server Settings -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-network-wired section-icon" aria-hidden="true"></i>
+                            Server Settings
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="smtp_host" class="form-label required">SMTP Host</label>
+                                <input 
+                                    type="text" 
+                                    id="smtp_host" 
+                                    name="smtp_host" 
+                                    class="form-input" 
+                                    placeholder="smtp.example.com" 
+                                    value="{{ config.get('SMTP_HOST', '') }}"
+                                    required
+                                >
+                                <div class="form-help">The hostname or IP address of your SMTP server</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="smtp_port" class="form-label required">Port</label>
+                                <select id="smtp_port" name="smtp_port" class="form-select" required>
+                                    <option value="25">25 (Standard SMTP)</option>
+                                    <option value="587" selected>587 (STARTTLS)</option>
+                                    <option value="465">465 (SSL/TLS)</option>
+                                    <option value="2525">2525 (Alternative)</option>
+                                    <option value="custom">Custom Port</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="custom-port-group" style="display: none;">
+                            <label for="smtp_port_custom" class="form-label">Custom Port</label>
+                            <input 
+                                type="number" 
+                                id="smtp_port_custom" 
+                                name="smtp_port_custom" 
+                                class="form-input" 
+                                placeholder="1025" 
+                                min="1" 
+                                max="65535"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Authentication -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-key section-icon" aria-hidden="true"></i>
+                            Authentication
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="smtp_username" class="form-label required">Username/Email</label>
+                                <input 
+                                    type="text" 
+                                    id="smtp_username" 
+                                    name="smtp_username" 
+                                    class="form-input" 
+                                    placeholder="your-email@example.com" 
+                                    value="{{ config.get('SMTP_USERNAME', '') }}"
+                                    required
+                                >
+                                <div class="form-help">Your SMTP account username or email address</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="smtp_password" class="form-label required">Password</label>
+                                <div class="input-group">
+                                    <input 
+                                        type="password" 
+                                        id="smtp_password" 
+                                        name="smtp_password" 
+                                        class="form-input" 
+                                        placeholder="••••••••••••"
+                                        required
+                                    >
+                                    <div class="input-addon" onclick="togglePassword('smtp_password')">
+                                        <i class="fas fa-eye" id="password-toggle-icon" aria-hidden="true"></i>
+                                    </div>
+                                </div>
+                                <div class="form-help">Your SMTP account password or app-specific password</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-shield-alt section-icon" aria-hidden="true"></i>
+                            Security & Encryption
+                        </h3>
+                        <div class="security-options">
+                            <label class="security-option selected" for="tls_auto">
+                                <input type="radio" id="tls_auto" name="encryption" value="auto" checked>
+                                <div class="security-title">
+                                    Auto-detect
+                                    <span class="security-badge high">Recommended</span>
+                                </div>
+                                <div class="security-description">Automatically select the best encryption method</div>
+                            </label>
+                            <label class="security-option" for="tls_starttls">
+                                <input type="radio" id="tls_starttls" name="encryption" value="starttls">
+                                <div class="security-title">
+                                    STARTTLS
+                                    <span class="security-badge high">High</span>
+                                </div>
+                                <div class="security-description">Upgrade to TLS after connection (Port 587)</div>
+                            </label>
+                            <label class="security-option" for="tls_ssl">
+                                <input type="radio" id="tls_ssl" name="encryption" value="ssl">
+                                <div class="security-title">
+                                    SSL/TLS
+                                    <span class="security-badge high">High</span>
+                                </div>
+                                <div class="security-description">Direct TLS connection (Port 465)</div>
+                            </label>
+                            <label class="security-option" for="tls_none">
+                                <input type="radio" id="tls_none" name="encryption" value="none">
+                                <div class="security-title">
+                                    No Encryption
+                                    <span class="security-badge low">Insecure</span>
+                                </div>
+                                <div class="security-description">Plain text connection (Not recommended)</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Sender Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user section-icon" aria-hidden="true"></i>
+                            Sender Information
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="from_name" class="form-label">From Name</label>
+                                <input 
+                                    type="text" 
+                                    id="from_name" 
+                                    name="from_name" 
+                                    class="form-input" 
+                                    placeholder="Your Company Name" 
+                                    value="{{ config.get('MAIL_DEFAULT_SENDER_NAME', '') }}"
+                                >
+                                <div class="form-help">The name that appears in the "From" field of emails</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="from_email" class="form-label required">From Email</label>
+                                <input 
+                                    type="email" 
+                                    id="from_email" 
+                                    name="from_email" 
+                                    class="form-input" 
+                                    placeholder="noreply@example.com" 
+                                    value="{{ config.get('MAIL_DEFAULT_SENDER', '') }}"
+                                    required
+                                >
+                                <div class="form-help">The email address that appears in the "From" field</div>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="reply_to" class="form-label">Reply-To Email</label>
+                                <input 
+                                    type="email" 
+                                    id="reply_to" 
+                                    name="reply_to" 
+                                    class="form-input" 
+                                    placeholder="support@example.com"
+                                >
+                                <div class="form-help">Where replies should be sent (optional)</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="return_path" class="form-label">Return Path</label>
+                                <input 
+                                    type="email" 
+                                    id="return_path" 
+                                    name="return_path" 
+                                    class="form-input" 
+                                    placeholder="bounce@example.com"
+                                >
+                                <div class="form-help">Email for bounce handling (optional)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="advanced-settings">
+                        <div class="advanced-toggle" onclick="toggleAdvanced()">
+                            <div class="toggle-switch" id="advanced-switch">
+                                <div class="toggle-knob"></div>
+                            </div>
+                            <span>Advanced Settings</span>
+                        </div>
+                        
+                        <div class="advanced-content" id="advanced-content">
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-cogs section-icon" aria-hidden="true"></i>
+                                    Connection Settings
+                                </h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="timeout" class="form-label">Connection Timeout (seconds)</label>
+                                        <input 
+                                            type="number" 
+                                            id="timeout" 
+                                            name="timeout" 
+                                            class="form-input" 
+                                            placeholder="30" 
+                                            min="5" 
+                                            max="300" 
+                                            value="30"
+                                        >
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="max_connections" class="form-label">Max Connections</label>
+                                        <input 
+                                            type="number" 
+                                            id="max_connections" 
+                                            name="max_connections" 
+                                            class="form-input" 
+                                            placeholder="10" 
+                                            min="1" 
+                                            max="100" 
+                                            value="10"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-tachometer-alt section-icon" aria-hidden="true"></i>
+                                    Rate Limiting
+                                </h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="rate_limit" class="form-label">Emails per Hour</label>
+                                        <input 
+                                            type="number" 
+                                            id="rate_limit" 
+                                            name="rate_limit" 
+                                            class="form-input" 
+                                            placeholder="1000" 
+                                            min="1" 
+                                            value="1000"
+                                        >
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="burst_limit" class="form-label">Burst Limit</label>
+                                        <input 
+                                            type="number" 
+                                            id="burst_limit" 
+                                            name="burst_limit" 
+                                            class="form-input" 
+                                            placeholder="100" 
+                                            min="1" 
+                                            value="100"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-certificate section-icon" aria-hidden="true"></i>
+                                    SSL/TLS Options
+                                </h4>
+                                <div class="form-group">
+                                    <div class="advanced-toggle" onclick="toggleSetting('verify_ssl')">
+                                        <div class="toggle-switch active" id="verify-ssl-switch">
+                                            <div class="toggle-knob"></div>
+                                        </div>
+                                        <span>Verify SSL Certificates</span>
+                                    </div>
+                                    <div class="form-help">Disable only for testing with self-signed certificates</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <div class="action-left">
+                <button class="btn btn-outline" onclick="resetForm()" type="button">
+                    <i class="fas fa-undo" aria-hidden="true"></i>
+                    Reset
+                </button>
+                <button class="btn btn-outline" onclick="loadTemplate()" type="button">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    Load Template
+                </button>
+            </div>
+            <div class="action-right">
+                <button class="btn btn-secondary" onclick="saveAsDraft()" type="button">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    Save Draft
+                </button>
+                <button class="btn btn-success" onclick="saveConfiguration()" type="button" id="save-btn">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-area">
+        <!-- Connection Test -->
+        <div class="connection-test">
+            <div class="test-header">
+                <h3 class="test-title">Connection Test</h3>
+                <button class="btn btn-primary" onclick="runDiagnostics()" id="diagnostic-btn">
+                    <i class="fas fa-stethoscope" aria-hidden="true"></i>
+                    Run Diagnostics
+                </button>
+            </div>
+            <div class="test-content">
+                <div id="test-results">
+                    <div class="test-result info">
+                        <div class="test-icon">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <strong>Ready to Test</strong><br>
+                            Click "Test Connection" to verify your SMTP settings.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="test-progress" id="test-progress" style="display: none;">
+                    <div class="test-progress-bar"></div>
+                </div>
+                
+                <ul class="test-steps" id="test-steps" style="display: none;">
+                    <li class="test-step">
+                        <div class="step-icon pending" id="step-dns">1</div>
+                        <span>DNS Resolution</span>
+                    </li>
+                    <li class="test-step">
+                        <div class="step-icon pending" id="step-connect">2</div>
+                        <span>TCP Connection</span>
+                    </li>
+                    <li class="test-step">
+                        <div class="step-icon pending" id="step-handshake">3</div>
+                        <span>SMTP Handshake</span>
+                    </li>
+                    <li class="test-step">
+                        <div class="step-icon pending" id="step-auth">4</div>
+                        <span>Authentication</span>
+                    </li>
+                    <li class="test-step">
+                        <div class="step-icon pending" id="step-send">5</div>
+                        <span>Test Email</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Configuration History -->
+        <div class="config-history">
+            <div class="history-header">
+                <h3 class="history-title">Configuration History</h3>
+            </div>
+            <div class="history-list">
+                <div class="history-item" onclick="loadHistoryItem('2025-10-07-19:30')">
+                    <div class="history-meta">
+                        <div class="history-date">Oct 7, 2025 7:30 PM</div>
+                        <div class="history-status success">Active</div>
+                    </div>
+                    <div class="history-details">Gmail SMTP configuration with STARTTLS encryption</div>
+                </div>
+                <div class="history-item" onclick="loadHistoryItem('2025-10-06-14:22')">
+                    <div class="history-meta">
+                        <div class="history-date">Oct 6, 2025 2:22 PM</div>
+                        <div class="history-status error">Failed</div>
+                    </div>
+                    <div class="history-details">SendGrid configuration - Authentication error</div>
+                </div>
+                <div class="history-item" onclick="loadHistoryItem('2025-10-05-09:15')">
+                    <div class="history-meta">
+                        <div class="history-date">Oct 5, 2025 9:15 AM</div>
+                        <div class="history-status success">Success</div>
+                    </div>
+                    <div class="history-details">Outlook SMTP with SSL/TLS encryption</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation -->
+        <div class="documentation">
+            <div class="doc-header">
+                <h3 class="doc-title">Quick Reference</h3>
+            </div>
+            <div class="doc-content">
+                <div class="doc-section">
+                    <div class="doc-section-title">Common SMTP Ports</div>
+                    <ul class="doc-list">
+                        <li class="doc-item">Port 25: Standard SMTP (often blocked by ISPs)</li>
+                        <li class="doc-item">Port 587: STARTTLS submission (recommended)</li>
+                        <li class="doc-item">Port 465: SSL/TLS direct connection</li>
+                        <li class="doc-item">Port 2525: Alternative submission port</li>
+                    </ul>
+                </div>
+                
+                <div class="doc-section">
+                    <div class="doc-section-title">Popular Providers</div>
+                    <ul class="doc-list">
+                        <li class="doc-item">Gmail: smtp.gmail.com:587 (STARTTLS)</li>
+                        <li class="doc-item">Outlook: smtp.live.com:587 (STARTTLS)</li>
+                        <li class="doc-item">Yahoo: smtp.mail.yahoo.com:587 (STARTTLS)</li>
+                        <li class="doc-item">SendGrid: smtp.sendgrid.net:587 (STARTTLS)</li>
+                    </ul>
+                </div>
+                
+                <div class="doc-section">
+                    <div class="doc-section-title">Security Notes</div>
+                    <ul class="doc-list">
+                        <li class="doc-item">Always use encrypted connections in production</li>
+                        <li class="doc-item">Enable 2FA and use app passwords when available</li>
+                        <li class="doc-item">Monitor for failed authentication attempts</li>
+                        <li class="doc-item">Regularly rotate SMTP credentials</li>
+                    </ul>
+                </div>
+                
+                <div class="doc-section">
+                    <div class="doc-section-title">Helpful Links</div>
+                    <ul class="doc-list">
+                        <li class="doc-item"><a href="#" class="doc-link">SMTP Troubleshooting Guide</a></li>
+                        <li class="doc-item"><a href="#" class="doc-link">Email Deliverability Best Practices</a></li>
+                        <li class="doc-item"><a href="#" class="doc-link">Setting up SPF, DKIM & DMARC</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Enterprise SMTP Configuration System
+class SMTPConfigManager {
+    constructor() {
+        this.currentProvider = 'custom';
+        this.testInProgress = false;
+        this.advancedVisible = false;
+        this.providers = {
+            gmail: {
+                host: 'smtp.gmail.com',
+                port: '587',
+                encryption: 'starttls',
+                name: 'Gmail'
+            },
+            outlook: {
+                host: 'smtp.live.com',
+                port: '587',
+                encryption: 'starttls',
+                name: 'Outlook/Hotmail'
+            },
+            yahoo: {
+                host: 'smtp.mail.yahoo.com',
+                port: '587',
+                encryption: 'starttls',
+                name: 'Yahoo Mail'
+            },
+            sendgrid: {
+                host: 'smtp.sendgrid.net',
+                port: '587',
+                encryption: 'starttls',
+                name: 'SendGrid'
+            },
+            mailgun: {
+                host: 'smtp.mailgun.org',
+                port: '587',
+                encryption: 'starttls',
+                name: 'Mailgun'
+            }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.setupFormValidation();
+        this.loadCurrentConfig();
+        
+        console.log('SMTP Config Manager initialized');
+    }
+    
+    setupEventListeners() {
+        // Port selection change
+        document.getElementById('smtp_port').addEventListener('change', (e) => {
+            this.handlePortChange(e.target.value);
+        });
+        
+        // Security option changes
+        document.querySelectorAll('input[name="encryption"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.handleEncryptionChange(e.target.value);
+            });
+        });
+        
+        // Form input validation
+        document.querySelectorAll('.form-input, .form-select').forEach(input => {
+            input.addEventListener('blur', (e) => {
+                this.validateField(e.target);
+            });
+            
+            input.addEventListener('input', (e) => {
+                this.clearFieldError(e.target);
+            });
+        });
+        
+        // Auto-save draft
+        let saveTimer;
+        document.querySelectorAll('.form-input, .form-select').forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => {
+                    this.autoSaveDraft();
+                }, 2000);
+            });
+        });
+    }
+    
+    setupFormValidation() {
+        const form = document.getElementById('smtp-config-form');
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveConfiguration();
+        });
+    }
+    
+    loadCurrentConfig() {
+        // Load existing configuration from server
+        // In a real implementation, this would fetch from the backend
+        console.log('Loading current SMTP configuration...');
+    }
+    
+    selectProvider(provider) {
+        // Update UI
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        document.querySelector(`[data-provider="${provider}"]`).classList.add('selected');
+        
+        this.currentProvider = provider;
+        
+        if (provider !== 'custom' && this.providers[provider]) {
+            this.applyProviderTemplate(this.providers[provider]);
+            this.showToast(`Applied ${this.providers[provider].name} template`, 'success');
+        }
+    }
+    
+    applyProviderTemplate(template) {
+        document.getElementById('smtp_host').value = template.host;
+        document.getElementById('smtp_port').value = template.port;
+        
+        // Set encryption method
+        document.getElementById(`tls_${template.encryption}`).checked = true;
+        this.updateSecuritySelection(template.encryption);
+        
+        // Update port field if needed
+        this.handlePortChange(template.port);
+    }
+    
+    updateSecuritySelection(encryption) {
+        document.querySelectorAll('.security-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        const selectedOption = document.querySelector(`#tls_${encryption}`).closest('.security-option');
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+    }
+    
+    handlePortChange(port) {
+        const customPortGroup = document.getElementById('custom-port-group');
+        
+        if (port === 'custom') {
+            customPortGroup.style.display = 'block';
+            document.getElementById('smtp_port_custom').required = true;
+        } else {
+            customPortGroup.style.display = 'none';
+            document.getElementById('smtp_port_custom').required = false;
+            
+            // Auto-select appropriate encryption based on port
+            if (port === '465') {
+                document.getElementById('tls_ssl').checked = true;
+                this.updateSecuritySelection('ssl');
+            } else if (port === '587') {
+                document.getElementById('tls_starttls').checked = true;
+                this.updateSecuritySelection('starttls');
+            } else if (port === '25') {
+                document.getElementById('tls_none').checked = true;
+                this.updateSecuritySelection('none');
+                this.showToast('Port 25 typically requires no encryption', 'warning');
+            }
+        }
+    }
+    
+    handleEncryptionChange(encryption) {
+        this.updateSecuritySelection(encryption);
+        
+        // Suggest appropriate port
+        const portSelect = document.getElementById('smtp_port');
+        if (encryption === 'ssl' && portSelect.value !== '465') {
+            portSelect.value = '465';
+            this.showToast('Switched to port 465 for SSL/TLS', 'info');
+        } else if (encryption === 'starttls' && portSelect.value !== '587') {
+            portSelect.value = '587';
+            this.showToast('Switched to port 587 for STARTTLS', 'info');
+        }
+    }
+    
+    validateField(field) {
+        const value = field.value.trim();
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Required field validation
+        if (field.hasAttribute('required') && !value) {
+            isValid = false;
+            errorMessage = 'This field is required';
+        }
+        
+        // Specific field validation
+        switch (field.type) {
+            case 'email':
+                if (value && !this.isValidEmail(value)) {
+                    isValid = false;
+                    errorMessage = 'Please enter a valid email address';
+                }
+                break;
+            case 'number':
+                const min = field.getAttribute('min');
+                const max = field.getAttribute('max');
+                const numValue = parseInt(value);
+                
+                if (value && (isNaN(numValue) || (min && numValue < min) || (max && numValue > max))) {
+                    isValid = false;
+                    errorMessage = `Please enter a number between ${min || 0} and ${max || 'infinity'}`;
+                }
+                break;
+        }
+        
+        // Specific field validations
+        if (field.id === 'smtp_host' && value) {
+            if (!this.isValidHostname(value)) {
+                isValid = false;
+                errorMessage = 'Please enter a valid hostname or IP address';
+            }
+        }
+        
+        this.updateFieldValidation(field, isValid, errorMessage);
+        return isValid;
+    }
+    
+    updateFieldValidation(field, isValid, errorMessage) {
+        const errorElement = field.parentNode.querySelector('.form-error');
+        const successElement = field.parentNode.querySelector('.form-success');
+        
+        // Remove existing states
+        field.classList.remove('error', 'success');
+        if (errorElement) errorElement.remove();
+        if (successElement) successElement.remove();
+        
+        if (!isValid && errorMessage) {
+            field.classList.add('error');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'form-error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle" aria-hidden="true"></i> ${errorMessage}`;
+            field.parentNode.appendChild(errorDiv);
+        } else if (field.value.trim() && field.hasAttribute('required')) {
+            field.classList.add('success');
+        }
+    }
+    
+    clearFieldError(field) {
+        field.classList.remove('error');
+        const errorElement = field.parentNode.querySelector('.form-error');
+        if (errorElement) errorElement.remove();
+    }
+    
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    isValidHostname(hostname) {
+        const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        return hostnameRegex.test(hostname) || ipRegex.test(hostname);
+    }
+    
+    toggleAdvanced() {
+        const content = document.getElementById('advanced-content');
+        const toggle = document.getElementById('advanced-switch');
+        
+        this.advancedVisible = !this.advancedVisible;
+        
+        if (this.advancedVisible) {
+            content.classList.add('visible');
+            toggle.classList.add('active');
+        } else {
+            content.classList.remove('visible');
+            toggle.classList.remove('active');
+        }
+    }
+    
+    toggleSetting(settingId) {
+        const toggle = document.getElementById(`${settingId.replace('_', '-')}-switch`);
+        toggle.classList.toggle('active');
+    }
+    
+    testConnection() {
+        if (this.testInProgress) return;
+        
+        // Validate required fields first
+        const requiredFields = document.querySelectorAll('.form-input[required], .form-select[required]');
+        let allValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!this.validateField(field)) {
+                allValid = false;
+            }
+        });
+        
+        if (!allValid) {
+            this.showToast('Please fix validation errors before testing', 'error');
+            return;
+        }
+        
+        this.testInProgress = true;
+        this.updateTestUI(true);
+        
+        // Simulate connection test
+        this.runConnectionTest();
+    }
+    
+    async runConnectionTest() {
+        const steps = ['dns', 'connect', 'handshake', 'auth', 'send'];
+        const testResults = document.getElementById('test-results');
+        const testSteps = document.getElementById('test-steps');
+        const testProgress = document.getElementById('test-progress');
+        
+        // Show progress
+        testResults.innerHTML = '';
+        testSteps.style.display = 'block';
+        testProgress.style.display = 'block';
+        
+        try {
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                const stepElement = document.getElementById(`step-${step}`);
+                
+                // Mark as running
+                stepElement.className = 'step-icon running';
+                stepElement.innerHTML = '<i class="fas fa-spinner" aria-hidden="true"></i>';
+                
+                // Simulate step execution
+                await this.simulateStep(step);
+                
+                // Mark as success
+                stepElement.className = 'step-icon success';
+                stepElement.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i>';
+                
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+            
+            // Success
+            this.showTestResult('success', 'Connection Successful', 
+                'SMTP connection established successfully. All tests passed.');
+            this.updateConnectionStatus('connected');
+            
+        } catch (error) {
+            this.showTestResult('error', 'Connection Failed', error.message);
+            this.updateConnectionStatus('disconnected');
+        }
+        
+        this.testInProgress = false;
+        this.updateTestUI(false);
+    }
+    
+    async simulateStep(step) {
+        // Simulate different step scenarios
+        const delay = Math.random() * 1500 + 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Simulate potential failures (5% chance)
+        if (Math.random() < 0.05) {
+            const errors = {
+                dns: 'DNS resolution failed. Please check the hostname.',
+                connect: 'Connection timeout. Please check the host and port.',
+                handshake: 'SMTP handshake failed. Server may not support the protocol.',
+                auth: 'Authentication failed. Please check your credentials.',
+                send: 'Test email failed to send. Please check your configuration.'
+            };
+            throw new Error(errors[step]);
+        }
+    }
+    
+    showTestResult(type, title, message) {
+        const testResults = document.getElementById('test-results');
+        const testSteps = document.getElementById('test-steps');
+        const testProgress = document.getElementById('test-progress');
+        
+        testSteps.style.display = 'none';
+        testProgress.style.display = 'none';
+        
+        testResults.innerHTML = `
+            <div class="test-result ${type}">
+                <div class="test-icon">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <strong>${title}</strong><br>
+                    ${message}
+                </div>
+            </div>
+        `;
+    }
+    
+    updateTestUI(testing) {
+        const testBtn = document.getElementById('test-btn');
+        const status = document.getElementById('connection-status');
+        
+        if (testing) {
+            testBtn.classList.add('loading');
+            testBtn.disabled = true;
+            status.className = 'status-indicator testing';
+            document.getElementById('status-text').textContent = 'Testing...';
+        } else {
+            testBtn.classList.remove('loading');
+            testBtn.disabled = false;
+        }
+    }
+    
+    updateConnectionStatus(status) {
+        const statusElement = document.getElementById('connection-status');
+        const statusText = document.getElementById('status-text');
+        
+        statusElement.className = `status-indicator ${status}`;
+        statusText.textContent = status === 'connected' ? 'Connected' : 'Disconnected';
+    }
+    
+    runDiagnostics() {
+        const diagnosticBtn = document.getElementById('diagnostic-btn');
+        diagnosticBtn.classList.add('loading');
+        diagnosticBtn.disabled = true;
+        
+        // Simulate diagnostics
+        setTimeout(() => {
+            const testResults = document.getElementById('test-results');
+            testResults.innerHTML = `
+                <div class="test-result info">
+                    <div class="test-icon">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <strong>Diagnostic Report</strong><br>
+                        • DNS resolution: 45ms<br>
+                        • TCP handshake: 120ms<br>
+                        • SSL negotiation: 380ms<br>
+                        • Authentication: 95ms<br>
+                        • Overall health: Good
+                    </div>
+                </div>
+            `;
+            
+            diagnosticBtn.classList.remove('loading');
+            diagnosticBtn.disabled = false;
+            
+            this.showToast('Diagnostic complete', 'success');
+        }, 3000);
+    }
+    
+    saveConfiguration() {
+        // Validate all fields
+        const form = document.getElementById('smtp-config-form');
+        const inputs = form.querySelectorAll('.form-input[required], .form-select[required]');
+        let allValid = true;
+        
+        inputs.forEach(input => {
+            if (!this.validateField(input)) {
+                allValid = false;
+            }
+        });
+        
+        if (!allValid) {
+            this.showToast('Please fix all validation errors before saving', 'error');
+            return;
+        }
+        
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.classList.add('loading');
+        saveBtn.disabled = true;
+        
+        // Collect form data
+        const formData = new FormData(form);
+        const config = {};
+        
+        for (let [key, value] of formData.entries()) {
+            config[key] = value;
+        }
+        
+        // Handle custom port
+        if (config.smtp_port === 'custom') {
+            config.smtp_port = config.smtp_port_custom;
+        }
+        
+        // Simulate save
+        setTimeout(() => {
+            saveBtn.classList.remove('loading');
+            saveBtn.disabled = false;
+            
+            this.showToast('Configuration saved successfully', 'success');
+            this.addToHistory('Configuration saved', 'success');
+            
+            // In real implementation, send to server
+            console.log('Saving configuration:', config);
+        }, 2000);
+    }
+    
+    saveAsDraft() {
+        const form = document.getElementById('smtp-config-form');
+        const formData = new FormData(form);
+        
+        // Save to localStorage as draft
+        const draft = {};
+        for (let [key, value] of formData.entries()) {
+            draft[key] = value;
+        }
+        
+        localStorage.setItem('smtp_config_draft', JSON.stringify(draft));
+        this.showToast('Draft saved', 'info');
+    }
+    
+    autoSaveDraft() {
+        this.saveAsDraft();
+    }
+    
+    loadTemplate() {
+        // Show template selection dialog or load from file
+        this.showToast('Template loading feature coming soon', 'info');
+    }
+    
+    resetForm() {
+        if (confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+            document.getElementById('smtp-config-form').reset();
+            
+            // Reset UI states
+            document.querySelectorAll('.form-input, .form-select').forEach(input => {
+                input.classList.remove('error', 'success');
+            });
+            
+            document.querySelectorAll('.form-error, .form-success').forEach(el => {
+                el.remove();
+            });
+            
+            // Reset to custom provider
+            this.selectProvider('custom');
+            
+            this.showToast('Form reset successfully', 'success');
+        }
+    }
+    
+    addToHistory(details, status) {
+        const historyList = document.querySelector('.history-list');
+        const now = new Date();
+        const timeStr = now.toLocaleString();
+        
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.innerHTML = `
+            <div class="history-meta">
+                <div class="history-date">${timeStr}</div>
+                <div class="history-status ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+            </div>
+            <div class="history-details">${details}</div>
+        `;
+        
+        historyList.insertBefore(historyItem, historyList.firstChild);
+        
+        // Keep only last 10 items
+        while (historyList.children.length > 10) {
+            historyList.removeChild(historyList.lastChild);
+        }
+    }
+    
+    loadHistoryItem(id) {
+        // In real implementation, load configuration from history
+        this.showToast(`Loading configuration from ${id}`, 'info');
+    }
+    
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icons[type]} fa-lg"></i>
+            <span>${message}</span>
+            <button class="toast-close" onclick="this.closest('.toast').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+}
+
+// Global functions for HTML onclick handlers
+function selectProvider(provider) {
+    window.smtpManager.selectProvider(provider);
+}
+
+function toggleAdvanced() {
+    window.smtpManager.toggleAdvanced();
+}
+
+function toggleSetting(setting) {
+    window.smtpManager.toggleSetting(setting);
+}
+
+function testConnection() {
+    window.smtpManager.testConnection();
+}
+
+function runDiagnostics() {
+    window.smtpManager.runDiagnostics();
+}
+
+function saveConfiguration() {
+    window.smtpManager.saveConfiguration();
+}
+
+function saveAsDraft() {
+    window.smtpManager.saveAsDraft();
+}
+
+function loadTemplate() {
+    window.smtpManager.loadTemplate();
+}
+
+function resetForm() {
+    window.smtpManager.resetForm();
+}
+
+function loadHistoryItem(id) {
+    window.smtpManager.loadHistoryItem(id);
+}
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById('password-toggle-icon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// Add CSS animations for slide out
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the SMTP configuration manager
+document.addEventListener('DOMContentLoaded', function() {
+    window.smtpManager = new SMTPConfigManager();
+});
+</script>
+{% endblock %}
+

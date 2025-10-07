@@ -1,0 +1,252 @@
+<!-- templates/dashboard/analytics.html -->
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Analytics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h1 class="h2 mb-0">
+        <i class="fas fa-chart-line me-2 text-info" aria-hidden="true"></i>
+        Analytics & Insights
+    </h1>
+    <div class="btn-toolbar">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-calendar me-1" aria-hidden="true"></i>
+                Last 7 days
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" data-period="24h">Last 24 hours</a></li>
+                <li><a class="dropdown-item active" href="#" data-period="7d">Last 7 days</a></li>
+                <li><a class="dropdown-item" href="#" data-period="30d">Last 30 days</a></li>
+                <li><a class="dropdown-item" href="#" data-period="90d">Last 90 days</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" data-period="custom">Custom Range</a></li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="export-analytics">
+                <i class="fas fa-download me-1" aria-hidden="true"></i>
+                Export
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" id="refresh-analytics" 
+                    aria-label="Refresh analytics data">
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Real-time Connection Status -->
+<div class="alert alert-info d-none" id="realtime-status" role="status" aria-live="polite">
+    <i class="fas fa-wifi me-2" aria-hidden="true"></i>
+    <span id="connection-message">Connecting to real-time analytics...</span>
+</div>
+
+<!-- Key Metrics Cards -->
+<div class="row g-4 mb-4" role="region" aria-labelledby="key-metrics-heading">
+    <div class="col-12">
+        <h2 id="key-metrics-heading" class="h4 mb-3">Key Performance Metrics</h2>
+    </div>
+    
+    <!-- Delivery Rate -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="card border-0 shadow-sm metric-card" data-metric="delivery-rate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="metric-icon bg-success bg-opacity-10 p-3 rounded-3 flex-shrink-0">
+                        <i class="fas fa-check-double text-success fa-2x" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-title text-muted mb-1">Delivery Rate</h6>
+                        <h2 class="card-text mb-0 metric-value" id="delivery-rate-value">
+                            {{ "%.1f"|format(metrics.delivery_rate|default(0)) }}
+                        </h2>
+                        <span class="metric-unit">%</span>
+                        <div class="metric-trend mt-1">
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up me-1" aria-hidden="true"></i>
+                                <span id="delivery-trend">+2.1%</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Similar metric cards for Bounce Rate, Open Rate, Click Rate -->
+    <!-- ... (following same pattern) ... -->
+</div>
+
+<!-- Real-time Charts -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Email Volume & Performance</h5>
+                    <div class="chart-controls">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                data-chart-action="zoom-out">
+                            <i class="fas fa-search-minus" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                data-chart-action="reset-zoom">
+                            <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="performance-chart" 
+                        height="300"
+                        role="img"
+                        aria-label="Email performance over time chart">
+                    <!-- Fallback content for non-canvas browsers -->
+                    <div class="text-center py-5">
+                        <p>Email performance chart data</p>
+                        <ul class="list-unstyled">
+                            <li>Delivery Rate: {{ "%.1f"|format(metrics.delivery_rate|default(0)) }}%</li>
+                            <li>Bounce Rate: {{ "%.1f"|format(metrics.bounce_rate|default(0)) }}%</li>
+                            <li>Open Rate: {{ "%.1f"|format(metrics.open_rate|default(0)) }}%</li>
+                        </ul>
+                    </div>
+                </canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Real-time Activity Feed -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-stream me-2 text-primary" aria-hidden="true"></i>
+                    Live Activity
+                    <span class="badge bg-success ms-2 pulse" id="live-indicator">LIVE</span>
+                </h5>
+            </div>
+            <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                <div id="activity-feed" class="activity-feed" role="log" aria-live="polite" aria-label="Live activity feed">
+                    <!-- Real-time activity items will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Analytics Section -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="delivery-tab" data-bs-toggle="tab" 
+                                data-bs-target="#delivery-panel" type="button" role="tab"
+                                aria-controls="delivery-panel" aria-selected="true">
+                            Delivery Analysis
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="engagement-tab" data-bs-toggle="tab"
+                                data-bs-target="#engagement-panel" type="button" role="tab"
+                                aria-controls="engagement-panel" aria-selected="false">
+                            Engagement Metrics
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="geographic-tab" data-bs-toggle="tab"
+                                data-bs-target="#geographic-panel" type="button" role="tab"
+                                aria-controls="geographic-panel" aria-selected="false">
+                            Geographic Data
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Delivery Analysis Tab -->
+                    <div class="tab-pane fade show active" id="delivery-panel" role="tabpanel" 
+                         aria-labelledby="delivery-tab">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <canvas id="delivery-status-chart" 
+                                        role="img"
+                                        aria-label="Email delivery status distribution"></canvas>
+                            </div>
+                            <div class="col-md-6">
+                                <canvas id="bounce-categories-chart"
+                                        role="img" 
+                                        aria-label="Bounce categories breakdown"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional tab panels... -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/analytics-dashboard.js') }}"></script>
+<script>
+    // Initialize analytics dashboard with real-time capabilities
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get campaign ID from URL or current context
+        const urlParams = new URLSearchParams(window.location.search);
+        const campaignId = urlParams.get('campaign') || 'overview';
+        
+        // Initialize real-time analytics dashboard
+        window.analyticsApp = new AnalyticsDashboard({
+            campaignId: campaignId,
+            enableRealTime: true,
+            updateInterval: 30000,
+            enableNotifications: true,
+            charts: {
+                performance: 'performance-chart',
+                deliveryStatus: 'delivery-status-chart',
+                bounceCategories: 'bounce-categories-chart'
+            }
+        });
+        
+        // Initialize activity feed
+        const activityFeed = new ActivityFeed({
+            containerId: 'activity-feed',
+            maxItems: 50,
+            enableSound: {{ 'true' if current_user.notification_sounds else 'false' }},
+            filters: ['email_sent', 'campaign_completed', 'bounce_received']
+        });
+        
+        // Export functionality
+        document.getElementById('export-analytics').addEventListener('click', function() {
+            window.analyticsApp.exportData({
+                format: 'csv',
+                includeCharts: true,
+                dateRange: '7d'
+            });
+        });
+    });
+</script>
+{% endblock %}
+

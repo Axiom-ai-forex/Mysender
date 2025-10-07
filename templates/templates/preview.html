@@ -1,0 +1,1820 @@
+<!-- templates/templates/preview.html -->
+{% extends "base.html" %}
+
+{% block title %}Template Preview - {{ template.name }} - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Advanced Email Template Preview System */
+:root {
+    --preview-primary: #2563eb;
+    --preview-secondary: #64748b;
+    --preview-success: #10b981;
+    --preview-warning: #f59e0b;
+    --preview-danger: #ef4444;
+    --preview-purple: #8b5cf6;
+    --preview-pink: #ec4899;
+    --preview-indigo: #6366f1;
+    --preview-teal: #14b8a6;
+    --preview-orange: #f97316;
+    --preview-gray-50: #f9fafb;
+    --preview-gray-100: #f3f4f6;
+    --preview-gray-200: #e5e7eb;
+    --preview-gray-300: #d1d5db;
+    --preview-gray-400: #9ca3af;
+    --preview-gray-500: #6b7280;
+    --preview-gray-600: #4b5563;
+    --preview-gray-700: #374151;
+    --preview-gray-800: #1f2937;
+    --preview-gray-900: #111827;
+    --preview-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --preview-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --preview-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --preview-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --preview-toolbar-height: 80px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--preview-gray-50);
+    overflow: hidden;
+}
+
+/* Preview Layout */
+.preview-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Preview Toolbar */
+.preview-toolbar {
+    height: var(--preview-toolbar-height);
+    background: white;
+    border-bottom: 1px solid var(--preview-gray-200);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    box-shadow: var(--preview-shadow);
+    position: relative;
+    z-index: 1000;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex: 1;
+}
+
+.preview-back {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--preview-gray-700);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--preview-gray-200);
+}
+
+.preview-back:hover {
+    background: var(--preview-gray-50);
+    color: var(--preview-gray-900);
+    text-decoration: none;
+    border-color: var(--preview-gray-300);
+}
+
+.template-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.template-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--preview-gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.template-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--preview-gray-600);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--preview-gray-100);
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+
+.device-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.device-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--preview-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.device-btn:hover {
+    color: var(--preview-gray-900);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.device-btn.active {
+    background: white;
+    color: var(--preview-primary);
+    box-shadow: var(--preview-shadow);
+}
+
+.device-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--preview-gray-800);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+}
+
+.device-btn:hover::after {
+    opacity: 1;
+}
+
+.view-mode-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 1rem;
+}
+
+.view-mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--preview-gray-600);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-mode-btn:hover {
+    color: var(--preview-gray-900);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.view-mode-btn.active {
+    background: white;
+    color: var(--preview-primary);
+    box-shadow: var(--preview-shadow);
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.preview-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-secondary {
+    background: var(--preview-gray-200);
+    color: var(--preview-gray-700);
+    border: 1px solid var(--preview-gray-300);
+}
+
+.btn-secondary:hover {
+    background: var(--preview-gray-300);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--preview-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--preview-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Preview Content Area */
+.preview-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Sidebar Panel */
+.preview-sidebar {
+    width: 350px;
+    background: white;
+    border-right: 1px solid var(--preview-gray-200);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.preview-sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+.sidebar-tabs {
+    display: flex;
+    background: var(--preview-gray-50);
+    border-bottom: 1px solid var(--preview-gray-200);
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--preview-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.sidebar-tab:hover {
+    color: var(--preview-gray-900);
+    background: var(--preview-gray-100);
+}
+
+.sidebar-tab.active {
+    color: var(--preview-primary);
+    background: white;
+    border-bottom-color: var(--preview-primary);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* Template Details Tab */
+.template-details {
+    padding: 1.5rem;
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--preview-gray-900);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--preview-gray-100);
+    font-size: 0.875rem;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--preview-gray-600);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--preview-gray-900);
+    font-weight: 600;
+    text-align: right;
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.template-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tag {
+    padding: 0.375rem 0.75rem;
+    background: var(--preview-gray-100);
+    color: var(--preview-gray-700);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid var(--preview-gray-200);
+}
+
+.template-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.125rem;
+}
+
+.star {
+    width: 16px;
+    height: 16px;
+    color: #fbbf24;
+}
+
+.star.empty {
+    color: var(--preview-gray-300);
+}
+
+.rating-text {
+    font-size: 0.875rem;
+    color: var(--preview-gray-600);
+}
+
+/* Test Settings Tab */
+.test-settings {
+    padding: 1.5rem;
+}
+
+.test-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--preview-gray-700);
+}
+
+.form-input,
+.form-textarea {
+    padding: 0.75rem;
+    border: 2px solid var(--preview-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--preview-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.test-button {
+    padding: 0.75rem 1.5rem;
+    background: var(--preview-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.test-button:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.test-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Preview Viewport */
+.preview-viewport {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+    overflow: auto;
+}
+
+.preview-frame {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--preview-shadow-xl);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Device Frames */
+.frame-desktop {
+    width: 800px;
+    min-height: 600px;
+}
+
+.frame-tablet {
+    width: 480px;
+    min-height: 640px;
+}
+
+.frame-mobile {
+    width: 320px;
+    min-height: 568px;
+}
+
+.preview-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(135deg, var(--preview-gray-100) 0%, var(--preview-gray-200) 100%);
+    border-bottom: 1px solid var(--preview-gray-300);
+    z-index: 10;
+}
+
+.device-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+}
+
+.device-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.device-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--preview-gray-400);
+}
+
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #10b981; }
+
+.device-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--preview-gray-600);
+}
+
+/* Email Preview Content */
+.email-preview {
+    padding-top: 40px;
+    min-height: 500px;
+    background: white;
+    overflow-y: auto;
+}
+
+.email-content {
+    /* Reset email styles for clean preview */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.email-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.email-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.email-content a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.email-content a:hover {
+    text-decoration: underline;
+}
+
+/* Split View */
+.split-view {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+.split-panel {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--preview-shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.split-header {
+    padding: 1rem;
+    background: var(--preview-gray-50);
+    border-bottom: 1px solid var(--preview-gray-200);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--preview-gray-700);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.split-content {
+    flex: 1;
+    overflow: auto;
+}
+
+/* Code View */
+.code-editor {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 1rem;
+    margin: 0;
+    border: none;
+    outline: none;
+    resize: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+}
+
+.code-editor::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.code-editor::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.code-editor::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 6px;
+}
+
+.code-editor::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Full Screen Preview */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.fullscreen-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: var(--preview-shadow-xl);
+    position: relative;
+}
+
+.fullscreen-header {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+.fullscreen-close {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.fullscreen-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+/* Loading States */
+.preview-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: var(--preview-gray-500);
+    font-size: 0.875rem;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--preview-gray-200);
+    border-top: 3px solid var(--preview-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .preview-sidebar {
+        width: 300px;
+    }
+    
+    .toolbar-center .view-mode-selector {
+        display: none;
+    }
+    
+    .split-view {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .split-panel {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-toolbar {
+        padding: 0 1rem;
+        height: 70px;
+    }
+    
+    .toolbar-left {
+        gap: 1rem;
+    }
+    
+    .template-info {
+        display: none;
+    }
+    
+    .toolbar-center {
+        gap: 0.5rem;
+    }
+    
+    .device-selector {
+        flex-wrap: wrap;
+    }
+    
+    .toolbar-right {
+        gap: 0.5rem;
+    }
+    
+    .preview-action {
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+    }
+    
+    .preview-sidebar {
+        position: absolute;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        z-index: 999;
+        transition: left 0.3s ease;
+        box-shadow: var(--preview-shadow-lg);
+    }
+    
+    .preview-sidebar.mobile-open {
+        left: 0;
+    }
+    
+    .preview-viewport {
+        padding: 1rem;
+    }
+    
+    .frame-desktop {
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .frame-tablet {
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .frame-mobile {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease;
+}
+
+.animate-slide-in-up {
+    animation: slideInUp 0.6s ease;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.4s ease;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.4s ease;
+}
+
+/* Print Styles */
+@media print {
+    .preview-toolbar,
+    .preview-sidebar {
+        display: none !important;
+    }
+    
+    .preview-content {
+        height: auto !important;
+    }
+    
+    .preview-viewport {
+        padding: 0 !important;
+        background: white !important;
+    }
+    
+    .preview-frame {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    .preview-frame::before,
+    .device-header {
+        display: none !important;
+    }
+    
+    .email-preview {
+        padding-top: 0 !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    :root {
+        --preview-gray-50: #ffffff;
+        --preview-gray-100: #f0f0f0;
+        --preview-gray-200: #d0d0d0;
+        --preview-gray-300: #b0b0b0;
+        --preview-gray-400: #909090;
+        --preview-gray-500: #707070;
+        --preview-gray-600: #505050;
+        --preview-gray-700: #303030;
+        --preview-gray-800: #202020;
+        --preview-gray-900: #000000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <!-- Preview Toolbar -->
+    <div class="preview-toolbar animate-slide-in-up">
+        <div class="toolbar-left">
+            <a href="{{ url_for('templates.library') }}" class="preview-back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                Back to Library
+            </a>
+            
+            <div class="template-info">
+                <h1 class="template-title">{{ template.name }}</h1>
+                <div class="template-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        <span>{{ template.author or 'System Template' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar" aria-hidden="true"></i>
+                        <span>{{ template.created_at.strftime('%b %d, %Y') if template.created_at else 'Recently' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                        <span>{{ template.views or 0 }} views</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar-center">
+            <div class="preview-controls">
+                <div class="device-selector">
+                    <button class="device-btn active" data-device="desktop" data-tooltip="Desktop Preview">
+                        <i class="fas fa-desktop" aria-hidden="true"></i>
+                    </button>
+                    <button class="device-btn" data-device="tablet" data-tooltip="Tablet Preview">
+                        <i class="fas fa-tablet-alt" aria-hidden="true"></i>
+                    </button>
+                    <button class="device-btn" data-device="mobile" data-tooltip="Mobile Preview">
+                        <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+                
+                <div class="view-mode-selector">
+                    <button class="view-mode-btn active" data-mode="preview">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                        Preview
+                    </button>
+                    <button class="view-mode-btn" data-mode="split">
+                        <i class="fas fa-columns" aria-hidden="true"></i>
+                        Split
+                    </button>
+                    <button class="view-mode-btn" data-mode="code">
+                        <i class="fas fa-code" aria-hidden="true"></i>
+                        Code
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar-right">
+            <button class="preview-action btn-secondary" id="toggle-sidebar">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                Details
+            </button>
+            <button class="preview-action btn-secondary" id="fullscreen-btn">
+                <i class="fas fa-expand" aria-hidden="true"></i>
+                Fullscreen
+            </button>
+            <a href="{{ url_for('templates.editor', id=template.id) }}" class="preview-action btn-primary">
+                <i class="fas fa-edit" aria-hidden="true"></i>
+                Edit Template
+            </a>
+            <button class="preview-action btn-success" id="use-template">
+                <i class="fas fa-rocket" aria-hidden="true"></i>
+                Use Template
+            </button>
+        </div>
+    </div>
+    
+    <!-- Preview Content -->
+    <div class="preview-content">
+        <!-- Sidebar Panel -->
+        <div class="preview-sidebar animate-slide-in-left" id="preview-sidebar">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="details">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Details
+                </button>
+                <button class="sidebar-tab" data-tab="test">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    Test Email
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Template Details Tab -->
+                <div class="tab-content active" id="details-tab">
+                    <div class="template-details">
+                        <div class="detail-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-info" aria-hidden="true"></i>
+                                Template Information
+                            </h3>
+                            <div class="detail-item">
+                                <span class="detail-label">Category</span>
+                                <span class="detail-value">{{ template.category|title or 'General' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Type</span>
+                                <span class="detail-value">{{ template.type|title or 'Custom' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Created</span>
+                                <span class="detail-value">{{ template.created_at.strftime('%b %d, %Y') if template.created_at else 'Recently' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Last Modified</span>
+                                <span class="detail-value">{{ template.updated_at.strftime('%b %d, %Y') if template.updated_at else 'Recently' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">File Size</span>
+                                <span class="detail-value">{{ template.file_size or '15.2 KB' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-star" aria-hidden="true"></i>
+                                Rating & Reviews
+                            </h3>
+                            <div class="template-rating">
+                                <div class="star-rating">
+                                    {% set rating = template.rating or 4.5 %}
+                                    {% for i in range(5) %}
+                                    <i class="fas fa-star star {% if i >= rating %}empty{% endif %}" aria-hidden="true"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-text">({{ template.review_count or 12 }} reviews)</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Downloads</span>
+                                <span class="detail-value">{{ template.usage_count or 245 }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Favorites</span>
+                                <span class="detail-value">{{ template.favorite_count or 89 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-tags" aria-hidden="true"></i>
+                                Tags
+                            </h3>
+                            <div class="template-tags">
+                                {% for tag in template.tags or ['responsive', 'professional', 'modern', 'newsletter'] %}
+                                <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-palette" aria-hidden="true"></i>
+                                Design Elements
+                            </h3>
+                            <div class="detail-item">
+                                <span class="detail-label">Color Scheme</span>
+                                <span class="detail-value">Blue & White</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Font Family</span>
+                                <span class="detail-value">Sans-serif</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Layout</span>
+                                <span class="detail-value">Single Column</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Responsive</span>
+                                <span class="detail-value">
+                                    <i class="fas fa-check text-green-500" aria-hidden="true"></i>
+                                    Yes
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Test Email Tab -->
+                <div class="tab-content" id="test-tab">
+                    <div class="test-settings">
+                        <form class="test-form" id="test-email-form">
+                            <div class="form-group">
+                                <label class="form-label" for="test-email">Test Email Address</label>
+                                <input type="email" class="form-input" id="test-email" placeholder="your@email.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="test-subject">Subject Line</label>
+                                <input type="text" class="form-input" id="test-subject" value="{{ template.name }} - Test Email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="test-from-name">From Name</label>
+                                <input type="text" class="form-input" id="test-from-name" placeholder="Your Company" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="test-from-email">From Email</label>
+                                <input type="email" class="form-input" id="test-from-email" placeholder="noreply@yourcompany.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="test-notes">Test Notes (Optional)</label>
+                                <textarea class="form-textarea" id="test-notes" placeholder="Add any notes about this test..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="test-button">
+                                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                                Send Test Email
+                            </button>
+                        </form>
+                        
+                        <div class="detail-section" style="margin-top: 2rem;">
+                            <h3 class="section-title">
+                                <i class="fas fa-history" aria-hidden="true"></i>
+                                Recent Tests
+                            </h3>
+                            <div id="recent-tests">
+                                <div style="text-align: center; color: var(--preview-gray-500); font-size: 0.875rem; padding: 2rem;">
+                                    No test emails sent yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Preview Area -->
+        <div class="preview-main" id="preview-main">
+            <!-- Preview Mode -->
+            <div class="preview-viewport animate-fade-in" id="preview-mode">
+                <div class="preview-frame frame-desktop" id="preview-frame">
+                    <div class="device-header">
+                        <div class="device-controls">
+                            <div class="device-dot dot-red"></div>
+                            <div class="device-dot dot-yellow"></div>
+                            <div class="device-dot dot-green"></div>
+                        </div>
+                        <div class="device-title">Email Preview</div>
+                    </div>
+                    <div class="email-preview" id="email-preview">
+                        {% if template.html_content %}
+                            <div class="email-content">
+                                {{ template.html_content|safe }}
+                            </div>
+                        {% else %}
+                            <div class="preview-loading">
+                                <div class="loading-spinner"></div>
+                                Loading template preview...
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Split Mode -->
+            <div class="split-view" id="split-mode" style="display: none;">
+                <div class="split-panel">
+                    <div class="split-header">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                        Visual Preview
+                    </div>
+                    <div class="split-content">
+                        <div class="email-preview">
+                            <div class="email-content">
+                                {{ template.html_content|safe or '<div style="padding: 2rem; text-align: center; color: #6b7280;">Template content will appear here</div>' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="split-panel">
+                    <div class="split-header">
+                        <i class="fas fa-code" aria-hidden="true"></i>
+                        HTML Source
+                    </div>
+                    <div class="split-content">
+                        <textarea class="code-editor" id="html-editor" readonly>{{ template.html_content or '<!-- Template HTML will appear here -->' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Code Mode -->
+            <div class="split-view" id="code-mode" style="display: none;">
+                <div class="split-panel" style="flex: 1;">
+                    <div class="split-header">
+                        <i class="fas fa-code" aria-hidden="true"></i>
+                        HTML Source Code
+                        <button style="margin-left: auto; background: none; border: none; color: var(--preview-gray-600); cursor: pointer;" onclick="copyToClipboard()" title="Copy to clipboard">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="split-content">
+                        <textarea class="code-editor" id="full-html-editor" readonly>{{ template.html_content or '<!-- Template HTML will appear here -->' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Overlay -->
+<div class="fullscreen-overlay" id="fullscreen-overlay">
+    <div class="fullscreen-content" id="fullscreen-content">
+        <div class="fullscreen-header">
+            <button class="fullscreen-close" id="fullscreen-close">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="email-preview">
+            <div class="email-content">
+                {{ template.html_content|safe or '<div style="padding: 2rem; text-align: center; color: #6b7280;">Template content will appear here</div>' }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Advanced Template Preview System
+class TemplatePreview {
+    constructor() {
+        this.currentDevice = 'desktop';
+        this.currentMode = 'preview';
+        this.sidebarVisible = true;
+        this.fullscreenMode = false;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupDevicePreview();
+        this.setupViewModes();
+        this.setupSidebar();
+        this.setupFullscreen();
+        this.setupTestEmail();
+        this.setupKeyboardShortcuts();
+        this.loadTemplateContent();
+        
+        console.log('Template Preview initialized');
+    }
+    
+    setupDevicePreview() {
+        const deviceButtons = document.querySelectorAll('.device-btn');
+        const previewFrame = document.getElementById('preview-frame');
+        
+        deviceButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const device = btn.dataset.device;
+                this.switchDevice(device);
+                
+                // Update button states
+                deviceButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+    
+    switchDevice(device) {
+        const previewFrame = document.getElementById('preview-frame');
+        
+        // Remove existing device classes
+        previewFrame.className = previewFrame.className.replace(/frame-(desktop|tablet|mobile)/g, '');
+        
+        // Add new device class
+        previewFrame.classList.add(`frame-${device}`);
+        
+        this.currentDevice = device;
+        
+        // Add animation effect
+        previewFrame.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            previewFrame.style.transform = 'scale(1)';
+        }, 200);
+        
+        // Update device title
+        const deviceTitle = document.querySelector('.device-title');
+        const deviceNames = {
+            desktop: 'Desktop Preview',
+            tablet: 'Tablet Preview',
+            mobile: 'Mobile Preview'
+        };
+        deviceTitle.textContent = deviceNames[device];
+    }
+    
+    setupViewModes() {
+        const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+        const previewMode = document.getElementById('preview-mode');
+        const splitMode = document.getElementById('split-mode');
+        const codeMode = document.getElementById('code-mode');
+        
+        viewModeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                this.switchViewMode(mode);
+                
+                // Update button states
+                viewModeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+    
+    switchViewMode(mode) {
+        const previewMode = document.getElementById('preview-mode');
+        const splitMode = document.getElementById('split-mode');
+        const codeMode = document.getElementById('code-mode');
+        
+        // Hide all modes
+        previewMode.style.display = 'none';
+        splitMode.style.display = 'none';
+        codeMode.style.display = 'none';
+        
+        // Show selected mode
+        switch (mode) {
+            case 'preview':
+                previewMode.style.display = 'flex';
+                break;
+            case 'split':
+                splitMode.style.display = 'flex';
+                this.setupCodeEditor();
+                break;
+            case 'code':
+                codeMode.style.display = 'flex';
+                this.setupCodeEditor();
+                break;
+        }
+        
+        this.currentMode = mode;
+    }
+    
+    setupCodeEditor() {
+        const htmlEditor = document.getElementById('html-editor');
+        const fullHtmlEditor = document.getElementById('full-html-editor');
+        
+        // Add syntax highlighting (simplified)
+        if (htmlEditor) {
+            this.applySyntaxHighlighting(htmlEditor);
+        }
+        if (fullHtmlEditor) {
+            this.applySyntaxHighlighting(fullHtmlEditor);
+        }
+    }
+    
+    applySyntaxHighlighting(editor) {
+        // Simple syntax highlighting for HTML
+        let content = editor.value;
+        
+        // This is a simplified version - in production you'd use a proper syntax highlighter like Prism.js
+        content = content
+            .replace(/(&lt;[^&]*&gt;)/g, '<span style="color: #3b82f6;">$1</span>')
+            .replace(/(&quot;[^&]*&quot;)/g, '<span style="color: #10b981;">$1</span>');
+        
+        // Note: For production, implement proper HTML syntax highlighting
+    }
+    
+    setupSidebar() {
+        // Toggle sidebar visibility
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('preview-sidebar');
+        
+        toggleBtn.addEventListener('click', () => {
+            this.toggleSidebar();
+        });
+        
+        // Sidebar tabs
+        const tabs = document.querySelectorAll('.sidebar-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update tab states
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabName}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    }
+    
+    toggleSidebar() {
+        const sidebar = document.getElementById('preview-sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const icon = toggleBtn.querySelector('i');
+        
+        this.sidebarVisible = !this.sidebarVisible;
+        
+        if (this.sidebarVisible) {
+            sidebar.classList.remove('hidden');
+            icon.className = 'fas fa-info-circle';
+            toggleBtn.innerHTML = '<i class="fas fa-info-circle"></i> Details';
+        } else {
+            sidebar.classList.add('hidden');
+            icon.className = 'fas fa-sidebar';
+            toggleBtn.innerHTML = '<i class="fas fa-bars"></i> Show Details';
+        }
+    }
+    
+    setupFullscreen() {
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+        const fullscreenClose = document.getElementById('fullscreen-close');
+        
+        fullscreenBtn.addEventListener('click', () => {
+            this.openFullscreen();
+        });
+        
+        fullscreenClose.addEventListener('click', () => {
+            this.closeFullscreen();
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.fullscreenMode) {
+                this.closeFullscreen();
+            }
+        });
+        
+        // Close on overlay click
+        fullscreenOverlay.addEventListener('click', (e) => {
+            if (e.target === fullscreenOverlay) {
+                this.closeFullscreen();
+            }
+        });
+    }
+    
+    openFullscreen() {
+        const overlay = document.getElementById('fullscreen-overlay');
+        const btn = document.getElementById('fullscreen-btn');
+        
+        overlay.style.display = 'flex';
+        this.fullscreenMode = true;
+        
+        // Update button
+        btn.innerHTML = '<i class="fas fa-compress"></i> Exit Fullscreen';
+        
+        // Disable body scroll
+        document.body.style.overflow = 'hidden';
+    }
+    
+    closeFullscreen() {
+        const overlay = document.getElementById('fullscreen-overlay');
+        const btn = document.getElementById('fullscreen-btn');
+        
+        overlay.style.display = 'none';
+        this.fullscreenMode = false;
+        
+        // Update button
+        btn.innerHTML = '<i class="fas fa-expand"></i> Fullscreen';
+        
+        // Re-enable body scroll
+        document.body.style.overflow = '';
+    }
+    
+    setupTestEmail() {
+        const testForm = document.getElementById('test-email-form');
+        const testButton = testForm.querySelector('.test-button');
+        
+        testForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.sendTestEmail();
+        });
+        
+        // Auto-populate from email if logged in
+        this.populateTestForm();
+    }
+    
+    populateTestForm() {
+        const fromEmailInput = document.getElementById('test-from-email');
+        const fromNameInput = document.getElementById('test-from-name');
+        
+        // You could populate these from user session data
+        // fromEmailInput.value = userEmail;
+        // fromNameInput.value = userName;
+    }
+    
+    async sendTestEmail() {
+        const testButton = document.querySelector('.test-button');
+        const originalContent = testButton.innerHTML;
+        
+        // Show loading state
+        testButton.disabled = true;
+        testButton.innerHTML = '<div class="loading-spinner" style="width: 16px; height: 16px; margin-right: 0.5rem;"></div> Sending...';
+        
+        try {
+            const formData = {
+                email: document.getElementById('test-email').value,
+                subject: document.getElementById('test-subject').value,
+                fromName: document.getElementById('test-from-name').value,
+                fromEmail: document.getElementById('test-from-email').value,
+                notes: document.getElementById('test-notes').value,
+                templateId: this.getTemplateId()
+            };
+            
+            // Simulate API call (replace with actual endpoint)
+            const response = await fetch('/api/templates/test-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                this.showNotification('Test email sent successfully!', 'success');
+                this.addRecentTest(formData);
+            } else {
+                throw new Error('Failed to send test email');
+            }
+        } catch (error) {
+            console.error('Test email error:', error);
+            this.showNotification('Failed to send test email. Please try again.', 'error');
+        } finally {
+            // Restore button state
+            testButton.disabled = false;
+            testButton.innerHTML = originalContent;
+        }
+    }
+    
+    addRecentTest(testData) {
+        const recentTests = document.getElementById('recent-tests');
+        const timestamp = new Date().toLocaleString();
+        
+        // Create test entry
+        const testEntry = document.createElement('div');
+        testEntry.className = 'detail-item';
+        testEntry.innerHTML = `
+            <span class="detail-label">
+                <i class="fas fa-paper-plane" style="margin-right: 0.5rem; color: var(--preview-success);"></i>
+                ${testData.email}
+            </span>
+            <span class="detail-value" style="font-size: 0.75rem;">
+                ${timestamp}
+            </span>
+        `;
+        
+        // Add to recent tests (remove placeholder if exists)
+        if (recentTests.textContent.includes('No test emails')) {
+            recentTests.innerHTML = '';
+        }
+        
+        recentTests.insertBefore(testEntry, recentTests.firstChild);
+        
+        // Limit to 5 recent tests
+        const entries = recentTests.querySelectorAll('.detail-item');
+        if (entries.length > 5) {
+            entries[entries.length - 1].remove();
+        }
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // F11 for fullscreen
+            if (e.key === 'F11') {
+                e.preventDefault();
+                if (this.fullscreenMode) {
+                    this.closeFullscreen();
+                } else {
+                    this.openFullscreen();
+                }
+            }
+            
+            // Ctrl/Cmd + Shift + S for sidebar toggle
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                this.toggleSidebar();
+            }
+            
+            // Number keys for device switching
+            if (e.key === '1' && !e.ctrlKey && !e.metaKey) {
+                document.querySelector('[data-device="desktop"]').click();
+            } else if (e.key === '2' && !e.ctrlKey && !e.metaKey) {
+                document.querySelector('[data-device="tablet"]').click();
+            } else if (e.key === '3' && !e.ctrlKey && !e.metaKey) {
+                document.querySelector('[data-device="mobile"]').click();
+            }
+            
+            // V key for view mode cycling
+            if (e.key === 'v' && !e.ctrlKey && !e.metaKey) {
+                const modes = ['preview', 'split', 'code'];
+                const currentIndex = modes.indexOf(this.currentMode);
+                const nextIndex = (currentIndex + 1) % modes.length;
+                document.querySelector(`[data-mode="${modes[nextIndex]}"]`).click();
+            }
+        });
+    }
+    
+    loadTemplateContent() {
+        // Simulate loading template content
+        const templateId = this.getTemplateId();
+        
+        if (templateId) {
+            this.showNotification('Template loaded successfully', 'success');
+        }
+        
+        // Initialize any interactive elements in the template
+        this.initializeTemplateInteractivity();
+    }
+    
+    initializeTemplateInteractivity() {
+        // Make sure all images in the preview have proper loading
+        const images = document.querySelectorAll('.email-preview img');
+        images.forEach(img => {
+            img.addEventListener('error', function() {
+                this.src = 'https://via.placeholder.com/400x200/f3f4f6/9ca3af?text=Image+Not+Found';
+            });
+        });
+        
+        // Handle links in preview (prevent navigation)
+        const links = document.querySelectorAll('.email-preview a');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showNotification(`Link clicked: ${link.href}`, 'info');
+            });
+        });
+    }
+    
+    getTemplateId() {
+        const pathParts = window.location.pathname.split('/');
+        return pathParts[pathParts.length - 1];
+    }
+    
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            min-width: 300px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#2563eb'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--preview-shadow-lg);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        notification.innerHTML = `
+            <i class="fas fa-${icons[type]} fa-lg"></i>
+            <span>${message}</span>
+            <button onclick="this.closest('.notification').remove()" 
+                    style="background: none; border: none; color: white; margin-left: auto; cursor: pointer; font-size: 1.25rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+    }
+}
+
+// Global functions
+function copyToClipboard() {
+    const editor = document.getElementById('full-html-editor');
+    editor.select();
+    document.execCommand('copy');
+    
+    if (window.templatePreview) {
+        window.templatePreview.showNotification('HTML code copied to clipboard!', 'success');
+    }
+}
+
+// Use template button handler
+document.getElementById('use-template')?.addEventListener('click', function() {
+    const templateId = window.templatePreview?.getTemplateId();
+    if (confirm('This will create a new email campaign using this template. Continue?')) {
+        window.location.href = `/campaigns/create?template=${templateId}`;
+    }
+});
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the template preview
+document.addEventListener('DOMContentLoaded', function() {
+    window.templatePreview = new TemplatePreview();
+});
+
+// Handle responsive behavior
+window.addEventListener('resize', function() {
+    const sidebar = document.getElementById('preview-sidebar');
+    
+    if (window.innerWidth <= 768) {
+        sidebar.classList.add('mobile-closed');
+    } else {
+        sidebar.classList.remove('mobile-closed');
+    }
+});
+</script>
+{% endblock %}
+

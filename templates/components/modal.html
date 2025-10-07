@@ -1,0 +1,505 @@
+<!-- templates/components/modal.html -->
+<!--
+Universal Modal Component System
+Features: Dynamic content loading, accessibility compliant, form integration, size variations
+Supports: Confirmation dialogs, forms, content display, loading states
+-->
+
+<!-- Base Modal Structure (can be customized via parameters) -->
+{% macro render_modal(id, title, size='', backdrop='true', keyboard='true', static=false) %}
+<div class="modal fade" 
+     id="{{ id }}" 
+     tabindex="-1" 
+     aria-labelledby="{{ id }}-label" 
+     aria-hidden="true"
+     data-bs-backdrop="{{ 'static' if static else backdrop }}"
+     data-bs-keyboard="{{ 'false' if static else keyboard }}">
+    <div class="modal-dialog {{ size }} modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <!-- Modal Header -->
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title" id="{{ id }}-label">
+                    {% if caller %}
+                        {% call caller() %}{% endcall %}
+                    {% else %}
+                        {{ title }}
+                    {% endif %}
+                </h5>
+                {% if not static %}
+                <button type="button" class="btn-close" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close modal"></button>
+                {% endif %}
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body" id="{{ id }}-body">
+                {{ caller() if caller else '' }}
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-light border-top" id="{{ id }}-footer">
+                <!-- Dynamic footer content -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Confirmation Modal -->
+{% macro confirmation_modal(id, title, message, confirm_text='Confirm', cancel_text='Cancel', 
+                           confirm_class='btn-primary', danger=false) %}
+<div class="modal fade" 
+     id="{{ id }}" 
+     tabindex="-1" 
+     aria-labelledby="{{ id }}-label" 
+     aria-hidden="true"
+     data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title d-flex align-items-center" id="{{ id }}-label">
+                    {% if danger %}
+                    <i class="fas fa-exclamation-triangle text-warning me-2" aria-hidden="true"></i>
+                    {% else %}
+                    <i class="fas fa-question-circle text-info me-2" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="modal-body py-4">
+                <p class="mb-0 lead">{{ message }}</p>
+                {% if danger %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {{ cancel_text }}
+                </button>
+                <button type="button" class="btn {{ 'btn-danger' if danger else confirm_class }}" 
+                        id="{{ id }}-confirm">
+                    {% if danger %}
+                    <i class="fas fa-trash me-2" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ confirm_text }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Loading Modal -->
+{% macro loading_modal(id, title='Processing...', message='Please wait while we process your request.') %}
+<div class="modal fade" 
+     id="{{ id }}" 
+     tabindex="-1" 
+     aria-labelledby="{{ id }}-label" 
+     aria-hidden="true"
+     data-bs-backdrop="static" 
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" 
+                     style="width: 3rem; height: 3rem;" 
+                     role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="modal-title mb-2" id="{{ id }}-label">{{ title }}</h5>
+                <p class="text-muted mb-0" id="{{ id }}-message">{{ message }}</p>
+                
+                <!-- Progress Bar (optional) -->
+                <div class="progress mt-3 d-none" id="{{ id }}-progress" style="height: 8px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: 0%"
+                         aria-valuenow="0" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Form Modal -->
+{% macro form_modal(id, title, form_action, method='POST', size='') %}
+<div class="modal fade" 
+     id="{{ id }}" 
+     tabindex="-1" 
+     aria-labelledby="{{ id }}-label" 
+     aria-hidden="true">
+    <div class="modal-dialog {{ size }} modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="{{ method }}" 
+                  action="{{ form_action }}" 
+                  id="{{ id }}-form" 
+                  novalidate
+                  data-modal-form="true">
+                
+                <!-- CSRF Protection -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title" id="{{ id }}-label">{{ title }}</h5>
+                    <button type="button" class="btn-close" 
+                            data-bs-dismiss="modal" 
+                            aria-label="Close modal"></button>
+                </div>
+                
+                <div class="modal-body" id="{{ id }}-form-body">
+                    {{ caller() if caller else '' }}
+                </div>
+                
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="{{ id }}-submit">
+                        <span class="btn-text">Save Changes</span>
+                        <span class="spinner-border spinner-border-sm d-none ms-2" 
+                              role="status" 
+                              aria-hidden="true"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- Image Preview Modal -->
+{% macro image_preview_modal(id='image-preview-modal') %}
+<div class="modal fade" 
+     id="{{ id }}" 
+     tabindex="-1" 
+     aria-labelledby="{{ id }}-label" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-white" id="{{ id }}-label">Image Preview</h5>
+                <button type="button" class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close image preview"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="{{ id }}-image" 
+                     src="" 
+                     alt="Preview image" 
+                     class="img-fluid rounded shadow"
+                     style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<script>
+// Modal System JavaScript
+class ModalManager {
+    constructor() {
+        this.activeModals = new Set();
+        this.init();
+    }
+    
+    init() {
+        // Handle modal events
+        document.addEventListener('show.bs.modal', (e) => {
+            this.activeModals.add(e.target.id);
+            this.handleModalShow(e.target);
+        });
+        
+        document.addEventListener('hidden.bs.modal', (e) => {
+            this.activeModals.delete(e.target.id);
+            this.handleModalHidden(e.target);
+        });
+        
+        // Handle form modals
+        document.querySelectorAll('[data-modal-form="true"]').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                this.handleFormSubmit(e);
+            });
+        });
+        
+        // ESC key handling for stacked modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.activeModals.size > 0) {
+                // Only close the top modal
+                const topModal = Array.from(this.activeModals).pop();
+                bootstrap.Modal.getInstance(document.getElementById(topModal))?.hide();
+            }
+        });
+    }
+    
+    handleModalShow(modal) {
+        // Focus management
+        const firstFocusable = modal.querySelector('input, button, select, textarea, [tabindex="0"]');
+        if (firstFocusable) {
+            setTimeout(() => firstFocusable.focus(), 100);
+        }
+        
+        // Add loading state management
+        const form = modal.querySelector('form');
+        if (form) {
+            this.resetFormState(form);
+        }
+    }
+    
+    handleModalHidden(modal) {
+        // Reset form state
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+            this.resetFormState(form);
+        }
+        
+        // Clear any validation states
+        modal.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+            el.classList.remove('is-invalid', 'is-valid');
+        });
+        
+        modal.querySelectorAll('.invalid-feedback, .valid-feedback').forEach(el => {
+            el.textContent = '';
+        });
+    }
+    
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const modal = form.closest('.modal');
+        const submitBtn = form.querySelector('[type="submit"]');
+        
+        // Show loading state
+        this.setFormLoading(form, true);
+        
+        // Prepare form data
+        const formData = new FormData(form);
+        
+        // Submit via fetch
+        fetch(form.action, {
+            method: form.method,
+            body: formData,
+            headers: {
+                'X-CSRF-Token': formData.get('csrf_token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setFormLoading(form, false);
+            
+            if (data.success) {
+                // Success handling
+                bootstrap.Modal.getInstance(modal).hide();
+                this.showSuccess(data.message || 'Operation completed successfully');
+                
+                // Reload page or update UI as needed
+                if (data.reload) {
+                    window.location.reload();
+                }
+            } else {
+                // Error handling
+                this.showFormErrors(form, data.errors || {});
+            }
+        })
+        .catch(error => {
+            this.setFormLoading(form, false);
+            this.showError('An unexpected error occurred. Please try again.');
+        });
+    }
+    
+    setFormLoading(form, loading) {
+        const submitBtn = form.querySelector('[type="submit"]');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const spinner = submitBtn.querySelector('.spinner-border');
+        
+        if (loading) {
+            submitBtn.disabled = true;
+            if (btnText) btnText.style.opacity = '0.7';
+            if (spinner) spinner.classList.remove('d-none');
+        } else {
+            submitBtn.disabled = false;
+            if (btnText) btnText.style.opacity = '1';
+            if (spinner) spinner.classList.add('d-none');
+        }
+    }
+    
+    resetFormState(form) {
+        this.setFormLoading(form, false);
+        
+        // Clear validation states
+        form.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+            el.classList.remove('is-invalid', 'is-valid');
+        });
+        
+        form.querySelectorAll('.invalid-feedback').forEach(el => {
+            el.textContent = '';
+        });
+    }
+    
+    showFormErrors(form, errors) {
+        Object.entries(errors).forEach(([field, messages]) => {
+            const input = form.querySelector(`[name="${field}"]`);
+            const errorDiv = form.querySelector(`#${field}-error`);
+            
+            if (input) {
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+            }
+            
+            if (errorDiv && Array.isArray(messages)) {
+                errorDiv.textContent = messages.join(', ');
+            }
+        });
+    }
+    
+    showSuccess(message) {
+        this.showAlert('success', message);
+    }
+    
+    showError(message) {
+        this.showAlert('danger', message);
+    }
+    
+    showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2" aria-hidden="true"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const container = document.getElementById('alert-container');
+        if (container) {
+            container.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const alert = container.querySelector('.alert');
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => alert.remove(), 150);
+                }
+            }, 5000);
+        }
+    }
+}
+
+// Initialize modal manager
+document.addEventListener('DOMContentLoaded', function() {
+    window.modalManager = new ModalManager();
+});
+
+// Utility functions for common modal operations
+function showConfirmDialog(title, message, onConfirm, options = {}) {
+    const modalId = 'confirm-dialog-' + Date.now();
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title d-flex align-items-center">
+                            <i class="fas fa-${options.icon || 'question-circle'} text-${options.type || 'info'} me-2" aria-hidden="true"></i>
+                            ${title}
+                        </h5>
+                    </div>
+                    <div class="modal-body py-4">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            ${options.cancelText || 'Cancel'}
+                        </button>
+                        <button type="button" class="btn btn-${options.confirmClass || 'primary'}" id="${modalId}-confirm">
+                            ${options.confirmText || 'Confirm'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const modalElement = document.getElementById(modalId);
+    const modalInstance = new bootstrap.Modal(modalElement);
+    
+    // Handle confirmation
+    document.getElementById(`${modalId}-confirm`).addEventListener('click', () => {
+        modalInstance.hide();
+        if (typeof onConfirm === 'function') {
+            onConfirm();
+        }
+    });
+    
+    // Cleanup on hide
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        modalElement.remove();
+    });
+    
+    modalInstance.show();
+    return modalInstance;
+}
+
+// Show loading modal with progress
+function showLoadingModal(title, message) {
+    const modalId = 'loading-modal-' + Date.now();
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true" 
+             data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="mb-2">${title}</h5>
+                        <p class="text-muted mb-3" id="${modalId}-message">${message}</p>
+                        <div class="progress" id="${modalId}-progress" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(document.getElementById(modalId));
+    modalInstance.show();
+    
+    return {
+        instance: modalInstance,
+        updateProgress: (percent) => {
+            const progressBar = document.querySelector(`#${modalId}-progress .progress-bar`);
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+                progressBar.setAttribute('aria-valuenow', percent);
+            }
+        },
+        updateMessage: (message) => {
+            const messageEl = document.getElementById(`${modalId}-message`);
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+        },
+        close: () => {
+            modalInstance.hide();
+            setTimeout(() => document.getElementById(modalId).remove(), 300);
+        }
+    };
+}
+</script>
+{% endmacro %}
+

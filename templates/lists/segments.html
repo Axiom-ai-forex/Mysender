@@ -1,0 +1,2414 @@
+<!-- templates/lists/segments.html -->
+{% extends "base.html" %}
+
+{% block title %}Audience Segmentation - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Advanced Audience Segmentation System */
+:root {
+    --segment-primary: #3b82f6;
+    --segment-secondary: #6b7280;
+    --segment-success: #10b981;
+    --segment-warning: #f59e0b;
+    --segment-danger: #ef4444;
+    --segment-purple: #8b5cf6;
+    --segment-pink: #ec4899;
+    --segment-indigo: #6366f1;
+    --segment-teal: #14b8a6;
+    --segment-orange: #f97316;
+    --segment-cyan: #06b6d4;
+    --segment-emerald: #059669;
+    --segment-rose: #f43f5e;
+    --segment-gray-50: #f9fafb;
+    --segment-gray-100: #f3f4f6;
+    --segment-gray-200: #e5e7eb;
+    --segment-gray-300: #d1d5db;
+    --segment-gray-400: #9ca3af;
+    --segment-gray-500: #6b7280;
+    --segment-gray-600: #4b5563;
+    --segment-gray-700: #374151;
+    --segment-gray-800: #1f2937;
+    --segment-gray-900: #111827;
+    --segment-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --segment-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --segment-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --segment-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--segment-gray-50);
+    color: var(--segment-gray-900);
+}
+
+/* Page Header */
+.page-header {
+    background: white;
+    border-bottom: 1px solid var(--segment-gray-200);
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-left h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--segment-gray-900);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--segment-gray-600);
+    margin-top: 0.5rem;
+}
+
+.breadcrumb a {
+    color: var(--segment-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    color: var(--segment-gray-400);
+}
+
+.header-stats {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--segment-primary);
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-secondary {
+    background: var(--segment-gray-200);
+    color: var(--segment-gray-700);
+    border: 1px solid var(--segment-gray-300);
+}
+
+.btn-secondary:hover {
+    background: var(--segment-gray-300);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--segment-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--segment-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Main Layout */
+.main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.content-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sidebar-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Segment Builder */
+.segment-builder {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    overflow: hidden;
+}
+
+.builder-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--segment-gray-200);
+    background: var(--segment-gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.builder-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--segment-gray-900);
+    margin: 0;
+}
+
+.builder-mode {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--segment-gray-300);
+}
+
+.mode-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    background: white;
+    color: var(--segment-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+    background: var(--segment-primary);
+    color: white;
+}
+
+.mode-btn:hover:not(.active) {
+    background: var(--segment-gray-50);
+}
+
+.builder-content {
+    padding: 2rem;
+}
+
+.builder-description {
+    font-size: 0.875rem;
+    color: var(--segment-gray-600);
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 8px;
+    border-left: 4px solid var(--segment-primary);
+}
+
+/* Visual Builder Interface */
+.visual-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.condition-group {
+    background: var(--segment-gray-50);
+    border-radius: 8px;
+    border: 2px dashed var(--segment-gray-300);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.condition-group.drag-over {
+    border-color: var(--segment-primary);
+    background: rgba(59, 130, 246, 0.05);
+    transform: scale(1.01);
+}
+
+.condition-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.group-logic {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logic-operator {
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--segment-primary);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logic-operator:hover {
+    background: #2563eb;
+}
+
+.group-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--segment-gray-300);
+    background: white;
+    color: var(--segment-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--segment-gray-50);
+    border-color: var(--segment-gray-400);
+}
+
+.action-btn.delete:hover {
+    background: var(--segment-danger);
+    border-color: var(--segment-danger);
+    color: white;
+}
+
+.conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.condition-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    cursor: move;
+}
+
+.condition-item:hover {
+    border-color: var(--segment-primary);
+    box-shadow: var(--segment-shadow-md);
+}
+
+.condition-item.dragging {
+    opacity: 0.6;
+    transform: rotate(3deg);
+}
+
+.condition-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.condition-operator {
+    flex: 0 0 120px;
+}
+
+.condition-value {
+    flex: 1;
+    min-width: 150px;
+}
+
+.condition-select,
+.condition-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--segment-gray-300);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.condition-select:focus,
+.condition-input:focus {
+    outline: none;
+    border-color: var(--segment-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.drag-handle {
+    color: var(--segment-gray-400);
+    cursor: move;
+    font-size: 1.25rem;
+}
+
+.drag-handle:hover {
+    color: var(--segment-gray-600);
+}
+
+/* Field Library */
+.field-library {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    overflow: hidden;
+}
+
+.library-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--segment-gray-200);
+    background: var(--segment-gray-50);
+}
+
+.library-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--segment-gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.library-search {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--segment-gray-300);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+.library-search:focus {
+    outline: none;
+    border-color: var(--segment-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-categories {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.field-category {
+    border-bottom: 1px solid var(--segment-gray-200);
+}
+
+.category-header {
+    padding: 1rem 1.5rem;
+    background: var(--segment-gray-50);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--segment-gray-700);
+    transition: all 0.2s ease;
+}
+
+.category-header:hover {
+    background: var(--segment-gray-100);
+}
+
+.category-icon {
+    transition: transform 0.2s ease;
+}
+
+.category-header.expanded .category-icon {
+    transform: rotate(90deg);
+}
+
+.category-fields {
+    display: none;
+    padding: 0 1.5rem 1rem 1.5rem;
+    background: white;
+}
+
+.category-fields.expanded {
+    display: block;
+}
+
+.field-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+}
+
+.field-item:hover {
+    background: var(--segment-gray-50);
+    border-color: var(--segment-gray-200);
+}
+
+.field-item:active {
+    cursor: grabbing;
+}
+
+.field-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.field-icon.text {
+    background: var(--segment-primary);
+}
+
+.field-icon.number {
+    background: var(--segment-success);
+}
+
+.field-icon.date {
+    background: var(--segment-warning);
+}
+
+.field-icon.boolean {
+    background: var(--segment-purple);
+}
+
+.field-icon.tag {
+    background: var(--segment-pink);
+}
+
+.field-info {
+    flex: 1;
+}
+
+.field-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--segment-gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.field-description {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    margin: 0;
+}
+
+/* Segment Preview */
+.segment-preview {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    overflow: hidden;
+}
+
+.preview-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--segment-gray-200);
+    background: var(--segment-gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.preview-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--segment-gray-900);
+    margin: 0;
+}
+
+.refresh-btn {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--segment-gray-300);
+    background: white;
+    color: var(--segment-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background: var(--segment-gray-50);
+    border-color: var(--segment-gray-400);
+}
+
+.preview-content {
+    padding: 1.5rem;
+}
+
+.preview-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.preview-stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--segment-gray-50);
+    border-radius: 8px;
+    border: 1px solid var(--segment-gray-200);
+}
+
+.preview-stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--segment-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.preview-stat-label {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.preview-chart {
+    height: 200px;
+    background: var(--segment-gray-50);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--segment-gray-500);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--segment-gray-200);
+}
+
+.sample-contacts {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.sample-header {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--segment-gray-700);
+    margin-bottom: 1rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--segment-gray-200);
+    margin-bottom: 0.5rem;
+    background: white;
+}
+
+.contact-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--segment-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.contact-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.contact-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--segment-gray-900);
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contact-email {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Saved Segments */
+.saved-segments {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    overflow: hidden;
+}
+
+.segments-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--segment-gray-200);
+    background: var(--segment-gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.segments-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--segment-gray-900);
+    margin: 0;
+}
+
+.segments-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.segment-card {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--segment-gray-100);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.segment-card:hover {
+    background: var(--segment-gray-50);
+}
+
+.segment-card:last-child {
+    border-bottom: none;
+}
+
+.segment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.segment-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--segment-gray-900);
+    margin: 0;
+}
+
+.segment-count {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    background: var(--segment-gray-100);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.segment-description {
+    font-size: 0.75rem;
+    color: var(--segment-gray-600);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+}
+
+.segment-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.segment-tag {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--segment-primary);
+    color: white;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.segment-tag.active {
+    background: var(--segment-success);
+}
+
+.segment-tag.inactive {
+    background: var(--segment-gray-400);
+}
+
+/* Action Bar */
+.action-bar {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--segment-gray-200);
+    box-shadow: var(--segment-shadow);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.action-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.segment-name-input {
+    padding: 0.75rem;
+    border: 1px solid var(--segment-gray-300);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    min-width: 200px;
+}
+
+.segment-name-input:focus {
+    outline: none;
+    border-color: var(--segment-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-outline {
+    background: white;
+    color: var(--segment-gray-700);
+    border: 1px solid var(--segment-gray-300);
+}
+
+.btn-outline:hover {
+    background: var(--segment-gray-50);
+    border-color: var(--segment-gray-400);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    min-width: 300px;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--segment-shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast.success {
+    background: var(--segment-success);
+    color: white;
+}
+
+.toast.error {
+    background: var(--segment-danger);
+    color: white;
+}
+
+.toast.warning {
+    background: var(--segment-warning);
+    color: white;
+}
+
+.toast.info {
+    background: var(--segment-primary);
+    color: white;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.25rem;
+    margin-left: auto;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        max-width: 1000px;
+    }
+    
+    .sidebar-area {
+        order: -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+        padding: 0 1rem;
+    }
+    
+    .header-stats {
+        justify-content: center;
+    }
+    
+    .condition-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .builder-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-left,
+    .action-right {
+        justify-content: center;
+    }
+    
+    .segment-name-input {
+        min-width: auto;
+    }
+    
+    .preview-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar-area {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.segment-builder {
+    animation: fadeIn 0.5s ease;
+}
+
+.condition-group {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --segment-gray-50: #1f2937;
+        --segment-gray-100: #374151;
+        --segment-gray-200: #4b5563;
+        --segment-gray-300: #6b7280;
+        --segment-gray-400: #9ca3af;
+        --segment-gray-500: #d1d5db;
+        --segment-gray-600: #e5e7eb;
+        --segment-gray-700: #f3f4f6;
+        --segment-gray-800: #f9fafb;
+        --segment-gray-900: #ffffff;
+    }
+}
+
+/* Loading States */
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--segment-gray-300);
+    border-top: 2px solid var(--segment-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Tooltips */
+.tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--segment-gray-900);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--segment-gray-900);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.tooltip:hover::before,
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1>Audience Segmentation</h1>
+            <div class="breadcrumb">
+                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('lists.manage') }}">Lists</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>Segments</span>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-item">
+                <span class="stat-number" id="total-contacts">15,432</span>
+                <span class="stat-label">Total Contacts</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="active-segments">8</span>
+                <span class="stat-label">Active Segments</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="segment-coverage">73%</span>
+                <span class="stat-label">Coverage</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('lists.manage') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                Back to Lists
+            </a>
+            <button class="btn btn-primary" onclick="createNewSegment()">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                New Segment
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="content-area">
+        <!-- Segment Builder -->
+        <div class="segment-builder">
+            <div class="builder-header">
+                <h2 class="builder-title">Segment Builder</h2>
+                <div class="builder-mode">
+                    <button class="mode-btn active" id="visual-mode" onclick="switchMode('visual')">Visual</button>
+                    <button class="mode-btn" id="advanced-mode" onclick="switchMode('advanced')">Advanced</button>
+                </div>
+            </div>
+            <div class="builder-content">
+                <div class="builder-description">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Create sophisticated audience segments using our visual builder. Drag fields from the library, set conditions, and combine multiple criteria with AND/OR logic to target exactly the right contacts.
+                </div>
+                
+                <div class="visual-builder" id="visual-builder">
+                    <div class="condition-group" id="main-group">
+                        <div class="condition-group-header">
+                            <div class="group-logic">
+                                <span class="logic-operator" onclick="toggleLogic(this)">AND</span>
+                                <span style="font-size: 0.75rem; color: var(--segment-gray-600);">Match ALL conditions</span>
+                            </div>
+                            <div class="group-actions">
+                                <button class="action-btn tooltip" data-tooltip="Add nested group" onclick="addNestedGroup()">
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="conditions-list" id="conditions-list">
+                            <!-- Default condition -->
+                            <div class="condition-item" draggable="true">
+                                <div class="drag-handle">
+                                    <i class="fas fa-grip-vertical" aria-hidden="true"></i>
+                                </div>
+                                <div class="condition-field">
+                                    <select class="condition-select">
+                                        <option value="">Select field...</option>
+                                        <option value="email" selected>Email Address</option>
+                                        <option value="first_name">First Name</option>
+                                        <option value="last_name">Last Name</option>
+                                        <option value="company">Company</option>
+                                        <option value="location">Location</option>
+                                        <option value="signup_date">Signup Date</option>
+                                        <option value="last_activity">Last Activity</option>
+                                        <option value="total_orders">Total Orders</option>
+                                        <option value="tags">Tags</option>
+                                        <option value="status">Status</option>
+                                    </select>
+                                </div>
+                                <div class="condition-operator">
+                                    <select class="condition-select">
+                                        <option value="contains" selected>contains</option>
+                                        <option value="equals">equals</option>
+                                        <option value="starts_with">starts with</option>
+                                        <option value="ends_with">ends with</option>
+                                        <option value="not_contains">does not contain</option>
+                                        <option value="not_equals">does not equal</option>
+                                        <option value="is_empty">is empty</option>
+                                        <option value="is_not_empty">is not empty</option>
+                                    </select>
+                                </div>
+                                <div class="condition-value">
+                                    <input type="text" class="condition-input" placeholder="Enter value..." value="@gmail.com">
+                                </div>
+                                <button class="action-btn delete" onclick="removeCondition(this)">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <button class="btn btn-outline" onclick="addCondition()">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                Add Condition
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced SQL Editor (Hidden by default) -->
+                <div class="advanced-builder" id="advanced-builder" style="display: none;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--segment-gray-700);">SQL Query</label>
+                        <textarea 
+                            id="sql-editor" 
+                            rows="10" 
+                            placeholder="SELECT * FROM contacts WHERE..."
+                            style="width: 100%; padding: 1rem; border: 1px solid var(--segment-gray-300); border-radius: 6px; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.875rem; resize: vertical;"
+                        ></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-secondary" onclick="validateSQL()">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            Validate
+                        </button>
+                        <button class="btn btn-outline" onclick="formatSQL()">
+                            <i class="fas fa-code" aria-hidden="true"></i>
+                            Format
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="action-left">
+                <input 
+                    type="text" 
+                    class="segment-name-input" 
+                    placeholder="Enter segment name..." 
+                    value="Gmail Users"
+                    id="segment-name"
+                >
+            </div>
+            <div class="action-right">
+                <button class="btn btn-outline" onclick="clearBuilder()">
+                    <i class="fas fa-eraser" aria-hidden="true"></i>
+                    Clear
+                </button>
+                <button class="btn btn-secondary" onclick="testSegment()">
+                    <i class="fas fa-play" aria-hidden="true"></i>
+                    Test
+                </button>
+                <button class="btn btn-success" onclick="saveSegment()" id="save-btn">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    Save Segment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-area">
+        <!-- Field Library -->
+        <div class="field-library">
+            <div class="library-header">
+                <h3 class="library-title">Field Library</h3>
+                <p style="font-size: 0.875rem; color: var(--segment-gray-600); margin: 0;">Drag fields to build conditions</p>
+                <input type="text" class="library-search" placeholder="Search fields..." id="field-search" onkeyup="searchFields()">
+            </div>
+            <div class="field-categories">
+                <div class="field-category">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span>Personal Information</span>
+                        <i class="fas fa-chevron-right category-icon" aria-hidden="true"></i>
+                    </div>
+                    <div class="category-fields">
+                        <div class="field-item" draggable="true" data-field="first_name" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-font" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">First Name</div>
+                                <div class="field-description">Contact's first name</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="last_name" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-font" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Last Name</div>
+                                <div class="field-description">Contact's last name</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="email" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-at" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Email Address</div>
+                                <div class="field-description">Primary email address</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="phone" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-phone" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Phone Number</div>
+                                <div class="field-description">Contact phone number</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="company" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-building" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Company</div>
+                                <div class="field-description">Company or organization</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-category">
+                    <div class="category-header expanded" onclick="toggleCategory(this)">
+                        <span>Behavior & Activity</span>
+                        <i class="fas fa-chevron-right category-icon" aria-hidden="true"></i>
+                    </div>
+                    <div class="category-fields expanded">
+                        <div class="field-item" draggable="true" data-field="last_activity" data-type="date">
+                            <div class="field-icon date">
+                                <i class="fas fa-calendar" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Last Activity</div>
+                                <div class="field-description">Last engagement date</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="signup_date" data-type="date">
+                            <div class="field-icon date">
+                                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Signup Date</div>
+                                <div class="field-description">Registration date</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="email_opens" data-type="number">
+                            <div class="field-icon number">
+                                <i class="fas fa-envelope-open" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Email Opens</div>
+                                <div class="field-description">Total email opens</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="email_clicks" data-type="number">
+                            <div class="field-icon number">
+                                <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Email Clicks</div>
+                                <div class="field-description">Total link clicks</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-category">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span>Demographics</span>
+                        <i class="fas fa-chevron-right category-icon" aria-hidden="true"></i>
+                    </div>
+                    <div class="category-fields">
+                        <div class="field-item" draggable="true" data-field="location" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Location</div>
+                                <div class="field-description">Geographic location</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="age" data-type="number">
+                            <div class="field-icon number">
+                                <i class="fas fa-birthday-cake" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Age</div>
+                                <div class="field-description">Age in years</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="timezone" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Timezone</div>
+                                <div class="field-description">Contact's timezone</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-category">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span>Custom Fields & Tags</span>
+                        <i class="fas fa-chevron-right category-icon" aria-hidden="true"></i>
+                    </div>
+                    <div class="category-fields">
+                        <div class="field-item" draggable="true" data-field="tags" data-type="tag">
+                            <div class="field-icon tag">
+                                <i class="fas fa-tags" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Tags</div>
+                                <div class="field-description">Custom labels</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="source" data-type="text">
+                            <div class="field-icon text">
+                                <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Source</div>
+                                <div class="field-description">Contact source</div>
+                            </div>
+                        </div>
+                        <div class="field-item" draggable="true" data-field="status" data-type="text">
+                            <div class="field-icon boolean">
+                                <i class="fas fa-toggle-on" aria-hidden="true"></i>
+                            </div>
+                            <div class="field-info">
+                                <div class="field-name">Status</div>
+                                <div class="field-description">Subscription status</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segment Preview -->
+        <div class="segment-preview">
+            <div class="preview-header">
+                <h3 class="preview-title">Live Preview</h3>
+                <button class="refresh-btn tooltip" data-tooltip="Refresh preview" onclick="refreshPreview()">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="preview-content">
+                <div class="preview-stats">
+                    <div class="preview-stat">
+                        <span class="preview-stat-number" id="preview-count">2,847</span>
+                        <span class="preview-stat-label">Matches</span>
+                    </div>
+                    <div class="preview-stat">
+                        <span class="preview-stat-number" id="preview-percentage">18.4%</span>
+                        <span class="preview-stat-label">Of Total</span>
+                    </div>
+                </div>
+                
+                <div class="preview-chart">
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                    Distribution Chart
+                </div>
+                
+                <div class="sample-contacts">
+                    <div class="sample-header">Sample Contacts</div>
+                    <div class="contact-item">
+                        <div class="contact-avatar">JD</div>
+                        <div class="contact-info">
+                            <div class="contact-name">John Doe</div>
+                            <div class="contact-email">john.doe@gmail.com</div>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-avatar">JS</div>
+                        <div class="contact-info">
+                            <div class="contact-name">Jane Smith</div>
+                            <div class="contact-email">jane.smith@gmail.com</div>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-avatar">BJ</div>
+                        <div class="contact-info">
+                            <div class="contact-name">Bob Johnson</div>
+                            <div class="contact-email">bob.johnson@gmail.com</div>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-avatar">SM</div>
+                        <div class="contact-info">
+                            <div class="contact-name">Sarah Miller</div>
+                            <div class="contact-email">sarah.miller@gmail.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Segments -->
+        <div class="saved-segments">
+            <div class="segments-header">
+                <h3 class="segments-title">Saved Segments</h3>
+            </div>
+            <div class="segments-list">
+                <div class="segment-card" onclick="loadSegment('vip-customers')">
+                    <div class="segment-header">
+                        <div class="segment-name">VIP Customers</div>
+                        <div class="segment-count">1,234</div>
+                    </div>
+                    <div class="segment-description">High-value customers with multiple purchases</div>
+                    <div class="segment-tags">
+                        <span class="segment-tag active">Active</span>
+                        <span class="segment-tag">Premium</span>
+                    </div>
+                </div>
+                
+                <div class="segment-card" onclick="loadSegment('new-subscribers')">
+                    <div class="segment-header">
+                        <div class="segment-name">New Subscribers</div>
+                        <div class="segment-count">892</div>
+                    </div>
+                    <div class="segment-description">Contacts who subscribed in the last 30 days</div>
+                    <div class="segment-tags">
+                        <span class="segment-tag active">Active</span>
+                        <span class="segment-tag">Recent</span>
+                    </div>
+                </div>
+                
+                <div class="segment-card" onclick="loadSegment('engaged-users')">
+                    <div class="segment-header">
+                        <div class="segment-name">Engaged Users</div>
+                        <div class="segment-count">3,456</div>
+                    </div>
+                    <div class="segment-description">Contacts with high email engagement rates</div>
+                    <div class="segment-tags">
+                        <span class="segment-tag active">Active</span>
+                        <span class="segment-tag">Engagement</span>
+                    </div>
+                </div>
+                
+                <div class="segment-card" onclick="loadSegment('inactive-contacts')">
+                    <div class="segment-header">
+                        <div class="segment-name">Inactive Contacts</div>
+                        <div class="segment-count">567</div>
+                    </div>
+                    <div class="segment-description">Contacts without activity in 90+ days</div>
+                    <div class="segment-tags">
+                        <span class="segment-tag inactive">Inactive</span>
+                        <span class="segment-tag">Cleanup</span>
+                    </div>
+                </div>
+                
+                <div class="segment-card" onclick="loadSegment('mobile-users')">
+                    <div class="segment-header">
+                        <div class="segment-name">Mobile Users</div>
+                        <div class="segment-count">8,921</div>
+                    </div>
+                    <div class="segment-description">Contacts who primarily use mobile devices</div>
+                    <div class="segment-tags">
+                        <span class="segment-tag active">Active</span>
+                        <span class="segment-tag">Mobile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Advanced Audience Segmentation System
+class SegmentationEngine {
+    constructor() {
+        this.conditions = [];
+        this.currentMode = 'visual';
+        this.previewData = null;
+        this.isDragging = false;
+        this.draggedElement = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.setupDragAndDrop();
+        this.expandDefaultCategory();
+        this.refreshPreview();
+        
+        console.log('Segmentation Engine initialized');
+    }
+    
+    setupEventListeners() {
+        // Mode switching
+        document.getElementById('visual-mode').addEventListener('click', () => this.switchMode('visual'));
+        document.getElementById('advanced-mode').addEventListener('click', () => this.switchMode('advanced'));
+        
+        // Auto-refresh preview on changes
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('.condition-select, .condition-input, #segment-name')) {
+                this.debounce(() => this.refreshPreview(), 500)();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 's':
+                        e.preventDefault();
+                        this.saveSegment();
+                        break;
+                    case 't':
+                        e.preventDefault();
+                        this.testSegment();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        this.createNewSegment();
+                        break;
+                }
+            }
+        });
+        
+        // Condition removal
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.action-btn.delete, .action-btn.delete *')) {
+                e.preventDefault();
+                const btn = e.target.closest('.action-btn.delete');
+                this.removeCondition(btn);
+            }
+        });
+    }
+    
+    setupDragAndDrop() {
+        // Make field items draggable
+        document.querySelectorAll('.field-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                this.isDragging = true;
+                this.draggedElement = e.target;
+                e.dataTransfer.setData('text/plain', '');
+                e.target.style.opacity = '0.6';
+            });
+            
+            item.addEventListener('dragend', (e) => {
+                this.isDragging = false;
+                e.target.style.opacity = '1';
+                this.draggedElement = null;
+            });
+        });
+        
+        // Setup drop zones
+        this.setupDropZones();
+    }
+    
+    setupDropZones() {
+        const conditionGroups = document.querySelectorAll('.condition-group');
+        
+        conditionGroups.forEach(group => {
+            group.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (this.isDragging) {
+                    group.classList.add('drag-over');
+                }
+            });
+            
+            group.addEventListener('dragleave', (e) => {
+                if (!group.contains(e.relatedTarget)) {
+                    group.classList.remove('drag-over');
+                }
+            });
+            
+            group.addEventListener('drop', (e) => {
+                e.preventDefault();
+                group.classList.remove('drag-over');
+                
+                if (this.draggedElement && this.draggedElement.classList.contains('field-item')) {
+                    const fieldData = this.draggedElement.dataset;
+                    this.addConditionFromDrop(fieldData, group);
+                }
+            });
+        });
+    }
+    
+    expandDefaultCategory() {
+        const behaviorCategory = document.querySelector('.field-category .category-header.expanded');
+        if (behaviorCategory) {
+            const fields = behaviorCategory.nextElementSibling;
+            if (fields) {
+                fields.classList.add('expanded');
+            }
+        }
+    }
+    
+    switchMode(mode) {
+        this.currentMode = mode;
+        
+        // Update button states
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`${mode}-mode`).classList.add('active');
+        
+        // Show/hide builders
+        const visualBuilder = document.getElementById('visual-builder');
+        const advancedBuilder = document.getElementById('advanced-builder');
+        
+        if (mode === 'visual') {
+            visualBuilder.style.display = 'block';
+            advancedBuilder.style.display = 'none';
+        } else {
+            visualBuilder.style.display = 'none';
+            advancedBuilder.style.display = 'block';
+            this.syncToSQL();
+        }
+        
+        this.showToast(`Switched to ${mode} mode`, 'info');
+    }
+    
+    syncToSQL() {
+        const conditions = this.extractConditions();
+        const sql = this.generateSQL(conditions);
+        document.getElementById('sql-editor').value = sql;
+    }
+    
+    generateSQL(conditions) {
+        if (conditions.length === 0) {
+            return 'SELECT * FROM contacts;';
+        }
+        
+        const whereClause = conditions.map(condition => {
+            const { field, operator, value } = condition;
+            return this.buildSQLCondition(field, operator, value);
+        }).join(' AND ');
+        
+        return `SELECT * FROM contacts WHERE ${whereClause};`;
+    }
+    
+    buildSQLCondition(field, operator, value) {
+        switch (operator) {
+            case 'equals':
+                return `${field} = '${value}'`;
+            case 'contains':
+                return `${field} LIKE '%${value}%'`;
+            case 'starts_with':
+                return `${field} LIKE '${value}%'`;
+            case 'ends_with':
+                return `${field} LIKE '%${value}'`;
+            case 'not_contains':
+                return `${field} NOT LIKE '%${value}%'`;
+            case 'not_equals':
+                return `${field} != '${value}'`;
+            case 'is_empty':
+                return `(${field} IS NULL OR ${field} = '')`;
+            case 'is_not_empty':
+                return `(${field} IS NOT NULL AND ${field} != '')`;
+            case 'greater_than':
+                return `${field} > ${value}`;
+            case 'less_than':
+                return `${field} < ${value}`;
+            case 'greater_equal':
+                return `${field} >= ${value}`;
+            case 'less_equal':
+                return `${field} <= ${value}`;
+            default:
+                return `${field} = '${value}'`;
+        }
+    }
+    
+    extractConditions() {
+        const conditions = [];
+        const conditionItems = document.querySelectorAll('.condition-item');
+        
+        conditionItems.forEach(item => {
+            const fieldSelect = item.querySelector('.condition-select');
+            const operatorSelect = item.querySelectorAll('.condition-select')[1];
+            const valueInput = item.querySelector('.condition-input');
+            
+            if (fieldSelect && operatorSelect && valueInput) {
+                conditions.push({
+                    field: fieldSelect.value,
+                    operator: operatorSelect.value,
+                    value: valueInput.value
+                });
+            }
+        });
+        
+        return conditions;
+    }
+    
+    addCondition() {
+        const conditionsList = document.getElementById('conditions-list');
+        const newCondition = this.createConditionElement();
+        conditionsList.appendChild(newCondition);
+        
+        // Add animation
+        newCondition.style.opacity = '0';
+        newCondition.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            newCondition.style.transition = 'all 0.3s ease';
+            newCondition.style.opacity = '1';
+            newCondition.style.transform = 'translateY(0)';
+        }, 10);
+        
+        this.refreshPreview();
+    }
+    
+    addConditionFromDrop(fieldData, group) {
+        const conditionsList = group.querySelector('.conditions-list');
+        const newCondition = this.createConditionElement(fieldData);
+        conditionsList.appendChild(newCondition);
+        
+        // Animation and feedback
+        newCondition.style.opacity = '0';
+        newCondition.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            newCondition.style.transition = 'all 0.3s ease';
+            newCondition.style.opacity = '1';
+            newCondition.style.transform = 'scale(1)';
+        }, 10);
+        
+        this.showToast(`Added ${fieldData.field} condition`, 'success');
+        this.refreshPreview();
+    }
+    
+    createConditionElement(fieldData = null) {
+        const condition = document.createElement('div');
+        condition.className = 'condition-item';
+        condition.draggable = true;
+        
+        const fieldValue = fieldData ? fieldData.field : '';
+        const fieldType = fieldData ? fieldData.type : 'text';
+        
+        condition.innerHTML = `
+            <div class="drag-handle">
+                <i class="fas fa-grip-vertical" aria-hidden="true"></i>
+            </div>
+            <div class="condition-field">
+                <select class="condition-select">
+                    <option value="">Select field...</option>
+                    <option value="email" ${fieldValue === 'email' ? 'selected' : ''}>Email Address</option>
+                    <option value="first_name" ${fieldValue === 'first_name' ? 'selected' : ''}>First Name</option>
+                    <option value="last_name" ${fieldValue === 'last_name' ? 'selected' : ''}>Last Name</option>
+                    <option value="company" ${fieldValue === 'company' ? 'selected' : ''}>Company</option>
+                    <option value="location" ${fieldValue === 'location' ? 'selected' : ''}>Location</option>
+                    <option value="signup_date" ${fieldValue === 'signup_date' ? 'selected' : ''}>Signup Date</option>
+                    <option value="last_activity" ${fieldValue === 'last_activity' ? 'selected' : ''}>Last Activity</option>
+                    <option value="email_opens" ${fieldValue === 'email_opens' ? 'selected' : ''}>Email Opens</option>
+                    <option value="email_clicks" ${fieldValue === 'email_clicks' ? 'selected' : ''}>Email Clicks</option>
+                    <option value="tags" ${fieldValue === 'tags' ? 'selected' : ''}>Tags</option>
+                    <option value="status" ${fieldValue === 'status' ? 'selected' : ''}>Status</option>
+                </select>
+            </div>
+            <div class="condition-operator">
+                <select class="condition-select">
+                    ${this.getOperatorOptions(fieldType)}
+                </select>
+            </div>
+            <div class="condition-value">
+                ${this.getValueInput(fieldType)}
+            </div>
+            <button class="action-btn delete" onclick="removeCondition(this)">
+                <i class="fas fa-trash" aria-hidden="true"></i>
+            </button>
+        `;
+        
+        // Add event listeners
+        const fieldSelect = condition.querySelector('.condition-select');
+        fieldSelect.addEventListener('change', (e) => {
+            this.updateOperatorsForField(condition, e.target.value);
+        });
+        
+        return condition;
+    }
+    
+    getOperatorOptions(fieldType) {
+        const operators = {
+            text: [
+                { value: 'contains', label: 'contains' },
+                { value: 'equals', label: 'equals' },
+                { value: 'starts_with', label: 'starts with' },
+                { value: 'ends_with', label: 'ends with' },
+                { value: 'not_contains', label: 'does not contain' },
+                { value: 'not_equals', label: 'does not equal' },
+                { value: 'is_empty', label: 'is empty' },
+                { value: 'is_not_empty', label: 'is not empty' }
+            ],
+            number: [
+                { value: 'equals', label: 'equals' },
+                { value: 'greater_than', label: 'greater than' },
+                { value: 'less_than', label: 'less than' },
+                { value: 'greater_equal', label: 'greater than or equal' },
+                { value: 'less_equal', label: 'less than or equal' },
+                { value: 'not_equals', label: 'does not equal' }
+            ],
+            date: [
+                { value: 'equals', label: 'is on' },
+                { value: 'greater_than', label: 'is after' },
+                { value: 'less_than', label: 'is before' },
+                { value: 'in_last', label: 'in the last' },
+                { value: 'not_in_last', label: 'not in the last' }
+            ],
+            boolean: [
+                { value: 'equals', label: 'is' },
+                { value: 'not_equals', label: 'is not' }
+            ],
+            tag: [
+                { value: 'contains', label: 'has tag' },
+                { value: 'not_contains', label: 'does not have tag' }
+            ]
+        };
+        
+        const options = operators[fieldType] || operators.text;
+        return options.map(op => `<option value="${op.value}">${op.label}</option>`).join('');
+    }
+    
+    getValueInput(fieldType) {
+        switch (fieldType) {
+            case 'number':
+                return '<input type="number" class="condition-input" placeholder="Enter number...">';
+            case 'date':
+                return '<input type="date" class="condition-input">';
+            case 'boolean':
+                return `<select class="condition-select">
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>`;
+            default:
+                return '<input type="text" class="condition-input" placeholder="Enter value...">';
+        }
+    }
+    
+    updateOperatorsForField(conditionElement, fieldValue) {
+        // Determine field type based on field value
+        const fieldTypes = {
+            'email': 'text',
+            'first_name': 'text',
+            'last_name': 'text',
+            'company': 'text',
+            'location': 'text',
+            'phone': 'text',
+            'source': 'text',
+            'signup_date': 'date',
+            'last_activity': 'date',
+            'email_opens': 'number',
+            'email_clicks': 'number',
+            'age': 'number',
+            'tags': 'tag',
+            'status': 'boolean'
+        };
+        
+        const fieldType = fieldTypes[fieldValue] || 'text';
+        const operatorSelect = conditionElement.querySelectorAll('.condition-select')[1];
+        const valueContainer = conditionElement.querySelector('.condition-value');
+        
+        // Update operators
+        operatorSelect.innerHTML = this.getOperatorOptions(fieldType);
+        
+        // Update value input
+        valueContainer.innerHTML = this.getValueInput(fieldType);
+        
+        // Refresh preview
+        this.refreshPreview();
+    }
+    
+    removeCondition(button) {
+        const condition = button.closest('.condition-item');
+        const conditionsList = condition.parentElement;
+        
+        // Animation
+        condition.style.transition = 'all 0.3s ease';
+        condition.style.opacity = '0';
+        condition.style.transform = 'translateX(100px)';
+        
+        setTimeout(() => {
+            condition.remove();
+            
+            // If no conditions left, add a default one
+            if (conditionsList.children.length === 0) {
+                this.addCondition();
+            } else {
+                this.refreshPreview();
+            }
+        }, 300);
+    }
+    
+    addNestedGroup() {
+        const mainGroup = document.getElementById('main-group');
+        const nestedGroup = document.createElement('div');
+        nestedGroup.className = 'condition-group';
+        nestedGroup.style.marginLeft = '2rem';
+        nestedGroup.style.border = '2px dashed var(--segment-purple)';
+        
+        nestedGroup.innerHTML = `
+            <div class="condition-group-header">
+                <div class="group-logic">
+                    <span class="logic-operator" onclick="toggleLogic(this)" style="background: var(--segment-purple);">OR</span>
+                    <span style="font-size: 0.75rem; color: var(--segment-gray-600);">Match ANY conditions</span>
+                </div>
+                <div class="group-actions">
+                    <button class="action-btn delete" onclick="removeGroup(this)">
+                        <i class="fas fa-trash" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="conditions-list">
+                <!-- Will be populated by addCondition -->
+            </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn btn-outline" onclick="addCondition()" style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Add Condition
+                </button>
+            </div>
+        `;
+        
+        mainGroup.appendChild(nestedGroup);
+        
+        // Add a default condition to the new group
+        const conditionsList = nestedGroup.querySelector('.conditions-list');
+        const newCondition = this.createConditionElement();
+        conditionsList.appendChild(newCondition);
+        
+        // Setup drag and drop for new group
+        this.setupDropZones();
+        
+        this.showToast('Added nested condition group', 'success');
+        this.refreshPreview();
+    }
+    
+    refreshPreview() {
+        // Simulate API call to get preview data
+        const conditions = this.extractConditions();
+        
+        // Mock data generation based on conditions
+        let count = Math.floor(Math.random() * 5000) + 500;
+        let percentage = ((count / 15432) * 100).toFixed(1);
+        
+        // Update UI
+        document.getElementById('preview-count').textContent = count.toLocaleString();
+        document.getElementById('preview-percentage').textContent = percentage + '%';
+        
+        // Update sample contacts (would be real data in production)
+        this.updateSampleContacts();
+        
+        console.log('Preview refreshed:', { conditions, count, percentage });
+    }
+    
+    updateSampleContacts() {
+        // In a real implementation, this would fetch actual sample contacts
+        // For now, we'll keep the existing mock data
+    }
+    
+    saveSegment() {
+        const segmentName = document.getElementById('segment-name').value.trim();
+        
+        if (!segmentName) {
+            this.showToast('Please enter a segment name', 'error');
+            return;
+        }
+        
+        const conditions = this.extractConditions();
+        
+        if (conditions.length === 0) {
+            this.showToast('Please add at least one condition', 'error');
+            return;
+        }
+        
+        // Show loading state
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.classList.add('loading');
+        saveBtn.disabled = true;
+        
+        // Simulate save operation
+        setTimeout(() => {
+            saveBtn.classList.remove('loading');
+            saveBtn.disabled = false;
+            
+            // Add to saved segments list
+            this.addToSavedSegments({
+                name: segmentName,
+                conditions: conditions,
+                count: document.getElementById('preview-count').textContent
+            });
+            
+            this.showToast(`Segment "${segmentName}" saved successfully`, 'success');
+        }, 1500);
+    }
+    
+    addToSavedSegments(segment) {
+        const segmentsList = document.querySelector('.segments-list');
+        const segmentCard = document.createElement('div');
+        segmentCard.className = 'segment-card';
+        segmentCard.onclick = () => this.loadSegment(segment.name.toLowerCase().replace(/\s+/g, '-'));
+        
+        segmentCard.innerHTML = `
+            <div class="segment-header">
+                <div class="segment-name">${segment.name}</div>
+                <div class="segment-count">${segment.count}</div>
+            </div>
+            <div class="segment-description">Custom segment with ${segment.conditions.length} condition(s)</div>
+            <div class="segment-tags">
+                <span class="segment-tag active">Active</span>
+                <span class="segment-tag">Custom</span>
+            </div>
+        `;
+        
+        segmentsList.insertBefore(segmentCard, segmentsList.firstChild);
+    }
+    
+    testSegment() {
+        const conditions = this.extractConditions();
+        
+        if (conditions.length === 0) {
+            this.showToast('Please add conditions to test', 'error');
+            return;
+        }
+        
+        this.showToast('Testing segment conditions...', 'info');
+        
+        // Simulate test
+        setTimeout(() => {
+            const count = document.getElementById('preview-count').textContent;
+            this.showToast(`Test complete: Found ${count} matching contacts`, 'success');
+        }, 1000);
+    }
+    
+    clearBuilder() {
+        if (confirm('Are you sure you want to clear all conditions?')) {
+            const conditionsList = document.getElementById('conditions-list');
+            conditionsList.innerHTML = '';
+            
+            // Add default condition
+            this.addCondition();
+            
+            // Clear segment name
+            document.getElementById('segment-name').value = '';
+            
+            this.showToast('Builder cleared', 'info');
+        }
+    }
+    
+    createNewSegment() {
+        this.clearBuilder();
+        document.getElementById('segment-name').focus();
+    }
+    
+    loadSegment(segmentId) {
+        // In a real implementation, this would load the segment from the backend
+        this.showToast(`Loading segment: ${segmentId}`, 'info');
+        
+        // Mock data for different segments
+        const mockSegments = {
+            'vip-customers': {
+                name: 'VIP Customers',
+                conditions: [
+                    { field: 'total_orders', operator: 'greater_than', value: '10' },
+                    { field: 'tags', operator: 'contains', value: 'VIP' }
+                ]
+            },
+            'new-subscribers': {
+                name: 'New Subscribers',
+                conditions: [
+                    { field: 'signup_date', operator: 'in_last', value: '30' }
+                ]
+            }
+        };
+        
+        const segment = mockSegments[segmentId];
+        if (segment) {
+            document.getElementById('segment-name').value = segment.name;
+            // Would populate conditions in real implementation
+            this.refreshPreview();
+        }
+    }
+    
+    validateSQL() {
+        const sql = document.getElementById('sql-editor').value;
+        
+        // Basic SQL validation (would be more sophisticated in production)
+        if (!sql.trim()) {
+            this.showToast('Please enter a SQL query', 'error');
+            return;
+        }
+        
+        if (!sql.toLowerCase().includes('select')) {
+            this.showToast('Query must start with SELECT', 'error');
+            return;
+        }
+        
+        this.showToast('SQL query is valid', 'success');
+    }
+    
+    formatSQL() {
+        const sql = document.getElementById('sql-editor').value;
+        // Basic SQL formatting (would use a proper SQL formatter in production)
+        const formatted = sql.replace(/\s+/g, ' ')
+            .replace(/SELECT/gi, 'SELECT\n  ')
+            .replace(/FROM/gi, '\nFROM\n  ')
+            .replace(/WHERE/gi, '\nWHERE\n  ')
+            .replace(/AND/gi, '\n  AND')
+            .replace(/OR/gi, '\n  OR');
+        
+        document.getElementById('sql-editor').value = formatted;
+        this.showToast('SQL formatted', 'success');
+    }
+    
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <i class="fas fa-${icons[type]} fa-lg"></i>
+            <span>${message}</span>
+            <button class="toast-close" onclick="this.closest('.toast').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+}
+
+// Global functions for HTML onclick handlers
+function toggleCategory(header) {
+    const category = header.parentElement;
+    const fields = header.nextElementSibling;
+    const icon = header.querySelector('.category-icon');
+    
+    header.classList.toggle('expanded');
+    fields.classList.toggle('expanded');
+    
+    if (fields.classList.contains('expanded')) {
+        fields.style.display = 'block';
+        icon.style.transform = 'rotate(90deg)';
+    } else {
+        fields.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function searchFields() {
+    const searchTerm = document.getElementById('field-search').value.toLowerCase();
+    const fieldItems = document.querySelectorAll('.field-item');
+    
+    fieldItems.forEach(item => {
+        const fieldName = item.querySelector('.field-name').textContent.toLowerCase();
+        const fieldDescription = item.querySelector('.field-description').textContent.toLowerCase();
+        
+        if (fieldName.includes(searchTerm) || fieldDescription.includes(searchTerm)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function toggleLogic(element) {
+    if (element.textContent === 'AND') {
+        element.textContent = 'OR';
+        element.style.background = 'var(--segment-purple)';
+        element.nextElementSibling.textContent = 'Match ANY conditions';
+    } else {
+        element.textContent = 'AND';
+        element.style.background = 'var(--segment-primary)';
+        element.nextElementSibling.textContent = 'Match ALL conditions';
+    }
+    
+    window.segmentationEngine.refreshPreview();
+}
+
+function addCondition() {
+    window.segmentationEngine.addCondition();
+}
+
+function removeCondition(button) {
+    window.segmentationEngine.removeCondition(button);
+}
+
+function addNestedGroup() {
+    window.segmentationEngine.addNestedGroup();
+}
+
+function removeGroup(button) {
+    const group = button.closest('.condition-group');
+    group.style.transition = 'all 0.3s ease';
+    group.style.opacity = '0';
+    group.style.transform = 'translateY(-20px)';
+    
+    setTimeout(() => {
+        group.remove();
+        window.segmentationEngine.refreshPreview();
+    }, 300);
+}
+
+function refreshPreview() {
+    window.segmentationEngine.refreshPreview();
+}
+
+function switchMode(mode) {
+    window.segmentationEngine.switchMode(mode);
+}
+
+function saveSegment() {
+    window.segmentationEngine.saveSegment();
+}
+
+function testSegment() {
+    window.segmentationEngine.testSegment();
+}
+
+function clearBuilder() {
+    window.segmentationEngine.clearBuilder();
+}
+
+function createNewSegment() {
+    window.segmentationEngine.createNewSegment();
+}
+
+function loadSegment(segmentId) {
+    window.segmentationEngine.loadSegment(segmentId);
+}
+
+function validateSQL() {
+    window.segmentationEngine.validateSQL();
+}
+
+function formatSQL() {
+    window.segmentationEngine.formatSQL();
+}
+
+// Add CSS animations for slide out
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the segmentation engine
+document.addEventListener('DOMContentLoaded', function() {
+    window.segmentationEngine = new SegmentationEngine();
+});
+</script>
+{% endblock %}
+

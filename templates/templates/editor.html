@@ -1,0 +1,2369 @@
+<!-- templates/templates/editor.html -->
+{% extends "base.html" %}
+
+{% block title %}Email Template Editor - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.css">
+<style>
+/* Advanced Email Template Editor System */
+:root {
+    --editor-primary: #2563eb;
+    --editor-secondary: #64748b;
+    --editor-success: #10b981;
+    --editor-warning: #f59e0b;
+    --editor-danger: #ef4444;
+    --editor-purple: #8b5cf6;
+    --editor-pink: #ec4899;
+    --editor-indigo: #6366f1;
+    --editor-teal: #14b8a6;
+    --editor-orange: #f97316;
+    --editor-gray-50: #f9fafb;
+    --editor-gray-100: #f3f4f6;
+    --editor-gray-200: #e5e7eb;
+    --editor-gray-300: #d1d5db;
+    --editor-gray-400: #9ca3af;
+    --editor-gray-500: #6b7280;
+    --editor-gray-600: #4b5563;
+    --editor-gray-700: #374151;
+    --editor-gray-800: #1f2937;
+    --editor-gray-900: #111827;
+    --editor-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --editor-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --editor-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --editor-sidebar-width: 320px;
+    --editor-toolbar-height: 70px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--editor-gray-50);
+    overflow: hidden;
+}
+
+/* Editor Layout */
+.editor-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--editor-toolbar-height);
+    background: white;
+    border-bottom: 1px solid var(--editor-gray-200);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    z-index: 1000;
+    box-shadow: var(--editor-shadow);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.editor-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--editor-gray-900);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--editor-primary) 0%, var(--editor-purple) 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.template-name-input {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--editor-gray-900);
+    border: none;
+    background: transparent;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    max-width: 300px;
+}
+
+.template-name-input:hover {
+    background: var(--editor-gray-100);
+}
+
+.template-name-input:focus {
+    outline: none;
+    background: var(--editor-gray-100);
+    box-shadow: 0 0 0 2px var(--editor-primary);
+}
+
+.toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--editor-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.toolbar-btn:hover {
+    background: var(--editor-gray-100);
+    color: var(--editor-gray-900);
+}
+
+.toolbar-btn.active {
+    background: var(--editor-primary);
+    color: white;
+}
+
+.toolbar-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--editor-gray-800);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+}
+
+.toolbar-btn:hover::after {
+    opacity: 1;
+}
+
+.device-preview-buttons {
+    display: flex;
+    background: var(--editor-gray-100);
+    border-radius: 8px;
+    padding: 0.25rem;
+    gap: 0.25rem;
+}
+
+.device-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--editor-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.device-btn:hover {
+    color: var(--editor-gray-900);
+}
+
+.device-btn.active {
+    background: white;
+    color: var(--editor-primary);
+    box-shadow: var(--editor-shadow);
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toolbar-action {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: var(--editor-gray-200);
+    color: var(--editor-gray-700);
+}
+
+.btn-secondary:hover {
+    background: var(--editor-gray-300);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--editor-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    text-decoration: none;
+}
+
+.btn-success {
+    background: var(--editor-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    text-decoration: none;
+}
+
+/* Editor Main Content */
+.editor-content {
+    display: flex;
+    height: calc(100vh - var(--editor-toolbar-height));
+    margin-top: var(--editor-toolbar-height);
+}
+
+/* Left Sidebar - Components & Blocks */
+.editor-sidebar {
+    width: var(--editor-sidebar-width);
+    background: white;
+    border-right: 1px solid var(--editor-gray-200);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-tabs {
+    display: flex;
+    background: var(--editor-gray-50);
+    border-bottom: 1px solid var(--editor-gray-200);
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--editor-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.sidebar-tab:hover {
+    color: var(--editor-gray-900);
+    background: var(--editor-gray-100);
+}
+
+.sidebar-tab.active {
+    color: var(--editor-primary);
+    background: white;
+    border-bottom-color: var(--editor-primary);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* Components Section */
+.component-category {
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--editor-gray-900);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.components-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.component-block {
+    aspect-ratio: 1;
+    background: var(--editor-gray-50);
+    border: 2px solid var(--editor-gray-200);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: all 0.2s ease;
+    padding: 0.75rem;
+    user-select: none;
+}
+
+.component-block:hover {
+    border-color: var(--editor-primary);
+    background: rgba(37, 99, 235, 0.05);
+    transform: translateY(-2px);
+    box-shadow: var(--editor-shadow-md);
+}
+
+.component-block:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.component-icon {
+    font-size: 1.5rem;
+    color: var(--editor-primary);
+    margin-bottom: 0.5rem;
+}
+
+.component-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--editor-gray-700);
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Layers Panel */
+.layers-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.layer-item:hover {
+    background: var(--editor-gray-50);
+}
+
+.layer-item.selected {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: var(--editor-primary);
+}
+
+.layer-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--editor-gray-500);
+    margin-right: 0.75rem;
+}
+
+.layer-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--editor-gray-900);
+}
+
+.layer-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.layer-item:hover .layer-actions {
+    opacity: 1;
+}
+
+.layer-action {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: var(--editor-gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.layer-action:hover {
+    background: var(--editor-gray-200);
+    color: var(--editor-gray-700);
+}
+
+/* Canvas Area */
+.editor-canvas {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--editor-gray-100);
+    position: relative;
+}
+
+.canvas-controls {
+    background: white;
+    border-bottom: 1px solid var(--editor-gray-200);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.zoom-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--editor-gray-100);
+    border: none;
+    border-radius: 6px;
+    color: var(--editor-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.zoom-btn:hover {
+    background: var(--editor-gray-200);
+    color: var(--editor-gray-900);
+}
+
+.zoom-level {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--editor-gray-700);
+    min-width: 60px;
+    text-align: center;
+}
+
+.canvas-viewport {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow: auto;
+    position: relative;
+}
+
+/* Email Canvas */
+.email-canvas {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--editor-shadow-lg);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.canvas-desktop {
+    width: 600px;
+    min-height: 800px;
+}
+
+.canvas-tablet {
+    width: 480px;
+    min-height: 640px;
+}
+
+.canvas-mobile {
+    width: 320px;
+    min-height: 568px;
+}
+
+.email-content {
+    padding: 0;
+    min-height: 500px;
+    position: relative;
+}
+
+.drop-zone {
+    min-height: 100px;
+    border: 2px dashed var(--editor-gray-300);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--editor-gray-500);
+    font-size: 0.875rem;
+    margin: 1rem;
+    transition: all 0.2s ease;
+}
+
+.drop-zone.drag-over {
+    border-color: var(--editor-primary);
+    background: rgba(37, 99, 235, 0.05);
+    color: var(--editor-primary);
+}
+
+.drop-zone:not(:empty) {
+    border: none;
+    margin: 0;
+    min-height: auto;
+}
+
+/* Email Blocks */
+.email-block {
+    position: relative;
+    margin: 0;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.email-block:hover {
+    border-color: var(--editor-primary);
+}
+
+.email-block.selected {
+    border-color: var(--editor-primary);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.block-controls {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.email-block:hover .block-controls,
+.email-block.selected .block-controls {
+    opacity: 1;
+}
+
+.block-control {
+    width: 28px;
+    height: 28px;
+    background: var(--editor-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.block-control:hover {
+    background: #1d4ed8;
+    transform: scale(1.1);
+}
+
+.block-drag-handle {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background: var(--editor-primary);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    opacity: 0;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.email-block:hover .block-drag-handle,
+.email-block.selected .block-drag-handle {
+    opacity: 1;
+}
+
+.block-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Block Types */
+.text-block {
+    padding: 1rem;
+}
+
+.text-block h1, .text-block h2, .text-block h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--editor-gray-900);
+}
+
+.text-block p {
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+    color: var(--editor-gray-700);
+}
+
+.image-block {
+    padding: 1rem;
+}
+
+.image-block img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.button-block {
+    padding: 1rem;
+    text-align: center;
+}
+
+.email-button {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--editor-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.email-button:hover {
+    background: #1d4ed8;
+    text-decoration: none;
+}
+
+.spacer-block {
+    height: 2rem;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        var(--editor-gray-200) 5px,
+        var(--editor-gray-200) 10px
+    );
+    opacity: 0.5;
+    margin: 0.5rem;
+}
+
+.social-block {
+    padding: 1rem;
+    text-align: center;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    background: var(--editor-gray-600);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.social-link:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+/* Right Sidebar - Properties */
+.properties-sidebar {
+    width: var(--editor-sidebar-width);
+    background: white;
+    border-left: 1px solid var(--editor-gray-200);
+    overflow-y: auto;
+    display: none;
+}
+
+.properties-sidebar.active {
+    display: block;
+}
+
+.properties-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--editor-gray-200);
+    background: var(--editor-gray-50);
+}
+
+.properties-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--editor-gray-900);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.properties-content {
+    padding: 1.5rem;
+}
+
+.property-group {
+    margin-bottom: 2rem;
+}
+
+.property-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--editor-gray-700);
+    margin: 0 0 0.5rem 0;
+    display: block;
+}
+
+.property-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--editor-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.property-input:focus {
+    outline: none;
+    border-color: var(--editor-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.property-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.color-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-picker {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--editor-gray-200);
+    border-radius: 8px;
+    cursor: pointer;
+    appearance: none;
+    background: none;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 6px;
+}
+
+.property-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--editor-gray-200);
+    outline: none;
+}
+
+.property-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--editor-primary);
+    cursor: pointer;
+}
+
+.property-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--editor-primary);
+    cursor: pointer;
+    border: none;
+}
+
+/* Sortable Styles */
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-chosen {
+    cursor: grabbing;
+}
+
+.sortable-drag {
+    transform: rotate(5deg);
+    box-shadow: var(--editor-shadow-lg);
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--editor-gray-200);
+    border-top: 4px solid var(--editor-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .editor-sidebar,
+    .properties-sidebar {
+        width: 280px;
+    }
+    
+    .toolbar-left .template-name-input {
+        max-width: 200px;
+    }
+    
+    .canvas-viewport {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .editor-sidebar {
+        position: absolute;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        z-index: 999;
+        transition: left 0.3s ease;
+        box-shadow: var(--editor-shadow-lg);
+    }
+    
+    .editor-sidebar.mobile-open {
+        left: 0;
+    }
+    
+    .properties-sidebar {
+        display: none !important;
+    }
+    
+    .toolbar-center {
+        display: none;
+    }
+    
+    .toolbar-right {
+        gap: 0.5rem;
+    }
+    
+    .toolbar-action {
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+    }
+    
+    .canvas-viewport {
+        padding: 0.5rem;
+    }
+    
+    .email-canvas {
+        width: 100%;
+        max-width: 400px;
+    }
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.3s ease;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.3s ease;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Context Menu */
+.context-menu {
+    position: fixed;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--editor-shadow-lg);
+    border: 1px solid var(--editor-gray-200);
+    padding: 0.5rem;
+    z-index: 10000;
+    min-width: 160px;
+    display: none;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--editor-gray-700);
+    transition: all 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background: var(--editor-gray-50);
+    color: var(--editor-gray-900);
+}
+
+.context-menu-item.danger:hover {
+    background: var(--editor-danger);
+    color: white;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--editor-gray-200);
+    margin: 0.5rem 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <!-- Editor Toolbar -->
+    <div class="editor-toolbar">
+        <div class="toolbar-left">
+            <div class="editor-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                </div>
+                <span>Email Editor</span>
+            </div>
+            <input type="text" class="template-name-input" value="{{ template.name or 'Untitled Template' }}" placeholder="Template Name" id="template-name">
+        </div>
+        
+        <div class="toolbar-center">
+            <button class="toolbar-btn" id="undo-btn" data-tooltip="Undo (Ctrl+Z)">
+                <i class="fas fa-undo" aria-hidden="true"></i>
+            </button>
+            <button class="toolbar-btn" id="redo-btn" data-tooltip="Redo (Ctrl+Y)">
+                <i class="fas fa-redo" aria-hidden="true"></i>
+            </button>
+            
+            <div style="width: 1px; height: 24px; background: var(--editor-gray-300); margin: 0 0.5rem;"></div>
+            
+            <div class="device-preview-buttons">
+                <button class="device-btn active" data-device="desktop" data-tooltip="Desktop">
+                    <i class="fas fa-desktop" aria-hidden="true"></i>
+                </button>
+                <button class="device-btn" data-device="tablet" data-tooltip="Tablet">
+                    <i class="fas fa-tablet-alt" aria-hidden="true"></i>
+                </button>
+                <button class="device-btn" data-device="mobile" data-tooltip="Mobile">
+                    <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="toolbar-right">
+            <button class="toolbar-action btn-secondary" id="preview-btn">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+                Preview
+            </button>
+            <button class="toolbar-action btn-primary" id="save-btn">
+                <i class="fas fa-save" aria-hidden="true"></i>
+                Save
+            </button>
+            <button class="toolbar-action btn-success" id="publish-btn">
+                <i class="fas fa-rocket" aria-hidden="true"></i>
+                Publish
+            </button>
+        </div>
+    </div>
+    
+    <!-- Editor Main Content -->
+    <div class="editor-content">
+        <!-- Left Sidebar - Components & Blocks -->
+        <div class="editor-sidebar animate-slide-in-left">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="blocks">
+                    <i class="fas fa-cube" aria-hidden="true"></i>
+                    Blocks
+                </button>
+                <button class="sidebar-tab" data-tab="layers">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    Layers
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Blocks Tab -->
+                <div class="tab-content active" id="blocks-tab">
+                    <div class="component-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-font" aria-hidden="true"></i>
+                            Content
+                        </h3>
+                        <div class="components-grid">
+                            <div class="component-block" draggable="true" data-block-type="text">
+                                <div class="component-icon">
+                                    <i class="fas fa-font" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Text</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="heading">
+                                <div class="component-icon">
+                                    <i class="fas fa-heading" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Heading</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="image">
+                                <div class="component-icon">
+                                    <i class="fas fa-image" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Image</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="button">
+                                <div class="component-icon">
+                                    <i class="fas fa-mouse-pointer" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Button</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="component-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-th-large" aria-hidden="true"></i>
+                            Layout
+                        </h3>
+                        <div class="components-grid">
+                            <div class="component-block" draggable="true" data-block-type="spacer">
+                                <div class="component-icon">
+                                    <i class="fas fa-arrows-alt-v" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Spacer</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="divider">
+                                <div class="component-icon">
+                                    <i class="fas fa-minus" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Divider</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="columns">
+                                <div class="component-icon">
+                                    <i class="fas fa-columns" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Columns</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="container">
+                                <div class="component-icon">
+                                    <i class="fas fa-square" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Container</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="component-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-share-alt" aria-hidden="true"></i>
+                            Social
+                        </h3>
+                        <div class="components-grid">
+                            <div class="component-block" draggable="true" data-block-type="social">
+                                <div class="component-icon">
+                                    <i class="fas fa-share-alt" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Social Links</div>
+                            </div>
+                            <div class="component-block" draggable="true" data-block-type="footer">
+                                <div class="component-icon">
+                                    <i class="fas fa-copyright" aria-hidden="true"></i>
+                                </div>
+                                <div class="component-name">Footer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Layers Tab -->
+                <div class="tab-content" id="layers-tab">
+                    <ul class="layers-list" id="layers-list">
+                        <!-- Layers will be dynamically populated -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Canvas Area -->
+        <div class="editor-canvas animate-fade-in">
+            <div class="canvas-controls">
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoom-out">
+                        <i class="fas fa-minus" aria-hidden="true"></i>
+                    </button>
+                    <div class="zoom-level" id="zoom-level">100%</div>
+                    <button class="zoom-btn" id="zoom-in">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="canvas-viewport" id="canvas-viewport">
+                <div class="email-canvas canvas-desktop" id="email-canvas">
+                    <div class="email-content">
+                        <div class="drop-zone" id="main-drop-zone">
+                            <i class="fas fa-plus-circle" style="margin-right: 0.5rem;" aria-hidden="true"></i>
+                            Drag components here to start building your email
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar - Properties -->
+        <div class="properties-sidebar animate-slide-in-right" id="properties-sidebar">
+            <div class="properties-header">
+                <h3 class="properties-title">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                    Properties
+                </h3>
+            </div>
+            
+            <div class="properties-content" id="properties-content">
+                <div class="property-group">
+                    <label class="property-label">Select an element to edit its properties</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="context-menu">
+    <div class="context-menu-item" data-action="copy">
+        <i class="fas fa-copy" aria-hidden="true"></i>
+        Copy
+    </div>
+    <div class="context-menu-item" data-action="duplicate">
+        <i class="fas fa-clone" aria-hidden="true"></i>
+        Duplicate
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" data-action="move-up">
+        <i class="fas fa-arrow-up" aria-hidden="true"></i>
+        Move Up
+    </div>
+    <div class="context-menu-item" data-action="move-down">
+        <i class="fas fa-arrow-down" aria-hidden="true"></i>
+        Move Down
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item danger" data-action="delete">
+        <i class="fas fa-trash" aria-hidden="true"></i>
+        Delete
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+// Advanced Email Template Editor System
+class EmailTemplateEditor {
+    constructor() {
+        this.currentDevice = 'desktop';
+        this.zoomLevel = 100;
+        this.selectedBlock = null;
+        this.blockCounter = 0;
+        this.history = [];
+        this.historyIndex = -1;
+        this.isDragging = false;
+        this.blockTypes = {
+            text: { icon: 'fa-font', name: 'Text Block' },
+            heading: { icon: 'fa-heading', name: 'Heading Block' },
+            image: { icon: 'fa-image', name: 'Image Block' },
+            button: { icon: 'fa-mouse-pointer', name: 'Button Block' },
+            spacer: { icon: 'fa-arrows-alt-v', name: 'Spacer Block' },
+            divider: { icon: 'fa-minus', name: 'Divider Block' },
+            social: { icon: 'fa-share-alt', name: 'Social Block' },
+            footer: { icon: 'fa-copyright', name: 'Footer Block' }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupDevicePreview();
+        this.setupDragAndDrop();
+        this.setupBlockSelection();
+        this.setupToolbar();
+        this.setupSidebars();
+        this.setupZoomControls();
+        this.setupKeyboardShortcuts();
+        this.setupContextMenu();
+        this.loadTemplate();
+        
+        console.log('Email Template Editor initialized');
+    }
+    
+    setupDevicePreview() {
+        const deviceButtons = document.querySelectorAll('.device-btn');
+        const canvas = document.getElementById('email-canvas');
+        
+        deviceButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const device = btn.dataset.device;
+                this.switchDevice(device);
+                
+                // Update button states
+                deviceButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+    
+    switchDevice(device) {
+        const canvas = document.getElementById('email-canvas');
+        
+        // Remove existing device classes
+        canvas.className = canvas.className.replace(/canvas-(desktop|tablet|mobile)/g, '');
+        
+        // Add new device class
+        canvas.classList.add(`canvas-${device}`);
+        
+        this.currentDevice = device;
+        
+        // Add animation
+        canvas.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            canvas.style.transform = 'scale(1)';
+        }, 150);
+    }
+    
+    setupDragAndDrop() {
+        // Setup draggable components
+        const componentBlocks = document.querySelectorAll('.component-block');
+        componentBlocks.forEach(block => {
+            block.addEventListener('dragstart', (e) => {
+                const blockType = block.dataset.blockType;
+                e.dataTransfer.setData('text/plain', blockType);
+                e.dataTransfer.effectAllowed = 'copy';
+                this.isDragging = true;
+            });
+            
+            block.addEventListener('dragend', () => {
+                this.isDragging = false;
+            });
+        });
+        
+        // Setup drop zone
+        const dropZone = document.getElementById('main-drop-zone');
+        this.setupDropZone(dropZone);
+        
+        // Setup sortable for existing blocks
+        this.setupSortable();
+    }
+    
+    setupDropZone(zone) {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            zone.classList.add('drag-over');
+        });
+        
+        zone.addEventListener('dragleave', (e) => {
+            if (!zone.contains(e.relatedTarget)) {
+                zone.classList.remove('drag-over');
+            }
+        });
+        
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            
+            const blockType = e.dataTransfer.getData('text/plain');
+            if (blockType) {
+                this.addBlock(blockType, zone);
+            }
+        });
+    }
+    
+    setupSortable() {
+        const emailContent = document.querySelector('.email-content');
+        
+        this.sortable = Sortable.create(emailContent, {
+            group: 'email-blocks',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            handle: '.block-drag-handle',
+            onStart: () => {
+                this.isDragging = true;
+            },
+            onEnd: () => {
+                this.isDragging = false;
+                this.updateLayers();
+                this.saveState();
+            }
+        });
+    }
+    
+    addBlock(blockType, targetZone) {
+        this.blockCounter++;
+        const blockId = `block-${this.blockCounter}`;
+        
+        const blockElement = this.createBlockElement(blockType, blockId);
+        
+        if (targetZone.classList.contains('drop-zone') && targetZone.children.length === 1) {
+            // Replace empty drop zone content
+            targetZone.innerHTML = '';
+            targetZone.appendChild(blockElement);
+            targetZone.classList.remove('drop-zone');
+        } else {
+            // Insert after target zone
+            targetZone.parentNode.insertBefore(blockElement, targetZone.nextSibling);
+        }
+        
+        this.setupBlockInteractions(blockElement);
+        this.updateLayers();
+        this.saveState();
+        
+        // Auto-select the new block
+        this.selectBlock(blockElement);
+        
+        this.showNotification(`${this.blockTypes[blockType].name} added`, 'success');
+    }
+    
+    createBlockElement(blockType, blockId) {
+        const block = document.createElement('div');
+        block.className = `email-block ${blockType}-block`;
+        block.dataset.blockType = blockType;
+        block.dataset.blockId = blockId;
+        
+        // Add drag handle and controls
+        block.innerHTML = `
+            <div class="block-drag-handle">
+                <i class="fas fa-grip-vertical" aria-hidden="true"></i>
+            </div>
+            <div class="block-controls">
+                <button class="block-control" data-action="edit" title="Edit">
+                    <i class="fas fa-edit" aria-hidden="true"></i>
+                </button>
+                <button class="block-control" data-action="duplicate" title="Duplicate">
+                    <i class="fas fa-clone" aria-hidden="true"></i>
+                </button>
+                <button class="block-control" data-action="delete" title="Delete">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </div>
+            ${this.getBlockContent(blockType)}
+        `;
+        
+        return block;
+    }
+    
+    getBlockContent(blockType) {
+        switch (blockType) {
+            case 'text':
+                return `
+                    <div class="text-block">
+                        <p contenteditable="true">Click to edit this text. You can add multiple paragraphs and format your content.</p>
+                    </div>
+                `;
+            case 'heading':
+                return `
+                    <div class="text-block">
+                        <h2 contenteditable="true">Your Heading Here</h2>
+                    </div>
+                `;
+            case 'image':
+                return `
+                    <div class="image-block">
+                        <img src="https://via.placeholder.com/400x200/667eea/ffffff?text=Click+to+Edit" alt="Placeholder">
+                    </div>
+                `;
+            case 'button':
+                return `
+                    <div class="button-block">
+                        <a href="#" class="email-button" contenteditable="true">Click Here</a>
+                    </div>
+                `;
+            case 'spacer':
+                return `<div class="spacer-block"></div>`;
+            case 'divider':
+                return `
+                    <div style="padding: 1rem;">
+                        <hr style="border: none; height: 1px; background: #e5e7eb; margin: 0;">
+                    </div>
+                `;
+            case 'social':
+                return `
+                    <div class="social-block">
+                        <div class="social-links">
+                            <a href="#" class="social-link" style="background: #1877f2;">
+                                <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" class="social-link" style="background: #1da1f2;">
+                                <i class="fab fa-twitter" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" class="social-link" style="background: #e4405f;">
+                                <i class="fab fa-instagram" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" class="social-link" style="background: #0077b5;">
+                                <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            case 'footer':
+                return `
+                    <div class="text-block" style="text-align: center; color: #6b7280; font-size: 0.875rem;">
+                        <p contenteditable="true">© 2025 Your Company Name. All rights reserved.</p>
+                        <p contenteditable="true">123 Business St, City, State 12345</p>
+                        <p contenteditable="true"><a href="#" style="color: #6b7280;">Unsubscribe</a> | <a href="#" style="color: #6b7280;">Privacy Policy</a></p>
+                    </div>
+                `;
+            default:
+                return '<div>Unknown block type</div>';
+        }
+    }
+    
+    setupBlockInteractions(block) {
+        // Click to select
+        block.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.selectBlock(block);
+        });
+        
+        // Block controls
+        const controls = block.querySelectorAll('.block-control');
+        controls.forEach(control => {
+            control.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = control.dataset.action;
+                this.handleBlockAction(action, block);
+            });
+        });
+        
+        // Content editing
+        const editableElements = block.querySelectorAll('[contenteditable]');
+        editableElements.forEach(element => {
+            element.addEventListener('blur', () => {
+                this.saveState();
+            });
+            
+            element.addEventListener('input', () => {
+                this.updateProperties();
+            });
+        });
+        
+        // Image click handler
+        const images = block.querySelectorAll('img');
+        images.forEach(img => {
+            img.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openImagePicker(img);
+            });
+        });
+    }
+    
+    selectBlock(block) {
+        // Remove previous selection
+        document.querySelectorAll('.email-block.selected').forEach(b => {
+            b.classList.remove('selected');
+        });
+        
+        // Select new block
+        block.classList.add('selected');
+        this.selectedBlock = block;
+        
+        // Show properties sidebar
+        this.showProperties(block);
+        
+        // Update layers
+        this.updateLayers();
+    }
+    
+    handleBlockAction(action, block) {
+        switch (action) {
+            case 'edit':
+                this.selectBlock(block);
+                break;
+            case 'duplicate':
+                this.duplicateBlock(block);
+                break;
+            case 'delete':
+                this.deleteBlock(block);
+                break;
+        }
+    }
+    
+    duplicateBlock(block) {
+        const clone = block.cloneNode(true);
+        this.blockCounter++;
+        clone.dataset.blockId = `block-${this.blockCounter}`;
+        
+        block.parentNode.insertBefore(clone, block.nextSibling);
+        this.setupBlockInteractions(clone);
+        this.updateLayers();
+        this.saveState();
+        
+        this.showNotification('Block duplicated', 'success');
+    }
+    
+    deleteBlock(block) {
+        if (confirm('Are you sure you want to delete this block?')) {
+            block.remove();
+            
+            // Check if canvas is empty
+            const emailContent = document.querySelector('.email-content');
+            if (emailContent.children.length === 0) {
+                emailContent.innerHTML = `
+                    <div class="drop-zone" id="main-drop-zone">
+                        <i class="fas fa-plus-circle" style="margin-right: 0.5rem;"></i>
+                        Drag components here to start building your email
+                    </div>
+                `;
+                this.setupDropZone(document.getElementById('main-drop-zone'));
+            }
+            
+            this.selectedBlock = null;
+            this.hideProperties();
+            this.updateLayers();
+            this.saveState();
+            
+            this.showNotification('Block deleted', 'info');
+        }
+    }
+    
+    showProperties(block) {
+        const sidebar = document.getElementById('properties-sidebar');
+        const content = document.getElementById('properties-content');
+        
+        sidebar.classList.add('active');
+        
+        const blockType = block.dataset.blockType;
+        const blockName = this.blockTypes[blockType]?.name || 'Unknown Block';
+        
+        content.innerHTML = `
+            <div class="property-group">
+                <h4 style="margin: 0 0 1rem 0; color: var(--editor-primary);">
+                    <i class="fas ${this.blockTypes[blockType]?.icon}" aria-hidden="true"></i>
+                    ${blockName}
+                </h4>
+            </div>
+            ${this.getPropertiesForBlock(block)}
+        `;
+        
+        this.setupPropertyControls(content, block);
+    }
+    
+    getPropertiesForBlock(block) {
+        const blockType = block.dataset.blockType;
+        
+        switch (blockType) {
+            case 'text':
+            case 'heading':
+                return `
+                    <div class="property-group">
+                        <label class="property-label">Text Color</label>
+                        <div class="color-input">
+                            <input type="color" class="color-picker property-input" data-property="color" value="#374151">
+                            <input type="text" class="property-input" data-property="color" value="#374151">
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Font Size</label>
+                        <input type="range" class="property-slider" data-property="fontSize" min="12" max="48" value="16">
+                        <div style="text-align: center; font-size: 0.875rem; color: var(--editor-gray-600); margin-top: 0.5rem;">
+                            <span id="fontSize-value">16px</span>
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Text Alignment</label>
+                        <div class="property-row">
+                            <button class="property-input" data-property="textAlign" data-value="left" style="border: 2px solid var(--editor-gray-200);">
+                                <i class="fas fa-align-left" aria-hidden="true"></i>
+                            </button>
+                            <button class="property-input" data-property="textAlign" data-value="center" style="border: 2px solid var(--editor-gray-200);">
+                                <i class="fas fa-align-center" aria-hidden="true"></i>
+                            </button>
+                            <button class="property-input" data-property="textAlign" data-value="right" style="border: 2px solid var(--editor-gray-200);">
+                                <i class="fas fa-align-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            case 'button':
+                return `
+                    <div class="property-group">
+                        <label class="property-label">Button Text</label>
+                        <input type="text" class="property-input" data-property="buttonText" value="Click Here">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Button Link</label>
+                        <input type="url" class="property-input" data-property="buttonLink" value="#" placeholder="https://example.com">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Background Color</label>
+                        <div class="color-input">
+                            <input type="color" class="color-picker property-input" data-property="backgroundColor" value="#2563eb">
+                            <input type="text" class="property-input" data-property="backgroundColor" value="#2563eb">
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Text Color</label>
+                        <div class="color-input">
+                            <input type="color" class="color-picker property-input" data-property="color" value="#ffffff">
+                            <input type="text" class="property-input" data-property="color" value="#ffffff">
+                        </div>
+                    </div>
+                `;
+            case 'image':
+                return `
+                    <div class="property-group">
+                        <label class="property-label">Image URL</label>
+                        <input type="url" class="property-input" data-property="imageSrc" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Alt Text</label>
+                        <input type="text" class="property-input" data-property="imageAlt" placeholder="Describe the image">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Width (%)</label>
+                        <input type="range" class="property-slider" data-property="imageWidth" min="25" max="100" value="100">
+                        <div style="text-align: center; font-size: 0.875rem; color: var(--editor-gray-600); margin-top: 0.5rem;">
+                            <span id="imageWidth-value">100%</span>
+                        </div>
+                    </div>
+                `;
+            case 'spacer':
+                return `
+                    <div class="property-group">
+                        <label class="property-label">Height (px)</label>
+                        <input type="range" class="property-slider" data-property="spacerHeight" min="10" max="100" value="32">
+                        <div style="text-align: center; font-size: 0.875rem; color: var(--editor-gray-600); margin-top: 0.5rem;">
+                            <span id="spacerHeight-value">32px</span>
+                        </div>
+                    </div>
+                `;
+            default:
+                return `
+                    <div class="property-group">
+                        <p style="color: var(--editor-gray-600); font-size: 0.875rem;">
+                            No specific properties available for this block type.
+                        </p>
+                    </div>
+                `;
+        }
+    }
+    
+    setupPropertyControls(content, block) {
+        const inputs = content.querySelectorAll('.property-input');
+        
+        inputs.forEach(input => {
+            const property = input.dataset.property;
+            
+            if (input.type === 'range') {
+                const valueDisplay = content.querySelector(`#${property}-value`);
+                
+                input.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    if (valueDisplay) {
+                        const unit = property.includes('Height') || property.includes('Size') ? 'px' : 
+                                   property.includes('Width') ? '%' : '';
+                        valueDisplay.textContent = value + unit;
+                    }
+                    this.applyProperty(block, property, value + (unit === '' ? '' : unit.replace('%', '%')));
+                });
+            } else if (input.type === 'color') {
+                input.addEventListener('change', (e) => {
+                    this.applyProperty(block, property, e.target.value);
+                    // Sync with text input
+                    const textInput = input.parentNode.querySelector('input[type="text"]');
+                    if (textInput) textInput.value = e.target.value;
+                });
+            } else if (input.tagName === 'BUTTON') {
+                input.addEventListener('click', (e) => {
+                    const value = input.dataset.value;
+                    // Remove active state from siblings
+                    input.parentNode.querySelectorAll('button').forEach(btn => {
+                        btn.style.borderColor = 'var(--editor-gray-200)';
+                    });
+                    // Add active state
+                    input.style.borderColor = 'var(--editor-primary)';
+                    this.applyProperty(block, property, value);
+                });
+            } else {
+                input.addEventListener('input', (e) => {
+                    this.applyProperty(block, property, e.target.value);
+                });
+            }
+        });
+    }
+    
+    applyProperty(block, property, value) {
+        const blockType = block.dataset.blockType;
+        
+        switch (property) {
+            case 'color':
+                const textElements = block.querySelectorAll('[contenteditable], .email-button');
+                textElements.forEach(el => el.style.color = value);
+                break;
+            case 'fontSize':
+                const fontElements = block.querySelectorAll('[contenteditable]');
+                fontElements.forEach(el => el.style.fontSize = value + 'px');
+                break;
+            case 'textAlign':
+                const alignElements = block.querySelectorAll('[contenteditable], .button-block');
+                alignElements.forEach(el => el.style.textAlign = value);
+                break;
+            case 'backgroundColor':
+                const buttons = block.querySelectorAll('.email-button');
+                buttons.forEach(btn => btn.style.backgroundColor = value);
+                break;
+            case 'buttonText':
+                const buttonText = block.querySelector('.email-button');
+                if (buttonText) buttonText.textContent = value;
+                break;
+            case 'buttonLink':
+                const buttonLink = block.querySelector('.email-button');
+                if (buttonLink) buttonLink.href = value;
+                break;
+            case 'imageSrc':
+                const images = block.querySelectorAll('img');
+                images.forEach(img => img.src = value);
+                break;
+            case 'imageAlt':
+                const altImages = block.querySelectorAll('img');
+                altImages.forEach(img => img.alt = value);
+                break;
+            case 'imageWidth':
+                const widthImages = block.querySelectorAll('img');
+                widthImages.forEach(img => img.style.width = value + '%');
+                break;
+            case 'spacerHeight':
+                if (blockType === 'spacer') {
+                    block.style.height = value + 'px';
+                }
+                break;
+        }
+        
+        this.saveState();
+    }
+    
+    hideProperties() {
+        document.getElementById('properties-sidebar').classList.remove('active');
+    }
+    
+    setupToolbar() {
+        // Save button
+        document.getElementById('save-btn').addEventListener('click', () => {
+            this.saveTemplate();
+        });
+        
+        // Preview button
+        document.getElementById('preview-btn').addEventListener('click', () => {
+            this.previewTemplate();
+        });
+        
+        // Publish button
+        document.getElementById('publish-btn').addEventListener('click', () => {
+            this.publishTemplate();
+        });
+        
+        // Undo/Redo
+        document.getElementById('undo-btn').addEventListener('click', () => {
+            this.undo();
+        });
+        
+        document.getElementById('redo-btn').addEventListener('click', () => {
+            this.redo();
+        });
+        
+        // Template name
+        document.getElementById('template-name').addEventListener('blur', () => {
+            this.saveState();
+        });
+    }
+    
+    setupSidebars() {
+        // Sidebar tabs
+        const tabs = document.querySelectorAll('.sidebar-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update tab states
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabName}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Setup component drag and drop after DOM is ready
+        setTimeout(() => {
+            this.setupDragAndDrop();
+        }, 100);
+    }
+    
+    setupZoomControls() {
+        const zoomIn = document.getElementById('zoom-in');
+        const zoomOut = document.getElementById('zoom-out');
+        const zoomLevel = document.getElementById('zoom-level');
+        const canvas = document.getElementById('email-canvas');
+        
+        zoomIn.addEventListener('click', () => {
+            if (this.zoomLevel < 200) {
+                this.zoomLevel += 25;
+                this.updateZoom();
+            }
+        });
+        
+        zoomOut.addEventListener('click', () => {
+            if (this.zoomLevel > 50) {
+                this.zoomLevel -= 25;
+                this.updateZoom();
+            }
+        });
+    }
+    
+    updateZoom() {
+        const canvas = document.getElementById('email-canvas');
+        const zoomLevel = document.getElementById('zoom-level');
+        
+        canvas.style.transform = `scale(${this.zoomLevel / 100})`;
+        zoomLevel.textContent = `${this.zoomLevel}%`;
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Z for undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                this.undo();
+            }
+            
+            // Ctrl+Y or Ctrl+Shift+Z for redo
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                this.redo();
+            }
+            
+            // Ctrl+S for save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.saveTemplate();
+            }
+            
+            // Delete key for selected block
+            if (e.key === 'Delete' && this.selectedBlock) {
+                this.deleteBlock(this.selectedBlock);
+            }
+            
+            // Ctrl+D for duplicate
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd' && this.selectedBlock) {
+                e.preventDefault();
+                this.duplicateBlock(this.selectedBlock);
+            }
+        });
+    }
+    
+    setupContextMenu() {
+        const contextMenu = document.getElementById('context-menu');
+        
+        // Show context menu on right click
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.email-block')) {
+                e.preventDefault();
+                const block = e.target.closest('.email-block');
+                this.selectBlock(block);
+                
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+            } else {
+                contextMenu.style.display = 'none';
+            }
+        });
+        
+        // Hide context menu on click outside
+        document.addEventListener('click', () => {
+            contextMenu.style.display = 'none';
+        });
+        
+        // Handle context menu actions
+        const menuItems = contextMenu.querySelectorAll('.context-menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = item.dataset.action;
+                if (this.selectedBlock) {
+                    this.handleContextMenuAction(action, this.selectedBlock);
+                }
+                contextMenu.style.display = 'none';
+            });
+        });
+    }
+    
+    handleContextMenuAction(action, block) {
+        switch (action) {
+            case 'copy':
+                this.copyBlock(block);
+                break;
+            case 'duplicate':
+                this.duplicateBlock(block);
+                break;
+            case 'move-up':
+                this.moveBlockUp(block);
+                break;
+            case 'move-down':
+                this.moveBlockDown(block);
+                break;
+            case 'delete':
+                this.deleteBlock(block);
+                break;
+        }
+    }
+    
+    copyBlock(block) {
+        const blockData = {
+            type: block.dataset.blockType,
+            html: block.outerHTML
+        };
+        
+        // Store in clipboard (simplified for demo)
+        this.clipboard = blockData;
+        this.showNotification('Block copied to clipboard', 'success');
+    }
+    
+    moveBlockUp(block) {
+        const prevSibling = block.previousElementSibling;
+        if (prevSibling && !prevSibling.classList.contains('drop-zone')) {
+            block.parentNode.insertBefore(block, prevSibling);
+            this.updateLayers();
+            this.saveState();
+            this.showNotification('Block moved up', 'success');
+        }
+    }
+    
+    moveBlockDown(block) {
+        const nextSibling = block.nextElementSibling;
+        if (nextSibling) {
+            block.parentNode.insertBefore(nextSibling, block);
+            this.updateLayers();
+            this.saveState();
+            this.showNotification('Block moved down', 'success');
+        }
+    }
+    
+    updateLayers() {
+        const layersList = document.getElementById('layers-list');
+        const blocks = document.querySelectorAll('.email-block');
+        
+        layersList.innerHTML = '';
+        
+        blocks.forEach((block, index) => {
+            const blockType = block.dataset.blockType;
+            const blockInfo = this.blockTypes[blockType];
+            const isSelected = block.classList.contains('selected');
+            
+            const layerItem = document.createElement('li');
+            layerItem.className = `layer-item ${isSelected ? 'selected' : ''}`;
+            layerItem.innerHTML = `
+                <i class="fas ${blockInfo?.icon || 'fa-square'} layer-icon" aria-hidden="true"></i>
+                <span class="layer-name">${blockInfo?.name || 'Unknown Block'}</span>
+                <div class="layer-actions">
+                    <button class="layer-action" data-action="visibility" title="Toggle Visibility">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                    </button>
+                    <button class="layer-action" data-action="lock" title="Lock/Unlock">
+                        <i class="fas fa-unlock" aria-hidden="true"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Click to select
+            layerItem.addEventListener('click', () => {
+                this.selectBlock(block);
+            });
+            
+            layersList.appendChild(layerItem);
+        });
+    }
+    
+    saveState() {
+        const state = {
+            html: document.querySelector('.email-content').innerHTML,
+            templateName: document.getElementById('template-name').value,
+            timestamp: Date.now()
+        };
+        
+        // Add to history
+        this.historyIndex++;
+        this.history = this.history.slice(0, this.historyIndex);
+        this.history.push(state);
+        
+        // Limit history size
+        if (this.history.length > 50) {
+            this.history.shift();
+            this.historyIndex--;
+        }
+        
+        // Update undo/redo buttons
+        document.getElementById('undo-btn').disabled = this.historyIndex <= 0;
+        document.getElementById('redo-btn').disabled = this.historyIndex >= this.history.length - 1;
+    }
+    
+    undo() {
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            this.restoreState(this.history[this.historyIndex]);
+            this.showNotification('Undo applied', 'info');
+        }
+    }
+    
+    redo() {
+        if (this.historyIndex < this.history.length - 1) {
+            this.historyIndex++;
+            this.restoreState(this.history[this.historyIndex]);
+            this.showNotification('Redo applied', 'info');
+        }
+    }
+    
+    restoreState(state) {
+        document.querySelector('.email-content').innerHTML = state.html;
+        document.getElementById('template-name').value = state.templateName;
+        
+        // Re-setup interactions for restored blocks
+        const blocks = document.querySelectorAll('.email-block');
+        blocks.forEach(block => {
+            this.setupBlockInteractions(block);
+        });
+        
+        // Re-setup drop zones
+        const dropZones = document.querySelectorAll('.drop-zone');
+        dropZones.forEach(zone => {
+            this.setupDropZone(zone);
+        });
+        
+        this.selectedBlock = null;
+        this.hideProperties();
+        this.updateLayers();
+        this.setupSortable();
+    }
+    
+    async saveTemplate() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.display = 'flex';
+        
+        try {
+            const templateData = {
+                name: document.getElementById('template-name').value,
+                html: document.querySelector('.email-content').innerHTML,
+                blocks: Array.from(document.querySelectorAll('.email-block')).map(block => ({
+                    type: block.dataset.blockType,
+                    id: block.dataset.blockId,
+                    content: block.innerHTML
+                }))
+            };
+            
+            // Simulate save (replace with actual API call)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            this.showNotification('Template saved successfully!', 'success');
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showNotification('Error saving template', 'error');
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+    
+    previewTemplate() {
+        const templateHtml = document.querySelector('.email-content').innerHTML;
+        const previewWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        previewWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Email Preview</title>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                    .preview-container { max-width: 600px; margin: 0 auto; background: white; }
+                    .email-block { border: none !important; }
+                    .block-controls, .block-drag-handle { display: none !important; }
+                    [contenteditable] { cursor: default !important; }
+                </style>
+            </head>
+            <body>
+                <div class="preview-container">
+                    ${templateHtml}
+                </div>
+            </body>
+            </html>
+        `);
+        
+        previewWindow.document.close();
+    }
+    
+    async publishTemplate() {
+        if (confirm('Are you sure you want to publish this template? It will be available in your template library.')) {
+            await this.saveTemplate();
+            this.showNotification('Template published successfully!', 'success');
+        }
+    }
+    
+    loadTemplate() {
+        // Load existing template if editing
+        const urlParams = new URLSearchParams(window.location.search);
+        const templateId = urlParams.get('id');
+        const cloneId = urlParams.get('clone');
+        
+        if (templateId || cloneId) {
+            // Simulate loading (replace with actual API call)
+            this.showNotification('Template loaded', 'success');
+        }
+        
+        // Initialize with first state
+        this.saveState();
+    }
+    
+    openImagePicker(imgElement) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imgElement.src = e.target.result;
+                    this.saveState();
+                    this.showNotification('Image updated', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        
+        input.click();
+    }
+    
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            min-width: 300px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#2563eb'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--editor-shadow-lg);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        notification.innerHTML = `
+            <i class="fas fa-${icons[type]} fa-lg"></i>
+            <span>${message}</span>
+            <button onclick="this.closest('.notification').remove()" 
+                    style="background: none; border: none; color: white; margin-left: auto; cursor: pointer; font-size: 1.25rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    updateProperties() {
+        if (this.selectedBlock) {
+            this.showProperties(this.selectedBlock);
+        }
+    }
+}
+
+// Click outside to deselect
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.email-block') && !e.target.closest('.properties-sidebar') && !window.emailEditor.isDragging) {
+        document.querySelectorAll('.email-block.selected').forEach(block => {
+            block.classList.remove('selected');
+        });
+        
+        if (window.emailEditor) {
+            window.emailEditor.selectedBlock = null;
+            window.emailEditor.hideProperties();
+            window.emailEditor.updateLayers();
+        }
+    }
+});
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the email editor
+document.addEventListener('DOMContentLoaded', function() {
+    window.emailEditor = new EmailTemplateEditor();
+});
+</script>
+{% endblock %}
+

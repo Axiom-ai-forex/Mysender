@@ -1,0 +1,488 @@
+<!-- templates/components/alerts.html -->
+<!--
+Comprehensive Alert System Component
+Features: Multiple alert types, auto-dismiss, stacking, accessibility, animations
+Supports: Success, error, warning, info, loading states with rich content
+-->
+
+<!-- Alert Container (should be included in base template) -->
+<div id="global-alert-container" 
+     class="alert-container position-fixed" 
+     style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;"
+     role="region" 
+     aria-live="assertive" 
+     aria-label="System notifications">
+</div>
+
+<!-- Alert Templates -->
+{% macro render_alert(type, message, dismissible=true, icon=true, auto_dismiss=true, duration=5000) %}
+<div class="alert alert-{{ type }} {{ 'alert-dismissible' if dismissible }} fade show border-0 shadow-sm" 
+     role="alert"
+     data-auto-dismiss="{{ duration if auto_dismiss else 'false' }}">
+    
+    <!-- Alert Content -->
+    <div class="d-flex align-items-start">
+        {% if icon %}
+        <div class="alert-icon me-3 flex-shrink-0">
+            {% if type == 'success' %}
+            <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
+            {% elif type == 'danger' or type == 'error' %}
+            <i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+            {% elif type == 'warning' %}
+            <i class="fas fa-exclamation-circle fa-lg" aria-hidden="true"></i>
+            {% elif type == 'info' %}
+            <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
+            {% else %}
+            <i class="fas fa-bell fa-lg" aria-hidden="true"></i>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="alert-content flex-grow-1">
+            <div class="alert-message">{{ message|safe }}</div>
+            {{ caller() if caller else '' }}
+        </div>
+    </div>
+    
+    <!-- Progress Bar for Auto-dismiss -->
+    {% if auto_dismiss %}
+    <div class="alert-progress mt-2">
+        <div class="progress" style="height: 2px;">
+            <div class="progress-bar" 
+                 role="progressbar" 
+                 style="width: 100%; animation: countdown {{ duration/1000 }}s linear forwards;"></div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Dismiss Button -->
+    {% if dismissible %}
+    <button type="button" class="btn-close" 
+            data-bs-dismiss="alert" 
+            aria-label="Close notification"></button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<!-- Rich Alert with Actions -->
+{% macro rich_alert(type, title, message, actions=[], dismissible=true) %}
+<div class="alert alert-{{ type }} {{ 'alert-dismissible' if dismissible }} fade show border-0 shadow-lg" 
+     role="alert">
+    
+    <div class="d-flex align-items-start">
+        <div class="alert-icon me-3 flex-shrink-0">
+            <div class="icon-circle bg-{{ type }} bg-opacity-20 p-2 rounded-circle">
+                {% if type == 'success' %}
+                <i class="fas fa-check text-{{ type }} fa-lg" aria-hidden="true"></i>
+                {% elif type == 'danger' %}
+                <i class="fas fa-times text-{{ type }} fa-lg" aria-hidden="true"></i>
+                {% elif type == 'warning' %}
+                <i class="fas fa-exclamation text-{{ type }} fa-lg" aria-hidden="true"></i>
+                {% else %}
+                <i class="fas fa-info text-{{ type }} fa-lg" aria-hidden="true"></i>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="alert-content flex-grow-1">
+            {% if title %}
+            <h6 class="alert-title fw-bold mb-2">{{ title }}</h6>
+            {% endif %}
+            <div class="alert-message mb-2">{{ message|safe }}</div>
+            
+            <!-- Action Buttons -->
+            {% if actions %}
+            <div class="alert-actions mt-3">
+                {% for action in actions %}
+                <button type="button" 
+                        class="btn btn-{{ action.class|default('outline-' + type) }} btn-sm me-2"
+                        {% if action.onclick %}onclick="{{ action.onclick }}"{% endif %}
+                        {% if action.href %}onclick="window.location.href='{{ action.href }}'"{% endif %}>
+                    {% if action.icon %}
+                    <i class="fas fa-{{ action.icon }} me-1" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ action.text }}
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if dismissible %}
+    <button type="button" class="btn-close" 
+            data-bs-dismiss="alert" 
+            aria-label="Close notification"></button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<!-- Toast Notification -->
+{% macro toast_notification(id, type, title, message, auto_hide=true, delay=5000) %}
+<div class="toast border-0 shadow" 
+     id="{{ id }}" 
+     role="alert" 
+     aria-live="assertive" 
+     aria-atomic="true"
+     data-bs-autohide="{{ 'true' if auto_hide else 'false' }}"
+     data-bs-delay="{{ delay }}">
+    
+    <div class="toast-header bg-{{ type }} text-white border-0">
+        <div class="toast-icon me-2">
+            {% if type == 'success' %}
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+            {% elif type == 'danger' %}
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+            {% elif type == 'warning' %}
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            {% else %}
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            {% endif %}
+        </div>
+        <strong class="me-auto">{{ title }}</strong>
+        <small class="opacity-75">{{ moment().format('HH:mm') }}</small>
+        <button type="button" class="btn-close btn-close-white ms-2" 
+                data-bs-dismiss="toast" 
+                aria-label="Close notification"></button>
+    </div>
+    
+    <div class="toast-body bg-white">
+        {{ message|safe }}
+        {{ caller() if caller else '' }}
+    </div>
+</div>
+{% endmacro %}
+
+<style>
+/* Alert System Styles */
+.alert-container {
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.alert {
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.alert-icon .icon-circle {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes countdown {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+.alert-progress .progress-bar {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Toast container */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 300px;
+    border-radius: 12px;
+}
+
+/* Slide-in animation for alerts */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.alert.fade.show {
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .alert {
+    --bs-alert-bg: var(--bs-dark);
+    --bs-alert-border-color: var(--bs-gray-700);
+    --bs-alert-color: var(--bs-light);
+}
+</style>
+
+<script>
+// Alert System JavaScript
+class AlertSystem {
+    constructor() {
+        this.container = document.getElementById('global-alert-container');
+        this.toastContainer = null;
+        this.alertQueue = [];
+        this.maxAlerts = 5;
+        
+        this.createToastContainer();
+        this.init();
+    }
+    
+    createToastContainer() {
+        this.toastContainer = document.createElement('div');
+        this.toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        this.toastContainer.setAttribute('role', 'region');
+        this.toastContainer.setAttribute('aria-label', 'Toast notifications');
+        document.body.appendChild(this.toastContainer);
+    }
+    
+    init() {
+        // Handle auto-dismiss alerts
+        this.container.addEventListener('DOMNodeInserted', (e) => {
+            if (e.target.classList && e.target.classList.contains('alert')) {
+                const autoDismiss = e.target.getAttribute('data-auto-dismiss');
+                if (autoDismiss && autoDismiss !== 'false') {
+                    setTimeout(() => {
+                        this.dismissAlert(e.target);
+                    }, parseInt(autoDismiss));
+                }
+            }
+        });
+        
+        // Limit number of alerts
+        this.container.addEventListener('DOMNodeInserted', () => {
+            const alerts = this.container.querySelectorAll('.alert');
+            if (alerts.length > this.maxAlerts) {
+                // Remove oldest alert
+                alerts[0].remove();
+            }
+        });
+    }
+    
+    show(type, message, options = {}) {
+        const alertId = 'alert-' + Date.now();
+        const alert = document.createElement('div');
+        
+        const iconMap = {
+            'success': 'check-circle',
+            'danger': 'exclamation-triangle',
+            'warning': 'exclamation-circle',
+            'info': 'info-circle',
+            'primary': 'info-circle'
+        };
+        
+        alert.className = `alert alert-${type} alert-dismissible fade show border-0 shadow-sm`;
+        alert.setAttribute('role', 'alert');
+        alert.setAttribute('id', alertId);
+        
+        if (options.autoDismiss !== false) {
+            alert.setAttribute('data-auto-dismiss', options.duration || '5000');
+        }
+        
+        alert.innerHTML = `
+            <div class="d-flex align-items-start">
+                ${options.showIcon !== false ? `
+                <div class="alert-icon me-3 flex-shrink-0">
+                    <i class="fas fa-${iconMap[type] || 'info-circle'} fa-lg" aria-hidden="true"></i>
+                </div>
+                ` : ''}
+                <div class="alert-content flex-grow-1">
+                    ${options.title ? `<h6 class="alert-title fw-bold mb-2">${options.title}</h6>` : ''}
+                    <div class="alert-message">${message}</div>
+                    ${options.actions ? this.renderActions(options.actions) : ''}
+                </div>
+            </div>
+            ${options.showProgress && options.autoDismiss !== false ? `
+            <div class="alert-progress mt-2">
+                <div class="progress" style="height: 2px;">
+                    <div class="progress-bar" 
+                         style="width: 100%; animation: countdown ${(options.duration || 5000)/1000}s linear forwards;"></div>
+                </div>
+            </div>
+            ` : ''}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close notification"></button>
+        `;
+        
+        this.container.appendChild(alert);
+        
+        // Return reference for manual control
+        return {
+            element: alert,
+            dismiss: () => this.dismissAlert(alert)
+        };
+    }
+    
+    success(message, options = {}) {
+        return this.show('success', message, { ...options, showProgress: true });
+    }
+    
+    error(message, options = {}) {
+        return this.show('danger', message, { ...options, autoDismiss: false });
+    }
+    
+    warning(message, options = {}) {
+        return this.show('warning', message, { ...options, duration: 8000 });
+    }
+    
+    info(message, options = {}) {
+        return this.show('info', message, options);
+    }
+    
+    showToast(type, title, message, options = {}) {
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        
+        toast.className = 'toast border-0 shadow';
+        toast.setAttribute('id', toastId);
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        if (options.autoHide !== false) {
+            toast.setAttribute('data-bs-autohide', 'true');
+            toast.setAttribute('data-bs-delay', options.delay || '5000');
+        } else {
+            toast.setAttribute('data-bs-autohide', 'false');
+        }
+        
+        const iconMap = {
+            'success': 'check-circle',
+            'danger': 'exclamation-circle', 
+            'warning': 'exclamation-triangle',
+            'info': 'info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="toast-header bg-${type} text-white border-0">
+                <i class="fas fa-${iconMap[type] || 'info-circle'} me-2" aria-hidden="true"></i>
+                <strong class="me-auto">${title}</strong>
+                <small class="opacity-75">${new Date().toLocaleTimeString()}</small>
+                <button type="button" class="btn-close btn-close-white ms-2" 
+                        data-bs-dismiss="toast" aria-label="Close notification"></button>
+            </div>
+            <div class="toast-body bg-white">
+                ${message}
+            </div>
+        `;
+        
+        this.toastContainer.appendChild(toast);
+        
+        const toastInstance = new bootstrap.Toast(toast);
+        toastInstance.show();
+        
+        // Cleanup after hide
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+        
+        return toastInstance;
+    }
+    
+    renderActions(actions) {
+        if (!actions || !actions.length) return '';
+        
+        return `
+            <div class="alert-actions mt-3">
+                ${actions.map(action => `
+                    <button type="button" 
+                            class="btn btn-${action.class || 'outline-primary'} btn-sm me-2"
+                            ${action.onclick ? `onclick="${action.onclick}"` : ''}
+                            ${action.href ? `onclick="window.location.href='${action.href}'"` : ''}>
+                        ${action.icon ? `<i class="fas fa-${action.icon} me-1" aria-hidden="true"></i>` : ''}
+                        ${action.text}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    dismissAlert(alert) {
+        if (alert && alert.classList.contains('show')) {
+            alert.classList.remove('show');
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 150);
+        }
+    }
+    
+    clear() {
+        this.container.innerHTML = '';
+        this.toastContainer.innerHTML = '';
+    }
+    
+    // Real-time notification integration
+    handleRealtimeNotification(data) {
+        const { type, title, message, persistent, actions } = data;
+        
+        if (persistent) {
+            this.show(type, message, {
+                title: title,
+                autoDismiss: false,
+                actions: actions
+            });
+        } else {
+            this.showToast(type, title, message);
+        }
+    }
+}
+
+// Initialize global alert system
+document.addEventListener('DOMContentLoaded', function() {
+    window.alertSystem = new AlertSystem();
+    
+    // Integration with Flask flash messages
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                window.alertSystem.{{ 'error' if category == 'error' else category }}('{{ message|e }}', {
+                    title: '{{ category|title }}',
+                    showProgress: true
+                });
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    // WebSocket integration for real-time alerts
+    if (typeof io !== 'undefined') {
+        const socket = io();
+        socket.on('notification', function(data) {
+            window.alertSystem.handleRealtimeNotification(data);
+        });
+        
+        socket.on('system_alert', function(data) {
+            window.alertSystem.show(data.type, data.message, {
+                title: 'System Alert',
+                autoDismiss: false,
+                actions: data.actions
+            });
+        });
+    }
+});
+
+// Utility functions for easy access
+function showSuccess(message, title) {
+    return window.alertSystem.success(message, { title: title });
+}
+
+function showError(message, title) {
+    return window.alertSystem.error(message, { title: title });
+}
+
+function showWarning(message, title) {
+    return window.alertSystem.warning(message, { title: title });
+}
+
+function showInfo(message, title) {
+    return window.alertSystem.info(message, { title: title });
+}
+</script>
+

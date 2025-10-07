@@ -1,0 +1,597 @@
+<!-- templates/components/pagination.html -->
+<!--
+Advanced Pagination Component for Large Datasets
+Features: Intelligent page ranges, accessibility, loading states, keyboard navigation
+Optimized for email marketing data (campaigns, contacts, analytics)
+-->
+
+{% macro render_pagination(pagination, endpoint, 
+                          show_info=true, 
+                          show_per_page=true, 
+                          show_jump=true,
+                          ajax_enabled=false,
+                          extra_params={}) %}
+
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Pagination Navigation" class="pagination-wrapper">
+    <div class="row align-items-center g-3">
+        <!-- Pagination Info -->
+        {% if show_info %}
+        <div class="col-md-6">
+            <div class="pagination-info">
+                <span class="text-muted">
+                    Showing <strong>{{ pagination.per_page * (pagination.page - 1) + 1 }}</strong> 
+                    to <strong>{{ pagination.per_page * pagination.page if pagination.page < pagination.pages else pagination.total }}</strong>
+                    of <strong>{{ pagination.total|number_format }}</strong> results
+                </span>
+                
+                {% if pagination.total > 1000 %}
+                <small class="d-block text-muted mt-1">
+                    <i class="fas fa-info-circle me-1" aria-hidden="true"></i>
+                    Large dataset - consider using filters for better performance
+                </small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Main Pagination -->
+        <div class="col-md-6 text-md-end">
+            <div class="d-flex align-items-center justify-content-md-end flex-wrap gap-2">
+                
+                <!-- Per Page Selector -->
+                {% if show_per_page %}
+                <div class="per-page-selector me-3">
+                    <label for="per-page-select" class="form-label visually-hidden">Items per page</label>
+                    <select class="form-select form-select-sm" 
+                            id="per-page-select" 
+                            style="width: auto;"
+                            {% if ajax_enabled %}data-ajax-pagination="true"{% endif %}
+                            aria-label="Number of items per page">
+                        {% for size in [10, 25, 50, 100] %}
+                        <option value="{{ size }}" 
+                                {% if pagination.per_page == size %}selected{% endif %}>
+                            {{ size }} per page
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <!-- Pagination Controls -->
+                <ul class="pagination pagination-sm mb-0" role="navigation">
+                    <!-- First Page -->
+                    {% if pagination.page > 2 %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=1, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="1"{% endif %}
+                           aria-label="Go to first page"
+                           title="First page">
+                            <i class="fas fa-angle-double-left" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Previous Page -->
+                    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                        {% if pagination.has_prev %}
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=pagination.prev_num, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="{{ pagination.prev_num }}"{% endif %}
+                           aria-label="Go to previous page">
+                            <i class="fas fa-chevron-left me-1" aria-hidden="true"></i>
+                            Previous
+                        </a>
+                        {% else %}
+                        <span class="page-link" aria-label="Previous page (disabled)">
+                            <i class="fas fa-chevron-left me-1" aria-hidden="true"></i>
+                            Previous
+                        </span>
+                        {% endif %}
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    {% set start_page = [1, pagination.page - 2]|max %}
+                    {% set end_page = [pagination.pages, pagination.page + 2]|min %}
+                    
+                    {% if start_page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=1, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="1"{% endif %}
+                           aria-label="Go to page 1">1</a>
+                    </li>
+                    
+                    {% if start_page > 2 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-ellipsis-h" aria-hidden="true" aria-label="More pages"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                    
+                    {% for page_num in range(start_page, end_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                        {% if page_num == pagination.page %}
+                        <span class="page-link" aria-current="page" aria-label="Current page {{ page_num }}">
+                            {{ page_num }}
+                        </span>
+                        {% else %}
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=page_num, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="{{ page_num }}"{% endif %}
+                           aria-label="Go to page {{ page_num }}">
+                            {{ page_num }}
+                        </a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                    
+                    {% if end_page < pagination.pages %}
+                    {% if end_page < pagination.pages - 1 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-ellipsis-h" aria-hidden="true" aria-label="More pages"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=pagination.pages, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="{{ pagination.pages }}"{% endif %}
+                           aria-label="Go to page {{ pagination.pages }}">
+                            {{ pagination.pages }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Next Page -->
+                    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                        {% if pagination.has_next %}
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=pagination.next_num, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="{{ pagination.next_num }}"{% endif %}
+                           aria-label="Go to next page">
+                            Next
+                            <i class="fas fa-chevron-right ms-1" aria-hidden="true"></i>
+                        </a>
+                        {% else %}
+                        <span class="page-link" aria-label="Next page (disabled)">
+                            Next
+                            <i class="fas fa-chevron-right ms-1" aria-hidden="true"></i>
+                        </span>
+                        {% endif %}
+                    </li>
+                    
+                    <!-- Last Page -->
+                    {% if pagination.page < pagination.pages - 1 %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for(endpoint, page=pagination.pages, per_page=pagination.per_page, **extra_params) }}"
+                           {% if ajax_enabled %}data-page="{{ pagination.pages }}"{% endif %}
+                           aria-label="Go to last page"
+                           title="Last page">
+                            <i class="fas fa-angle-double-right" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Jump to Page -->
+                {% if show_jump and pagination.pages > 10 %}
+                <div class="page-jump ms-3">
+                    <div class="input-group input-group-sm" style="width: 120px;">
+                        <input type="number" 
+                               class="form-control" 
+                               id="jump-to-page"
+                               min="1" 
+                               max="{{ pagination.pages }}"
+                               placeholder="Page"
+                               aria-label="Jump to page number">
+                        <button class="btn btn-outline-secondary" 
+                                type="button" 
+                                id="jump-btn"
+                                aria-label="Jump to specified page">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading State Overlay -->
+    {% if ajax_enabled %}
+    <div class="pagination-loading position-absolute w-100 h-100 top-0 start-0 d-none" 
+         style="background: rgba(255, 255, 255, 0.8); z-index: 10;"
+         role="status" 
+         aria-live="polite">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</nav>
+
+<style>
+/* Pagination Styles */
+.pagination-wrapper {
+    position: relative;
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    border-color: #dee2e6;
+    color: #adb5bd;
+}
+
+.per-page-selector .form-select {
+    border-radius: 8px;
+    border-color: #dee2e6;
+    font-size: 0.875rem;
+}
+
+.page-jump .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.page-jump .form-control {
+    border-right: none;
+    text-align: center;
+}
+
+.page-jump .btn {
+    border-left: none;
+}
+
+/* Loading animation */
+.pagination-loading {
+    backdrop-filter: blur(2px);
+    border-radius: 12px;
+}
+
+/* Dark theme */
+[data-theme="dark"] .pagination .page-link {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+    background-color: #4b5563;
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pagination-info {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .per-page-selector,
+    .page-jump {
+        order: -1;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script>
+// Pagination System JavaScript
+class PaginationManager {
+    constructor(options = {}) {
+        this.endpoint = options.endpoint || '';
+        this.ajaxEnabled = options.ajaxEnabled || false;
+        this.loadingCallback = options.loadingCallback || null;
+        this.updateCallback = options.updateCallback || null;
+        this.extraParams = options.extraParams || {};
+        
+        this.init();
+    }
+    
+    init() {
+        // Handle per-page changes
+        const perPageSelect = document.getElementById('per-page-select');
+        if (perPageSelect) {
+            perPageSelect.addEventListener('change', (e) => {
+                this.changePage(1, parseInt(e.target.value));
+            });
+        }
+        
+        // Handle page jumps
+        const jumpInput = document.getElementById('jump-to-page');
+        const jumpBtn = document.getElementById('jump-btn');
+        
+        if (jumpInput && jumpBtn) {
+            jumpBtn.addEventListener('click', () => {
+                const pageNum = parseInt(jumpInput.value);
+                if (pageNum && pageNum >= 1 && pageNum <= this.getMaxPages()) {
+                    this.changePage(pageNum);
+                } else {
+                    jumpInput.classList.add('is-invalid');
+                    setTimeout(() => jumpInput.classList.remove('is-invalid'), 2000);
+                }
+            });
+            
+            jumpInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    jumpBtn.click();
+                }
+            });
+            
+            jumpInput.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                const max = this.getMaxPages();
+                
+                if (value && (value < 1 || value > max)) {
+                    e.target.setCustomValidity(`Please enter a number between 1 and ${max}`);
+                } else {
+                    e.target.setCustomValidity('');
+                }
+            });
+        }
+        
+        // AJAX pagination handling
+        if (this.ajaxEnabled) {
+            document.querySelectorAll('[data-page]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = parseInt(e.target.getAttribute('data-page'));
+                    this.changePage(page);
+                });
+            });
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            // Only handle if pagination is focused or no input is active
+            if (document.activeElement.tagName === 'INPUT' || 
+                document.activeElement.tagName === 'TEXTAREA') return;
+                
+            if (e.key === 'ArrowLeft' && e.ctrlKey) {
+                e.preventDefault();
+                this.previousPage();
+            } else if (e.key === 'ArrowRight' && e.ctrlKey) {
+                e.preventDefault();
+                this.nextPage();
+            }
+        });
+    }
+    
+    changePage(page, perPage = null) {
+        if (this.ajaxEnabled) {
+            this.loadPageAjax(page, perPage);
+        } else {
+            this.loadPageRedirect(page, perPage);
+        }
+    }
+    
+    loadPageAjax(page, perPage = null) {
+        // Show loading state
+        this.setLoading(true);
+        
+        // Prepare URL parameters
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage || this.getCurrentPerPage(),
+            ...this.extraParams
+        });
+        
+        // Make AJAX request
+        fetch(`${this.endpoint}?${params}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setLoading(false);
+            
+            if (data.success) {
+                // Update content
+                if (this.updateCallback) {
+                    this.updateCallback(data);
+                } else {
+                    this.updatePageContent(data);
+                }
+                
+                // Update URL without refresh
+                const newUrl = `${window.location.pathname}?${params}`;
+                history.pushState({page: page}, '', newUrl);
+                
+            } else {
+                this.showError(data.message || 'Failed to load page');
+            }
+        })
+        .catch(error => {
+            this.setLoading(false);
+            this.showError('Network error occurred while loading page');
+        });
+    }
+    
+    loadPageRedirect(page, perPage = null) {
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage || this.getCurrentPerPage(),
+            ...this.extraParams
+        });
+        
+        window.location.href = `${this.endpoint}?${params}`;
+    }
+    
+    previousPage() {
+        const currentPage = this.getCurrentPage();
+        if (currentPage > 1) {
+            this.changePage(currentPage - 1);
+        }
+    }
+    
+    nextPage() {
+        const currentPage = this.getCurrentPage();
+        const maxPages = this.getMaxPages();
+        if (currentPage < maxPages) {
+            this.changePage(currentPage + 1);
+        }
+    }
+    
+    getCurrentPage() {
+        const activePageLink = document.querySelector('.pagination .page-item.active .page-link');
+        return activePageLink ? parseInt(activePageLink.textContent) : 1;
+    }
+    
+    getCurrentPerPage() {
+        const perPageSelect = document.getElementById('per-page-select');
+        return perPageSelect ? parseInt(perPageSelect.value) : 25;
+    }
+    
+    getMaxPages() {
+        const lastPageLink = document.querySelector('.pagination .page-item:last-child .page-link[data-page]');
+        return lastPageLink ? parseInt(lastPageLink.getAttribute('data-page')) : 1;
+    }
+    
+    setLoading(loading) {
+        const loadingOverlay = document.querySelector('.pagination-loading');
+        if (loadingOverlay) {
+            loadingOverlay.classList.toggle('d-none', !loading);
+        }
+        
+        // Disable pagination controls
+        document.querySelectorAll('.pagination .page-link, #per-page-select').forEach(el => {
+            el.disabled = loading;
+        });
+        
+        if (this.loadingCallback) {
+            this.loadingCallback(loading);
+        }
+    }
+    
+    updatePageContent(data) {
+        // Update main content area
+        const contentArea = document.querySelector('[data-pagination-content]');
+        if (contentArea && data.html) {
+            contentArea.innerHTML = data.html;
+        }
+        
+        // Update pagination controls
+        const paginationWrapper = document.querySelector('.pagination-wrapper');
+        if (paginationWrapper && data.pagination_html) {
+            paginationWrapper.outerHTML = data.pagination_html;
+            this.init(); // Re-initialize event handlers
+        }
+    }
+    
+    showError(message) {
+        if (window.alertSystem) {
+            window.alertSystem.error(message, { title: 'Pagination Error' });
+        } else {
+            alert(message);
+        }
+    }
+}
+
+// Initialize pagination when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const paginationWrapper = document.querySelector('.pagination-wrapper');
+    if (paginationWrapper) {
+        const endpoint = paginationWrapper.getAttribute('data-endpoint') || window.location.pathname;
+        const ajaxEnabled = paginationWrapper.hasAttribute('data-ajax-enabled');
+        
+        window.paginationManager = new PaginationManager({
+            endpoint: endpoint,
+            ajaxEnabled: ajaxEnabled,
+            loadingCallback: (loading) => {
+                // Show global loading indicator if available
+                const globalLoading = document.getElementById('loading-overlay');
+                if (globalLoading) {
+                    globalLoading.classList.toggle('d-none', !loading);
+                }
+            }
+        });
+    }
+});
+</script>
+{% endmacro %}
+
+<!-- Simple Pagination (lightweight version) -->
+{% macro simple_pagination(pagination, endpoint, extra_params={}) %}
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Simple pagination" class="d-flex justify-content-between align-items-center">
+    <div class="pagination-info">
+        <span class="text-muted">
+            Page {{ pagination.page }} of {{ pagination.pages }}
+            ({{ pagination.total|number_format }} total)
+        </span>
+    </div>
+    
+    <div class="pagination-controls">
+        <div class="btn-group" role="group" aria-label="Pagination controls">
+            <a class="btn btn-outline-secondary {{ 'disabled' if not pagination.has_prev }}" 
+               {% if pagination.has_prev %}href="{{ url_for(endpoint, page=pagination.prev_num, **extra_params) }}"{% endif %}
+               aria-label="Previous page">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </a>
+            
+            <span class="btn btn-outline-secondary disabled">
+                {{ pagination.page }} / {{ pagination.pages }}
+            </span>
+            
+            <a class="btn btn-outline-secondary {{ 'disabled' if not pagination.has_next }}" 
+               {% if pagination.has_next %}href="{{ url_for(endpoint, page=pagination.next_num, **extra_params) }}"{% endif %}
+               aria-label="Next page">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+{% endmacro %}
+

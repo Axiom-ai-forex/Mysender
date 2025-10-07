@@ -1,0 +1,2023 @@
+<!-- templates/lists/manage.html -->
+{% extends "base.html" %}
+
+{% block title %}List Management - Email Sender Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Advanced List Management System */
+:root {
+    --list-primary: #2563eb;
+    --list-secondary: #64748b;
+    --list-success: #10b981;
+    --list-warning: #f59e0b;
+    --list-danger: #ef4444;
+    --list-purple: #8b5cf6;
+    --list-pink: #ec4899;
+    --list-indigo: #6366f1;
+    --list-teal: #14b8a6;
+    --list-orange: #f97316;
+    --list-gray-50: #f9fafb;
+    --list-gray-100: #f3f4f6;
+    --list-gray-200: #e5e7eb;
+    --list-gray-300: #d1d5db;
+    --list-gray-400: #9ca3af;
+    --list-gray-500: #6b7280;
+    --list-gray-600: #4b5563;
+    --list-gray-700: #374151;
+    --list-gray-800: #1f2937;
+    --list-gray-900: #111827;
+    --list-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --list-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --list-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --list-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--list-gray-50);
+}
+
+/* Page Header */
+.page-header {
+    background: white;
+    border-bottom: 1px solid var(--list-gray-200);
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-left h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--list-gray-900);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.header-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--list-primary);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--list-gray-600);
+    font-weight: 500;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: var(--list-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--list-gray-200);
+    color: var(--list-gray-700);
+    border: 1px solid var(--list-gray-300);
+}
+
+.btn-secondary:hover {
+    background: var(--list-gray-300);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--list-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+}
+
+/* Filters Sidebar */
+.filters-sidebar {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: fit-content;
+    border: 1px solid var(--list-gray-200);
+    box-shadow: var(--list-shadow);
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--list-gray-900);
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-section {
+    margin-bottom: 2rem;
+}
+
+.filter-section:last-child {
+    margin-bottom: 0;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--list-gray-700);
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--list-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--list-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--list-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--list-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.filter-checkbox:hover {
+    background: var(--list-gray-50);
+}
+
+.filter-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.filter-checkbox label {
+    font-size: 0.875rem;
+    color: var(--list-gray-700);
+    cursor: pointer;
+    flex: 1;
+}
+
+.filter-badge {
+    background: var(--list-gray-100);
+    color: var(--list-gray-600);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.clear-filters {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--list-gray-300);
+    color: var(--list-gray-700);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+}
+
+.clear-filters:hover {
+    background: var(--list-gray-50);
+    border-color: var(--list-gray-400);
+}
+
+/* Lists Content Area */
+.lists-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Control Bar */
+.control-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid var(--list-gray-200);
+    box-shadow: var(--list-shadow);
+}
+
+.control-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    border: 2px solid var(--list-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--list-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--list-gray-400);
+    pointer-events: none;
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--list-gray-100);
+    border-radius: 8px;
+    padding: 0.25rem;
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--list-gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-btn:hover {
+    color: var(--list-gray-900);
+}
+
+.view-btn.active {
+    background: white;
+    color: var(--list-primary);
+    box-shadow: var(--list-shadow);
+}
+
+.control-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sort-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--list-gray-200);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 180px;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--list-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.bulk-actions.visible {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.bulk-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--list-gray-300);
+    background: white;
+    color: var(--list-gray-700);
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bulk-btn:hover {
+    background: var(--list-gray-50);
+    border-color: var(--list-gray-400);
+}
+
+.bulk-btn.danger:hover {
+    background: var(--list-danger);
+    border-color: var(--list-danger);
+    color: white;
+}
+
+/* Lists Grid */
+.lists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.list-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--list-gray-200);
+    box-shadow: var(--list-shadow);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.list-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--list-primary), var(--list-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.list-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--list-shadow-lg);
+}
+
+.list-card:hover::before {
+    opacity: 1;
+}
+
+.list-card.selected {
+    border-color: var(--list-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.list-card.selected::before {
+    opacity: 1;
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.card-checkbox {
+    margin-top: 0.125rem;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.card-menu {
+    position: relative;
+}
+
+.menu-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--list-gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.menu-btn:hover {
+    background: var(--list-gray-100);
+    color: var(--list-gray-700);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--list-gray-200);
+    border-radius: 8px;
+    box-shadow: var(--list-shadow-lg);
+    min-width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--list-gray-700);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: var(--list-gray-50);
+    text-decoration: none;
+}
+
+.dropdown-item.danger:hover {
+    background: var(--list-danger);
+    color: white;
+}
+
+.list-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--list-gray-900);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.list-description {
+    font-size: 0.875rem;
+    color: var(--list-gray-600);
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.list-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--list-gray-900);
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--list-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+}
+
+.list-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--list-gray-100);
+}
+
+.list-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: var(--list-gray-100);
+    color: var(--list-gray-700);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag.priority-high { background: rgba(239, 68, 68, 0.1); color: var(--list-danger); }
+.tag.priority-medium { background: rgba(245, 158, 11, 0.1); color: var(--list-warning); }
+.tag.priority-low { background: rgba(16, 185, 129, 0.1); color: var(--list-success); }
+
+.list-updated {
+    font-size: 0.75rem;
+    color: var(--list-gray-500);
+    white-space: nowrap;
+}
+
+.activity-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--list-gray-300);
+}
+
+.activity-dot.active { background: var(--list-success); }
+.activity-dot.inactive { background: var(--list-gray-400); }
+
+.activity-text {
+    font-size: 0.75rem;
+    color: var(--list-gray-500);
+}
+
+/* Lists Table View */
+.lists-table {
+    display: none;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--list-gray-200);
+    box-shadow: var(--list-shadow);
+    overflow: hidden;
+}
+
+.lists-table.active {
+    display: block;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: var(--list-gray-50);
+    border-bottom: 1px solid var(--list-gray-200);
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--list-gray-100);
+}
+
+.table th {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--list-gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table td {
+    font-size: 0.875rem;
+    color: var(--list-gray-900);
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.table tbody tr:hover {
+    background: var(--list-gray-50);
+}
+
+.table tbody tr.selected {
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.table-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.table-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--list-gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.table-btn:hover {
+    background: var(--list-gray-100);
+    color: var(--list-gray-700);
+}
+
+.table-btn.danger:hover {
+    background: var(--list-danger);
+    color: white;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.page-info {
+    font-size: 0.875rem;
+    color: var(--list-gray-600);
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid var(--list-gray-300);
+    border-radius: 8px;
+    color: var(--list-gray-600);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+    background: var(--list-gray-50);
+    border-color: var(--list-gray-400);
+    text-decoration: none;
+}
+
+.page-btn.active {
+    background: var(--list-primary);
+    border-color: var(--list-primary);
+    color: white;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--list-gray-200);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--list-gray-300);
+    margin-bottom: 1rem;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--list-gray-900);
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-description {
+    font-size: 1rem;
+    color: var(--list-gray-600);
+    margin: 0 0 2rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 250px 1fr;
+        gap: 1.5rem;
+    }
+    
+    .lists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 0 1rem;
+        align-items: stretch;
+    }
+    
+    .header-stats {
+        gap: 1rem;
+    }
+    
+    .control-bar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .control-left {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-box {
+        max-width: none;
+    }
+    
+    .control-right {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .lists-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .list-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.list-card {
+    animation: fadeIn 0.4s ease;
+}
+
+.filters-sidebar {
+    animation: slideIn 0.4s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --list-gray-50: #1f2937;
+        --list-gray-100: #374151;
+        --list-gray-200: #4b5563;
+        --list-gray-300: #6b7280;
+        --list-gray-400: #9ca3af;
+        --list-gray-500: #d1d5db;
+        --list-gray-600: #e5e7eb;
+        --list-gray-700: #f3f4f6;
+        --list-gray-800: #f9fafb;
+        --list-gray-900: #ffffff;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1>List Management</h1>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ total_lists or 12 }}</div>
+                    <div class="stat-label">Total Lists</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ total_subscribers or 24567 }}</div>
+                    <div class="stat-label">Total Subscribers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ active_lists or 8 }}</div>
+                    <div class="stat-label">Active Lists</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ growth_rate or 12.5 }}%</div>
+                    <div class="stat-label">Growth Rate</div>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('lists.import') }}" class="btn btn-secondary">
+                <i class="fas fa-upload" aria-hidden="true"></i>
+                Import Contacts
+            </a>
+            <a href="{{ url_for('lists.segments') }}" class="btn btn-primary">
+                <i class="fas fa-filter" aria-hidden="true"></i>
+                Create Segment
+            </a>
+            <button class="btn btn-success" onclick="createNewList()">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                New List
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <!-- Filters Sidebar -->
+    <div class="filters-sidebar">
+        <h3 class="sidebar-title">
+            <i class="fas fa-sliders-h" aria-hidden="true"></i>
+            Filters
+        </h3>
+        
+        <div class="filter-section">
+            <div class="filter-label">Search Lists</div>
+            <input type="text" class="filter-input" placeholder="Search by name..." id="filter-search">
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-label">Status</div>
+            <div class="filter-checkbox-group">
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="status-active" checked>
+                    <label for="status-active">Active</label>
+                    <span class="filter-badge">8</span>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="status-inactive">
+                    <label for="status-inactive">Inactive</label>
+                    <span class="filter-badge">4</span>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="status-archived">
+                    <label for="status-archived">Archived</label>
+                    <span class="filter-badge">2</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-label">List Type</div>
+            <select class="filter-select" id="filter-type">
+                <option value="">All Types</option>
+                <option value="newsletter">Newsletter</option>
+                <option value="promotional">Promotional</option>
+                <option value="transactional">Transactional</option>
+                <option value="segment">Segment</option>
+            </select>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-label">Size Range</div>
+            <select class="filter-select" id="filter-size">
+                <option value="">All Sizes</option>
+                <option value="small">Small (0-1K)</option>
+                <option value="medium">Medium (1K-10K)</option>
+                <option value="large">Large (10K-100K)</option>
+                <option value="enterprise">Enterprise (100K+)</option>
+            </select>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-label">Growth Rate</div>
+            <div class="filter-checkbox-group">
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="growth-high">
+                    <label for="growth-high">High Growth</label>
+                    <span class="filter-badge">3</span>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="growth-moderate">
+                    <label for="growth-moderate">Moderate</label>
+                    <span class="filter-badge">6</span>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="growth-declining">
+                    <label for="growth-declining">Declining</label>
+                    <span class="filter-badge">1</span>
+                </div>
+            </div>
+        </div>
+        
+        <button class="clear-filters">
+            <i class="fas fa-times" aria-hidden="true"></i>
+            Clear All Filters
+        </button>
+    </div>
+    
+    <!-- Lists Content -->
+    <div class="lists-content">
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="control-left">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                    <input type="text" class="search-input" placeholder="Search lists..." id="main-search">
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid">
+                        <i class="fas fa-th" aria-hidden="true"></i>
+                    </button>
+                    <button class="view-btn" data-view="table">
+                        <i class="fas fa-list" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="control-right">
+                <select class="sort-select" id="sort-by">
+                    <option value="updated">Sort by Updated</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="size">Sort by Size</option>
+                    <option value="created">Sort by Created</option>
+                    <option value="activity">Sort by Activity</option>
+                </select>
+                
+                <div class="bulk-actions" id="bulk-actions">
+                    <span style="font-size: 0.875rem; color: var(--list-gray-600);">
+                        <span id="selected-count">0</span> selected
+                    </span>
+                    <button class="bulk-btn">Export</button>
+                    <button class="bulk-btn">Archive</button>
+                    <button class="bulk-btn danger">Delete</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lists Grid View -->
+        <div class="lists-grid" id="lists-grid">
+            {% for list in sample_lists or [] %}
+            <div class="list-card" data-list-id="{{ list.id }}">
+                <div class="card-header">
+                    <input type="checkbox" class="card-checkbox" value="{{ list.id }}">
+                    <div class="card-menu">
+                        <button class="menu-btn">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('lists.view', id=list.id) }}" class="dropdown-item">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                View Details
+                            </a>
+                            <a href="{{ url_for('lists.edit', id=list.id) }}" class="dropdown-item">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                                Edit List
+                            </a>
+                            <button class="dropdown-item">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                Duplicate
+                            </button>
+                            <button class="dropdown-item">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export
+                            </button>
+                            <button class="dropdown-item danger">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="list-title">{{ list.name }}</h3>
+                <p class="list-description">{{ list.description or 'No description available.' }}</p>
+                
+                <div class="list-stats">
+                    <div class="stat">
+                        <span class="stat-number">{{ list.subscriber_count or 1234 }}</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ list.open_rate or 24.5 }}%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ list.growth_rate or 12.3 }}%</span>
+                        <span class="stat-label">Growth</span>
+                    </div>
+                </div>
+                
+                <div class="list-meta">
+                    <div class="list-tags">
+                        <span class="tag">{{ list.type|title or 'Newsletter' }}</span>
+                        {% if list.priority %}
+                        <span class="tag priority-{{ list.priority }}">{{ list.priority|title }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="list-updated">
+                        {{ list.updated_at.strftime('%b %d, %Y') if list.updated_at else '2 days ago' }}
+                    </div>
+                </div>
+                
+                <div class="activity-indicator">
+                    <div class="activity-dot {{ 'active' if list.is_active else 'inactive' }}"></div>
+                    <span class="activity-text">{{ 'Active' if list.is_active else 'Inactive' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <!-- Sample data for demonstration -->
+            <div class="list-card" data-list-id="1">
+                <div class="card-header">
+                    <input type="checkbox" class="card-checkbox" value="1">
+                    <div class="card-menu">
+                        <button class="menu-btn">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                View Details
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                                Edit List
+                            </a>
+                            <button class="dropdown-item">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                Duplicate
+                            </button>
+                            <button class="dropdown-item">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export
+                            </button>
+                            <button class="dropdown-item danger">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="list-title">Newsletter Subscribers</h3>
+                <p class="list-description">Main newsletter list with active subscribers interested in our weekly content updates and product announcements.</p>
+                
+                <div class="list-stats">
+                    <div class="stat">
+                        <span class="stat-number">8,234</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">28.4%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">15.2%</span>
+                        <span class="stat-label">Growth</span>
+                    </div>
+                </div>
+                
+                <div class="list-meta">
+                    <div class="list-tags">
+                        <span class="tag">Newsletter</span>
+                        <span class="tag priority-high">High</span>
+                    </div>
+                    <div class="list-updated">2 hours ago</div>
+                </div>
+                
+                <div class="activity-indicator">
+                    <div class="activity-dot active"></div>
+                    <span class="activity-text">Active</span>
+                </div>
+            </div>
+            
+            <div class="list-card" data-list-id="2">
+                <div class="card-header">
+                    <input type="checkbox" class="card-checkbox" value="2">
+                    <div class="card-menu">
+                        <button class="menu-btn">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                View Details
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                                Edit List
+                            </a>
+                            <button class="dropdown-item">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                Duplicate
+                            </button>
+                            <button class="dropdown-item">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export
+                            </button>
+                            <button class="dropdown-item danger">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="list-title">VIP Customers</h3>
+                <p class="list-description">Exclusive list of high-value customers who receive special offers, early access to products, and premium content.</p>
+                
+                <div class="list-stats">
+                    <div class="stat">
+                        <span class="stat-number">456</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">45.8%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">8.7%</span>
+                        <span class="stat-label">Growth</span>
+                    </div>
+                </div>
+                
+                <div class="list-meta">
+                    <div class="list-tags">
+                        <span class="tag">Promotional</span>
+                        <span class="tag priority-high">High</span>
+                    </div>
+                    <div class="list-updated">1 day ago</div>
+                </div>
+                
+                <div class="activity-indicator">
+                    <div class="activity-dot active"></div>
+                    <span class="activity-text">Active</span>
+                </div>
+            </div>
+            
+            <div class="list-card" data-list-id="3">
+                <div class="card-header">
+                    <input type="checkbox" class="card-checkbox" value="3">
+                    <div class="card-menu">
+                        <button class="menu-btn">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                View Details
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                                Edit List
+                            </a>
+                            <button class="dropdown-item">
+                                <i class="fas fa-copy" aria-hidden="true"></i>
+                                Duplicate
+                            </button>
+                            <button class="dropdown-item">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export
+                            </button>
+                            <button class="dropdown-item danger">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="list-title">Product Announcements</h3>
+                <p class="list-description">Users who specifically opted in to receive notifications about new product launches and feature updates.</p>
+                
+                <div class="list-stats">
+                    <div class="stat">
+                        <span class="stat-number">3,892</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">31.2%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">22.1%</span>
+                        <span class="stat-label">Growth</span>
+                    </div>
+                </div>
+                
+                <div class="list-meta">
+                    <div class="list-tags">
+                        <span class="tag">Transactional</span>
+                        <span class="tag priority-medium">Medium</span>
+                    </div>
+                    <div class="list-updated">3 days ago</div>
+                </div>
+                
+                <div class="activity-indicator">
+                    <div class="activity-dot active"></div>
+                    <span class="activity-text">Active</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Lists Table View -->
+        <div class="lists-table" id="lists-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" class="table-checkbox" id="select-all-table"></th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Subscribers</th>
+                        <th>Open Rate</th>
+                        <th>Growth</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="checkbox" class="table-checkbox" value="1"></td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600;">Newsletter Subscribers</div>
+                                <div style="font-size: 0.75rem; color: var(--list-gray-500);">Main newsletter list</div>
+                            </div>
+                        </td>
+                        <td><span class="tag">Newsletter</span></td>
+                        <td>8,234</td>
+                        <td>28.4%</td>
+                        <td style="color: var(--list-success);">+15.2%</td>
+                        <td>
+                            <div class="activity-indicator">
+                                <div class="activity-dot active"></div>
+                                <span class="activity-text">Active</span>
+                            </div>
+                        </td>
+                        <td>2 hours ago</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-btn" title="View">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn" title="Edit">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn danger" title="Delete">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="table-checkbox" value="2"></td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600;">VIP Customers</div>
+                                <div style="font-size: 0.75rem; color: var(--list-gray-500);">High-value customers</div>
+                            </div>
+                        </td>
+                        <td><span class="tag">Promotional</span></td>
+                        <td>456</td>
+                        <td>45.8%</td>
+                        <td style="color: var(--list-success);">+8.7%</td>
+                        <td>
+                            <div class="activity-indicator">
+                                <div class="activity-dot active"></div>
+                                <span class="activity-text">Active</span>
+                            </div>
+                        </td>
+                        <td>1 day ago</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-btn" title="View">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn" title="Edit">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn danger" title="Delete">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="table-checkbox" value="3"></td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600;">Product Announcements</div>
+                                <div style="font-size: 0.75rem; color: var(--list-gray-500);">Product updates</div>
+                            </div>
+                        </td>
+                        <td><span class="tag">Transactional</span></td>
+                        <td>3,892</td>
+                        <td>31.2%</td>
+                        <td style="color: var(--list-success);">+22.1%</td>
+                        <td>
+                            <div class="activity-indicator">
+                                <div class="activity-dot active"></div>
+                                <span class="activity-text">Active</span>
+                            </div>
+                        </td>
+                        <td>3 days ago</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-btn" title="View">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn" title="Edit">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                </button>
+                                <button class="table-btn danger" title="Delete">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="page-info">
+                Showing 1-12 of 12 lists
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" disabled>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <a href="#" class="page-btn active">1</a>
+                <button class="page-btn" disabled>
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Advanced List Management System
+class ListManager {
+    constructor() {
+        this.selectedLists = new Set();
+        this.currentView = 'grid';
+        this.filters = {};
+        this.sortBy = 'updated';
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupViewToggle();
+        this.setupSearch();
+        this.setupFilters();
+        this.setupSelections();
+        this.setupDropdownMenus();
+        this.setupSorting();
+        this.setupBulkActions();
+        
+        console.log('List Management System initialized');
+    }
+    
+    setupViewToggle() {
+        const viewButtons = document.querySelectorAll('.view-btn');
+        const gridView = document.getElementById('lists-grid');
+        const tableView = document.getElementById('lists-table');
+        
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                this.switchView(view);
+                
+                // Update button states
+                viewButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+    
+    switchView(view) {
+        const gridView = document.getElementById('lists-grid');
+        const tableView = document.getElementById('lists-table');
+        
+        this.currentView = view;
+        
+        if (view === 'grid') {
+            gridView.style.display = 'grid';
+            tableView.classList.remove('active');
+        } else {
+            gridView.style.display = 'none';
+            tableView.classList.add('active');
+        }
+        
+        // Reset selections when switching views
+        this.clearSelections();
+    }
+    
+    setupSearch() {
+        const searchInputs = document.querySelectorAll('#main-search, #filter-search');
+        
+        searchInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                this.filterLists({ search: query });
+            });
+        });
+    }
+    
+    setupFilters() {
+        // Status checkboxes
+        const statusFilters = document.querySelectorAll('[id^="status-"]');
+        statusFilters.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updateFilters();
+            });
+        });
+        
+        // Type and size selects
+        const typeSelect = document.getElementById('filter-type');
+        const sizeSelect = document.getElementById('filter-size');
+        
+        [typeSelect, sizeSelect].forEach(select => {
+            select.addEventListener('change', () => {
+                this.updateFilters();
+            });
+        });
+        
+        // Growth rate checkboxes
+        const growthFilters = document.querySelectorAll('[id^="growth-"]');
+        growthFilters.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.updateFilters();
+            });
+        });
+        
+        // Clear filters button
+        const clearBtn = document.querySelector('.clear-filters');
+        clearBtn.addEventListener('click', () => {
+            this.clearFilters();
+        });
+    }
+    
+    updateFilters() {
+        const filters = {};
+        
+        // Status filters
+        const statusFilters = [];
+        document.querySelectorAll('[id^="status-"]:checked').forEach(cb => {
+            statusFilters.push(cb.id.replace('status-', ''));
+        });
+        if (statusFilters.length > 0) {
+            filters.status = statusFilters;
+        }
+        
+        // Type filter
+        const type = document.getElementById('filter-type').value;
+        if (type) filters.type = type;
+        
+        // Size filter
+        const size = document.getElementById('filter-size').value;
+        if (size) filters.size = size;
+        
+        // Growth rate filters
+        const growthFilters = [];
+        document.querySelectorAll('[id^="growth-"]:checked').forEach(cb => {
+            growthFilters.push(cb.id.replace('growth-', ''));
+        });
+        if (growthFilters.length > 0) {
+            filters.growth = growthFilters;
+        }
+        
+        this.filters = filters;
+        this.applyFilters();
+    }
+    
+    applyFilters() {
+        const listCards = document.querySelectorAll('.list-card');
+        const tableRows = document.querySelectorAll('.lists-table tbody tr');
+        
+        // Apply to grid view
+        listCards.forEach(card => {
+            const shouldShow = this.shouldShowListItem(card);
+            card.style.display = shouldShow ? 'block' : 'none';
+        });
+        
+        // Apply to table view
+        tableRows.forEach(row => {
+            const shouldShow = this.shouldShowTableRow(row);
+            row.style.display = shouldShow ? 'table-row' : 'none';
+        });
+        
+        this.updateResultsCount();
+    }
+    
+    shouldShowListItem(card) {
+        // This would normally check against actual data
+        // For demo purposes, we'll use simple logic
+        return true;
+    }
+    
+    shouldShowTableRow(row) {
+        // This would normally check against actual data
+        // For demo purposes, we'll use simple logic
+        return true;
+    }
+    
+    clearFilters() {
+        // Clear all checkboxes
+        document.querySelectorAll('.filter-checkbox input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        // Clear selects
+        document.querySelectorAll('.filter-select').forEach(select => {
+            select.value = '';
+        });
+        
+        // Clear search
+        document.querySelectorAll('.filter-input').forEach(input => {
+            input.value = '';
+        });
+        
+        this.filters = {};
+        this.applyFilters();
+    }
+    
+    setupSelections() {
+        // Grid view checkboxes
+        const cardCheckboxes = document.querySelectorAll('.card-checkbox');
+        cardCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                this.handleSelection(e.target);
+                e.stopPropagation();
+            });
+        });
+        
+        // Table view checkboxes
+        const tableCheckboxes = document.querySelectorAll('.table-checkbox:not(#select-all-table)');
+        tableCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                this.handleSelection(e.target);
+                e.stopPropagation();
+            });
+        });
+        
+        // Select all checkbox
+        const selectAllTable = document.getElementById('select-all-table');
+        if (selectAllTable) {
+            selectAllTable.addEventListener('change', (e) => {
+                this.handleSelectAll(e.target.checked);
+            });
+        }
+        
+        // Card click handlers
+        const listCards = document.querySelectorAll('.list-card');
+        listCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('.card-checkbox') && !e.target.closest('.card-menu')) {
+                    const checkbox = card.querySelector('.card-checkbox');
+                    checkbox.checked = !checkbox.checked;
+                    this.handleSelection(checkbox);
+                }
+            });
+        });
+    }
+    
+    handleSelection(checkbox) {
+        const listId = checkbox.value;
+        const card = checkbox.closest('.list-card') || checkbox.closest('tr');
+        
+        if (checkbox.checked) {
+            this.selectedLists.add(listId);
+            card?.classList.add('selected');
+        } else {
+            this.selectedLists.delete(listId);
+            card?.classList.remove('selected');
+        }
+        
+        this.updateBulkActions();
+        this.updateSelectAllState();
+    }
+    
+    handleSelectAll(checked) {
+        const checkboxes = this.currentView === 'grid' 
+            ? document.querySelectorAll('.card-checkbox')
+            : document.querySelectorAll('.table-checkbox:not(#select-all-table)');
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked !== checked) {
+                checkbox.checked = checked;
+                this.handleSelection(checkbox);
+            }
+        });
+    }
+    
+    updateBulkActions() {
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+        
+        if (this.selectedLists.size > 0) {
+            bulkActions.classList.add('visible');
+            selectedCount.textContent = this.selectedLists.size;
+        } else {
+            bulkActions.classList.remove('visible');
+        }
+    }
+    
+    updateSelectAllState() {
+        const selectAllTable = document.getElementById('select-all-table');
+        if (!selectAllTable) return;
+        
+        const totalCheckboxes = this.currentView === 'grid' 
+            ? document.querySelectorAll('.card-checkbox').length
+            : document.querySelectorAll('.table-checkbox:not(#select-all-table)').length;
+        
+        if (this.selectedLists.size === 0) {
+            selectAllTable.indeterminate = false;
+            selectAllTable.checked = false;
+        } else if (this.selectedLists.size === totalCheckboxes) {
+            selectAllTable.indeterminate = false;
+            selectAllTable.checked = true;
+        } else {
+            selectAllTable.indeterminate = true;
+        }
+    }
+    
+    clearSelections() {
+        this.selectedLists.clear();
+        
+        // Clear all checkboxes
+        document.querySelectorAll('.card-checkbox, .table-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Remove selected class from cards/rows
+        document.querySelectorAll('.list-card, .lists-table tbody tr').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        this.updateBulkActions();
+        this.updateSelectAllState();
+    }
+    
+    setupDropdownMenus() {
+        const menuBtns = document.querySelectorAll('.menu-btn');
+        
+        menuBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                const menu = btn.nextElementSibling;
+                const isOpen = menu.classList.contains('show');
+                
+                // Close all other menus
+                document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                    m.classList.remove('show');
+                });
+                
+                if (!isOpen) {
+                    menu.classList.add('show');
+                }
+            });
+        });
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        });
+    }
+    
+    setupSorting() {
+        const sortSelect = document.getElementById('sort-by');
+        
+        sortSelect.addEventListener('change', (e) => {
+            this.sortBy = e.target.value;
+            this.applySorting();
+        });
+    }
+    
+    applySorting() {
+        // This would normally sort the actual data
+        // For demo purposes, we'll just show a notification
+        this.showNotification(`Sorted by ${this.sortBy}`, 'info');
+    }
+    
+    setupBulkActions() {
+        const bulkBtns = document.querySelectorAll('.bulk-btn');
+        
+        bulkBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.textContent.toLowerCase();
+                this.handleBulkAction(action);
+            });
+        });
+    }
+    
+    handleBulkAction(action) {
+        if (this.selectedLists.size === 0) {
+            this.showNotification('No lists selected', 'warning');
+            return;
+        }
+        
+        switch (action) {
+            case 'export':
+                this.exportSelectedLists();
+                break;
+            case 'archive':
+                this.archiveSelectedLists();
+                break;
+            case 'delete':
+                this.deleteSelectedLists();
+                break;
+        }
+    }
+    
+    exportSelectedLists() {
+        this.showNotification(`Exporting ${this.selectedLists.size} lists...`, 'info');
+        // Implement export logic
+    }
+    
+    archiveSelectedLists() {
+        if (confirm(`Archive ${this.selectedLists.size} selected lists?`)) {
+            this.showNotification(`Archived ${this.selectedLists.size} lists`, 'success');
+            this.clearSelections();
+        }
+    }
+    
+    deleteSelectedLists() {
+        if (confirm(`Permanently delete ${this.selectedLists.size} selected lists? This action cannot be undone.`)) {
+            this.showNotification(`Deleted ${this.selectedLists.size} lists`, 'success');
+            
+            // Remove selected cards/rows from DOM
+            this.selectedLists.forEach(listId => {
+                const card = document.querySelector(`[data-list-id="${listId}"]`);
+                const row = document.querySelector(`input[value="${listId}"]`)?.closest('tr');
+                
+                if (card) {
+                    card.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => card.remove(), 300);
+                }
+                if (row) {
+                    row.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => row.remove(), 300);
+                }
+            });
+            
+            this.clearSelections();
+        }
+    }
+    
+    updateResultsCount() {
+        const visibleCards = document.querySelectorAll('.list-card:not([style*="display: none"])').length;
+        const visibleRows = document.querySelectorAll('.lists-table tbody tr:not([style*="display: none"])').length;
+        
+        const count = this.currentView === 'grid' ? visibleCards : visibleRows;
+        const pageInfo = document.querySelector('.page-info');
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Showing 1-${count} of ${count} lists`;
+        }
+    }
+    
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            min-width: 300px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#2563eb'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--list-shadow-lg);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
+        notification.innerHTML = `
+            <i class="fas fa-${icons[type]} fa-lg"></i>
+            <span>${message}</span>
+            <button onclick="this.closest('.notification').remove()" 
+                    style="background: none; border: none; color: white; margin-left: auto; cursor: pointer; font-size: 1.25rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+    }
+}
+
+// Global functions
+function createNewList() {
+    // This would open a modal or navigate to creation page
+    console.log('Creating new list...');
+}
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.95); }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the list manager
+document.addEventListener('DOMContentLoaded', function() {
+    window.listManager = new ListManager();
+});
+</script>
+{% endblock %}
+

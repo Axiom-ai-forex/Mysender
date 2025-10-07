@@ -1,0 +1,136 @@
+<!-- templates/components/navbar.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top" 
+     role="navigation" aria-label="Main navigation">
+    <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard.index') }}">
+            <i class="fas fa-envelope-open-text me-2" aria-hidden="true"></i>
+            <span class="fw-bold">Email Sender Pro</span>
+        </a>
+        
+        <!-- Mobile Menu Toggle -->
+        <button class="navbar-toggler" type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#main-navbar"
+                aria-controls="main-navbar" 
+                aria-expanded="false" 
+                aria-label="Toggle navigation menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="main-navbar">
+            <!-- Navigation Links -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'dashboard.index' }}" 
+                       href="{{ url_for('dashboard.index') }}"
+                       {{ 'aria-current="page"' if request.endpoint == 'dashboard.index' }}>
+                        <i class="fas fa-tachometer-alt me-1" aria-hidden="true"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if 'campaigns' in request.endpoint }}" 
+                       href="{{ url_for('campaigns.list') }}"
+                       {{ 'aria-current="page"' if 'campaigns' in request.endpoint }}>
+                        <i class="fas fa-paper-plane me-1" aria-hidden="true"></i>
+                        Campaigns
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if 'templates' in request.endpoint }}" 
+                       href="{{ url_for('templates.library') }}"
+                       {{ 'aria-current="page"' if 'templates' in request.endpoint }}>
+                        <i class="fas fa-palette me-1" aria-hidden="true"></i>
+                        Templates
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if 'lists' in request.endpoint }}" 
+                       href="{{ url_for('lists.manage') }}"
+                       {{ 'aria-current="page"' if 'lists' in request.endpoint }}>
+                        <i class="fas fa-users me-1" aria-hidden="true"></i>
+                        Lists
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Right-side Navigation -->
+            <ul class="navbar-nav">
+                <!-- Notifications Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle position-relative" href="#" role="button" 
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       aria-label="Notifications">
+                        <i class="fas fa-bell" aria-hidden="true"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                              id="notification-badge" aria-label="unread notifications">
+                            <span class="visually-hidden">unread notifications</span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
+                        <li class="dropdown-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Notifications</span>
+                                <button type="button" class="btn btn-sm btn-link p-0" id="mark-all-read">
+                                    Mark all read
+                                </button>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <div id="notifications-list" role="list" aria-live="polite">
+                            <!-- Dynamic notifications will be inserted here -->
+                        </div>
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="text-center">
+                            <a class="dropdown-item" href="{{ url_for('notifications.all') }}">
+                                View All Notifications
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- Theme Toggle -->
+                <li class="nav-item">
+                    <button class="nav-link btn btn-link" id="theme-toggle" 
+                            aria-label="Toggle dark mode">
+                        <i class="fas fa-moon" id="theme-icon" aria-hidden="true"></i>
+                    </button>
+                </li>
+                
+                <!-- User Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ current_user.avatar_url|default(url_for('static', filename='images/default-avatar.png')) }}" 
+                             alt="{{ current_user.username|e }}'s avatar"
+                             class="rounded-circle me-2" 
+                             width="32" height="32">
+                        <span class="d-none d-sm-inline">{{ current_user.username|e }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="dropdown-header">
+                            <div class="text-center">
+                                <div class="fw-bold">{{ current_user.full_name|e }}</div>
+                                <small class="text-muted">{{ current_user.email|e }}</small>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings.profile') }}">
+                            <i class="fas fa-user me-2" aria-hidden="true"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings.security') }}">
+                            <i class="fas fa-shield-alt me-2" aria-hidden="true"></i>Security</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings.smtp') }}">
+                            <i class="fas fa-server me-2" aria-hidden="true"></i>SMTP Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('help.documentation') }}">
+                            <i class="fas fa-question-circle me-2" aria-hidden="true"></i>Help</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2" aria-hidden="true"></i>Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
